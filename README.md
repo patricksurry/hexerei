@@ -1,6 +1,55 @@
 Hex and counter AI
 ===
 
+    hexerei - the art or power of bringing magical or preternatural power to bear or the act or practice of attempting to do so
+
+  -     make a blog visual test page that shows labeling and various tests
+
+
+geojson.io - mapbox open source geojson editor
+geojson.xyz - sample files via natural earth
+geonmaes.org - collection of mostly points for many features
+geoman.io - alternative freemium geojson editor
+
+
+Map spec
+---
+
+geojson => hex map
+
+specials:
+
+Geometry Line with id='origin' with hex side length = pointy radius,
+and direction 90deg right of 'up' orientation,
+or Point with properties 'scale' hex size in km, and orient=degrees default 0
+default flat top, optional pointy=true.
+
+Polygon (or multipolygon) geometry with id='boundary'
+
+other features optional property map='tile|edge|vertex|none', default tile
+optional property label=str
+
+
+
+coordinate systems:
+
+[web mercator][webgm]for geojson e.g. for map background tiles or cities
+[webgm]: https://en.wikipedia.org/wiki/Web_Mercator_projection
+
+cube/axial coordinates as native hex coords
+
+user coords (string ids) like offset xxyy "0304" or alternative axial like "AA01"
+needs a cube2id and id2cube method
+
+map geojson objects to hex tiles, edges and/or vertices  via shapely
+
+
+build and run like
+
+npx tsc
+node --es-module-specifier-resolution=node  dist/flowsnake.js
+
+
 Simple hex and counter games
 ---
 
@@ -30,3 +79,6 @@ Finding Equilibrium via Regularization](https://arxiv.org/pdf/2002.08456.pdf)
 - [GameAIPro](https://www.gameaipro.com/)
 - [Neural Replicator Dynamics:
 Multiagent Learning via Hedging Policy Gradients](https://arxiv.org/pdf/1906.00190.pdf)
+
+Uber's H3 https://h3geo.org/
+use directed edge identifiers between two hexes to represent flow between them?
