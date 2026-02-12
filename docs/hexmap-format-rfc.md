@@ -1,7 +1,7 @@
 # The HexMap Format
 
 **hexerei project — format specification draft**
-**February 2026, revision 2**
+**February 2026, revision 3**
 
 ## Status of This Document
 
@@ -94,19 +94,19 @@ data, it is poorly suited to hex maps: it requires 6-vertex polygons per hex
 is lat/lng. HexMap uses a purpose-built coordinate system with compact hex
 addressing.
 
-However, conversion to/from GeoJSON is straightforward and SHOULD be
-supported by implementations. A hex map with a defined geographic projection
-can be losslessly converted to GeoJSON feature collections.
+Conversion from HexMap to GeoJSON is straightforward and SHOULD be supported
+by implementations. A hex map with a defined geographic projection can be
+losslessly converted to a GeoJSON feature collection.
 
-PDS: from GeoJSON seems a stretch?
+Conversion from GeoJSON to HexMap is not generally lossless and requires
+heuristics (identifying the hex grid, snapping features to hexes, etc.).
+Implementations MAY support this as an import/digitization aid.
+
 ---
 
 ## 2. Conventions and Terminology
 
-**hex**: A single hexagonal cell on the grid. Synonyms: tile, cell, face.
-
-PDS: tile should probably be reserved for geomorphic maps
-where a tile might be a superhex for example
+**hex**: A single hexagonal cell on the grid. Synonyms: cell, face.
 
 **edge**: A side of a hex. Each interior edge is shared by exactly two
 adjacent hexes. Boundary edges belong to only one hex. Synonym: hexside.
@@ -129,13 +129,14 @@ than it is tall.
 **pointy-top**: A hex orientation where vertices point up and down
 (vertices at 12 o'clock and 6 o'clock). The hex is taller than it is wide.
 
-**cube coordinates**: A three-integer coordinate system (x, y, z) for hex
-grids where x + y + z = 0. This is the canonical mathematical
+**cube coordinates**: A three-integer coordinate system (u, v, w) for hex
+grids where u + v + w = 0. This is the canonical mathematical
 representation for hex math (distance, neighbors, line drawing, rings).
 Two coordinates suffice since the third is determined by the constraint;
 the two-component form (q, r) is called **axial coordinates**.
 
-PDS: i think u,v,w is better for the cube coords, to differentiate from screen or row/col coords
+The letters u, v, w are used (rather than x, y, z) to avoid confusion
+with screen coordinates or row/column indices.
 
 **user coordinates**: A human-readable labeling scheme for hexes, such as
 `"0304"` (column 03, row 04) or `"C4"` (column C, row 4). Defined per map.
@@ -153,7 +154,8 @@ linear feature such as a road, railroad, or river.
 **directed edge type**: An edge terrain type where the effect is
 asymmetric — different depending on which side you approach from (e.g.,
 cliff, slope). The referencing hex in the addressing notation indicates
-the "source" side.
+the "active" side. The semantic meaning of "active" (e.g., whether it
+is the base or top of a cliff) is determined by the game, not this format.
 
 ---
 
@@ -167,7 +169,7 @@ hexmap: "1.0"              # format version (REQUIRED)
 metadata: { ... }          # map identity and descriptive info
 grid: { ... }              # hex geometry and coordinate system
 terrain: { ... }           # terrain type vocabulary (hex, edge, vertex)
-defaults: { ... }          # default values for hexes, edges
+defaults: { ... }          # default values for hexes, edges, vertices
 features: [ ... ]          # the map content: terrain, paths, regions
 extensions: { ... }        # implementation-specific extensions
 ```
@@ -191,7 +193,7 @@ it carries all map content as an ordered sequence of feature entries.
 | `metadata` | object | no | Descriptive metadata (Section 4.2). |
 | `grid` | object | YES | Grid geometry and coordinates (Section 4.3). |
 | `terrain` | object | no | Terrain type definitions (Section 4.5). |
-| `defaults` | object | no | Default hex/edge properties (Section 4.6). |
+| `defaults` | object | no | Default hex/edge/vertex properties (Section 4.6). |
 | `features` | array | no | Map content (Section 4.7). |
 | `extensions` | object | no | Reserved for extensions (Section 8). |
 
@@ -203,6 +205,7 @@ All fields are OPTIONAL.
 ```yaml
 metadata:
   id: battle-for-moscow
+  version: "1.0"
   title: "Battle for Moscow"
   description: "The German advance on Moscow, Oct-Dec 1941"
   designer: "Frank Chadwick"
@@ -213,18 +216,20 @@ metadata:
     notes: "Freely available introductory wargame"
 ```
 
-PDS: version/revision would also be good unless that's part of ID,
-to allow for errata fixes etc
-
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | string | Machine-readable identifier. SHOULD be lowercase with hyphens. |
+| `version` | string | Version of this map definition (for errata, revisions). |
 | `title` | string | Human-readable name. |
 | `description` | string | Longer description. |
 | `designer` | string | Map or game designer. |
 | `publisher` | string | Publisher name. |
 | `date` | string | Publication date or year. |
 | `source` | object | Provenance information. |
+
+The `version` field tracks revisions of the map data itself (not the
+format version, which is in the top-level `hexmap` field). Use semantic
+versioning or simple incrementing numbers.
 
 Implementations MUST preserve unrecognized fields in `metadata` and pass
 them through unchanged.
@@ -240,32 +245,34 @@ grid:
   columns: 22
   rows: 15
   stagger: low
-  scale:
-    meters_per_hex: 16000
+  coordinates:
+    label: XXYY
+    origin: top-left
+    first: [1, 1]
   geo:
-    anchor: [54.5, 35.0]     # lat, lng of hex 0101 center
+    scale: 16000              # meters per hex
+    anchor: [54.5, 35.0]      # lat, lng of hex 0101 center
     bearing: 0                 # degrees, 0 = north up
+    projection: mercator
 ```
-
-PDS: move meters_per_hex into geo, add geo.projection ?
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `hex_top` | string | YES | `"flat"` or `"pointy"`. |
-| `columns` | integer | conditional | Number of columns. REQUIRED for rectangular maps. |
-| `rows` | integer | conditional | Number of rows. REQUIRED for rectangular maps. |
-| `stagger` | string | no | `"low"` or `"high"`.  Which columns (flat) or rows (pointy) are indented. See below. |
-| `boundary` | array | no | List of hex IDs for non-rectangular maps. |
+| `columns` | integer | YES | Number of columns. |
+| `rows` | integer | YES | Number of rows. |
+| `stagger` | string | no | `"low"` or `"high"`. Default: `"low"`. See below. |
+| `boundary` | array | no | Hex IDs of valid hexes for non-rectangular maps. |
 | `coordinates` | object | no | User coordinate labeling. See Section 4.4. |
-| `scale` | object | no | Physical scale of the map. |
-| `scale.meters_per_hex` | number | no | Distance across a hex in meters. |
-| `geo` | object | no | Geographic anchoring. See below. |
+| `geo` | object | no | Geographic scale and anchoring. See below. |
 
-PDS: i'm not sure how a non-rectangular map would work
-since most of the coordinate stuff depends on it.  
-Perhaps we always require rows/columns but
-have optional valid region which references a hex geometry
-defined later.  only hexes in that region would be rendered
+The `columns` and `rows` fields are always REQUIRED. They define the
+bounding rectangle and coordinate space for the map. For non-rectangular
+maps, all hexes within the bounding rectangle exist by default (if a
+default terrain is set in Section 4.6). The optional `boundary` field
+restricts which hexes are valid — hexes outside the boundary but within
+the bounding rectangle do not exist. If `boundary` is absent and no
+default terrain is set, only hexes explicitly mentioned in features exist.
 
 #### hex_top
 
@@ -277,31 +284,53 @@ literature.
 
 When hex columns (flat-top) or rows (pointy-top) are arranged in a
 rectangular grid, alternating columns/rows must be offset. The `stagger`
-field specifies which ones are shifted:
+field specifies which ones are shifted.
 
 | Value | Flat-top meaning | Pointy-top meaning |
 |-------|------------------|--------------------|
-| `"low"` (default) | First column sits lower | First row sits further right |
-| `"high"` | First column sits higher | First row sits further left |
+| `"low"` (default) | Odd columns sit lower | Odd rows sit further right |
+| `"high"` | Odd columns sit higher | Odd rows sit further left |
 
-"First" means the column or row with the lowest index (as determined by
-the coordinate origin). `"low"` corresponds to Red Blob Games' `odd-q`
-(flat-top) or `odd-r` (pointy-top) when coordinates start at 1.
+"Odd" columns/rows are those whose index (after applying `first`) is odd:
+columns 1, 3, 5, ... when `first` starts at 1. `"low"` corresponds to
+Red Blob Games' "odd-q" (flat-top) or "odd-r" (pointy-top).
 
-#### geo (geographic anchoring)
+The following diagrams show the vertical offset of hex centers for flat-top
+grids. Each label shows the hex user coordinate (XXYY format, first: [1,1]):
 
-The optional `geo` object anchors the hex grid to real-world geography.
+```
+stagger: low                     stagger: high
+(odd columns sit lower)          (odd columns sit higher)
+
+   c1     c2     c3                c1     c2     c3
+
+         0201                    0101          0301
+  0101          0301                    0201
+         0202                    0102          0302
+  0102          0302                    0202
+         0203                    0103          0303
+  0103          0303                    0203
+```
+
+For pointy-top grids, the pattern is analogous but applied to rows
+instead of columns, with the offset being horizontal rather than vertical.
+
+#### geo (geographic anchoring and scale)
+
+The optional `geo` object provides physical scale and anchors the hex
+grid to real-world geography.
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `scale` | number | Meters across a hex (center to center of opposite edges). |
 | `anchor` | [number, number] | [latitude, longitude] of a reference hex center. |
 | `anchor_hex` | string | Which hex the anchor refers to. Default: first hex. |
 | `bearing` | number | Rotation in degrees clockwise from north. Default: 0. |
 | `projection` | string | Map projection identifier. Default: `"mercator"`. |
 
-This enables conversion to/from geographic coordinate systems and
-overlay on real-world maps. The combination of anchor point, scale,
-bearing, and projection fully defines the hex-to-geography mapping.
+Only `scale` is needed for maps that specify physical size without geographic
+positioning. The full combination of anchor, scale, bearing, and projection
+defines the hex-to-geography mapping for real-world overlay.
 
 ### 4.4 Coordinate Systems
 
@@ -311,8 +340,8 @@ The HexMap format uses two coordinate representations:
    `"C4"`. These appear in the file as hex identifiers in features, edges,
    paths, etc. They MUST be unique within a map.
 
-2. **Cube coordinates** (x, y, z integers): The canonical mathematical
-   representation where x + y + z = 0. Implementations SHOULD use cube
+2. **Cube coordinates** (u, v, w integers): The canonical mathematical
+   representation where u + v + w = 0. Implementations SHOULD use cube
    coordinates internally for hex math (distance, neighbors, rings, line
    drawing). Cube coordinates do not appear in the file.
 
@@ -333,8 +362,16 @@ coordinates:
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `label` | string | `"XXYY"` | Label pattern (see below). |
-| `origin` | string | `"top-left"` | Where numbering starts. |
-| `first` | [int, int] | `[1, 1]` | Starting [column, row] number. |
+| `origin` | string | `"top-left"` | Corner where numbering starts (visual direction). |
+| `first` | [int, int] | `[1, 1]` | Starting [column, row] number at the origin. |
+
+**`origin`** specifies the visual corner of the map where the lowest-
+numbered hex appears — it controls the *direction* numbers increase.
+**`first`** specifies what number to assign that corner hex — it controls
+the *starting value*. Together: `origin: top-left` with `first: [1, 1]`
+means hex (1,1) is at the top-left, columns increase rightward, rows
+increase downward. Changing `first: [0, 0]` makes that same corner hex
+(0,0) instead, but doesn't change the visual layout.
 
 **Label patterns** use `X` for column digits, `Y` for row digits, and
 `A` for column letters. The number of repeated characters indicates
@@ -349,21 +386,27 @@ zero-padded width. Any other characters are literal punctuation.
 | `(X,Y)` | `"(3,4)"` | Parenthesized, comma-separated |
 | `XX.YY` | `"03.04"` | Dot-separated |
 
+These patterns cover the most common wargame labeling schemes. The set is
+intentionally minimal for v1.0. Future versions may add support for more
+complex schemes (e.g., board-prefixed notation like `"3-1204"` for
+geomorphic multi-board maps). For unusual labeling needs, the `properties`
+field on features can carry alternative identifiers.
+
 **Origin** specifies the corner where numbering begins:
 
 | Value | Column numbers increase | Row numbers increase |
 |-------|------------------------|---------------------|
-| `"top-left"` (default) | left → right | top → bottom |
-| `"bottom-left"` | left → right | bottom → top |
-| `"top-right"` | right → left | top → bottom |
-| `"bottom-right"` | right → left | bottom → top |
+| `"top-left"` (default) | left to right | top to bottom |
+| `"bottom-left"` | left to right | bottom to top |
+| `"top-right"` | right to left | top to bottom |
+| `"bottom-right"` | right to left | bottom to top |
 
 Most wargames use `"top-left"` (XXYY with 01,01 in the upper-left).
 
 ### 4.5 Terrain Vocabulary
 
 The `terrain` object defines all terrain types used on this map, organized
-by the geometry they apply to: hexes, edges, or vertices.
+by the geometry they apply to: hexes, edges, vertices, or paths.
 
 ```yaml
 terrain:
@@ -375,8 +418,6 @@ terrain:
     city: {}
     major_city:
       name: "Major City"
-    major_river:
-      name: "Major River"
 
   edge:
     river: {}
@@ -387,6 +428,11 @@ terrain:
     slope:
       directed: true
 
+  vertex:
+    bridge: {}
+    crossroads: {}
+    ford: {}
+
   path:
     road: {}
     railroad: {}
@@ -394,27 +440,38 @@ terrain:
       name: "River"
 ```
 
-PDS: this example could be a lot better
-
 #### Type identifiers
 
 Type identifiers MUST be lowercase ASCII with underscores for word
 separation (e.g., `light_woods`, `major_river`).
 
 When `name` is omitted, it defaults to the identifier converted from
-snake_case to Title Case: `light_woods` → "Light Woods",
-`major_river` → "Major River".
+snake_case to Title Case: `light_woods` -> "Light Woods",
+`major_river` -> "Major River".
 
 #### Terrain type definition object
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | no | Human-readable display name. Auto-generated from identifier if omitted. |
-| `directed` | boolean | no | Edge types only. If true, the feature is asymmetric (e.g., cliff). Default: false. |
+| `directed` | boolean | no | Edge types only. If true, the feature is asymmetric (e.g., cliff). Default: false. Vertex types are never directed. |
 | `style` | object | no | Display hints (color, pattern, etc). See below. |
-| `properties` | object | no | Arbitrary additional properties. |
+| `properties` | object | no | Arbitrary additional properties for game-specific semantics. |
 
-PDS: properties is where gameplay semantics would be stored?
+The `properties` field on terrain type definitions is intended for
+gameplay-relevant data that the format itself does not interpret: movement
+costs, combat modifiers, line-of-sight effects, etc. The format carries
+this data opaquely. Example:
+
+```yaml
+terrain:
+  hex:
+    forest:
+      properties:
+        movement_cost: 2
+        defense_modifier: +1
+        blocks_los: true
+```
 
 The `style` object carries optional rendering hints:
 
@@ -429,17 +486,34 @@ Style is purely advisory. Renderers MAY ignore it entirely.
 
 #### Geometry subsections
 
-The three subsections — `hex`, `edge`, `path` — scope terrain identifiers
-to their geometry. The same identifier MAY appear in multiple subsections
-(e.g., `river` as both an edge type and a path type). This supports the
-real-world fact that a river may be represented as hex-filling terrain,
-as edge features, or as a connected path, depending on scale and game
-design.
+The four subsections — `hex`, `edge`, `vertex`, `path` — scope terrain
+identifiers to their geometry. The same identifier MAY appear in multiple
+subsections (e.g., `river` as both an edge type and a path type).
 
-A `vertex` subsection MAY also be included for games that annotate
-vertices (bridges, crossroads). It follows the same structure as `edge`.
+**When to use each subsection:**
 
-PDS: but vertex not directed?
+- **`hex`**: The feature fills an entire hex. Use for terrain that
+  occupies the cell: forests, cities, swamps, open water. At operational
+  scale, a wide river may be hex-filling terrain.
+
+- **`edge`**: The feature is a property of a hexside. Use for linear
+  features that form boundaries between hexes: rivers at tactical scale,
+  cliffs, walls, hedges. Edge features carry game-mechanical meaning
+  (cost to cross, line-of-sight effects).
+
+- **`vertex`**: The feature sits at a hex corner. Use for point features
+  where three hexes meet: bridges, fords, crossroads, hilltop
+  observation points. Vertex terrain types are never directed.
+
+- **`path`**: The feature is a connected linear route spanning multiple
+  hexes or edges. Use for the continuous course of a named feature:
+  roads, railroads, rivers. Path features often duplicate edge features
+  (e.g., individual river hexsides as `edge` terrain for game mechanics,
+  plus the full river course as a `path` for display and identification).
+
+A feature like "river" may reasonably appear in all three of `hex`,
+`edge`, and `path` depending on game scale and design. This is
+intentional — the format does not prescribe which representation to use.
 
 **The format does not define a fixed set of terrain types.** Each map
 declares its own vocabulary. This is intentional: terrain types are
@@ -451,8 +525,8 @@ common hex wargames as a non-normative interoperability aid.
 
 ### 4.6 Defaults
 
-The `defaults` object specifies property values applied to every hex (and
-optionally edge/vertex) that does not have an explicit value set in the
+The `defaults` object specifies property values applied to every hex,
+edge, or vertex that does not have an explicit value set in the
 features list.
 
 ```yaml
@@ -460,6 +534,8 @@ defaults:
   hex:
     terrain: clear
     elevation: 0
+  edge: {}
+  vertex: {}
 ```
 
 | Field | Type | Description |
@@ -467,14 +543,21 @@ defaults:
 | `hex` | object | Default properties for all hexes. |
 | `hex.terrain` | string | Default hex terrain type. |
 | `hex.elevation` | integer | Default elevation level. |
-| `edge` | object | Default properties for all edges (rare). |
+| `edge` | object | Default properties for all edges (uncommon). |
+| `vertex` | object | Default properties for all vertices (uncommon). |
 
-PDS: similarly vertex should be legal but rare
+Each property defaults independently. Setting `defaults.hex.terrain`
+does not imply a default elevation; if `defaults.hex.elevation` is
+also desired, it must be set explicitly. Similarly, a hex that appears
+in the features list with only `terrain` set still inherits the default
+`elevation` (if one is defined).
 
-If `defaults.hex.terrain` is specified, hexes not mentioned in the
-features list are assumed to exist (within the grid bounds) with that
+If `defaults.hex.terrain` is specified, all hexes within the grid bounds
+(constrained by `boundary` if present) are assumed to exist with that
 terrain. If no default terrain is specified, only hexes explicitly
-mentioned in features exist.
+mentioned in features exist. This provides a natural way to define
+non-rectangular maps: omit the default terrain and enumerate only the
+valid hexes in features.
 
 ### 4.7 Features
 
@@ -506,13 +589,11 @@ fields are attributes applied to the selected geometry.
 | Field | Type | Description |
 |-------|------|-------------|
 | `terrain` | string | Terrain type from the appropriate vocabulary subsection. |
-| `elevation` | integer | Elevation level (hex features only). |
+| `elevation` | integer | Elevation level. Primarily used for hexes, but MAY also appear on edge or vertex features for games that require it (e.g., wall heights, bridge elevations). |
 | `label` | string | Display name or label text. |
 | `id` | string | Unique identifier for this feature (for cross-referencing). |
 | `tags` | array of strings | Semantic tags (e.g., `"victory"`, `"fortified"`). |
 | `properties` | object | Arbitrary key-value data. |
-
-PDS: elevation is usually hex only, but i wouldn't forbid for edge (e.g. wall?) or even vertex for some applications
 
 #### Feature ordering and precedence
 
@@ -524,10 +605,6 @@ with later keys overriding.
 
 This enables a layered authoring style: set broad defaults first, then
 override specific areas:
-
-PDS: nice.  should the spec mandate anything about round-trip
-or is that up to implementations?  e.g. you could read/write
-a map and get the same effective result with different formats.
 
 ```yaml
 features:
@@ -541,6 +618,15 @@ features:
     terrain: town
     label: "Waldstadt"
 ```
+
+**Round-trip considerations.** The format does not mandate round-trip
+fidelity: an implementation that reads and writes a HexMap document MAY
+produce a structurally different file (e.g., flattened features, reordered
+entries) as long as the effective result is identical. Two documents are
+semantically equivalent if, after applying defaults and feature
+precedence, every hex, edge, and vertex has the same terrain, elevation,
+tags, and properties. Implementations that need to preserve authoring
+structure SHOULD treat the features list as opaque and pass it through.
 
 #### Hex features
 
@@ -569,16 +655,16 @@ features:
     terrain: river
 
   - edge: "0503/SE"
-    terrain: cliff    # directed: the cliff base is on the 0503 side
+    terrain: cliff    # directed: 0503 is the "active" side
 ```
 
 For directed edge types (where `directed: true` in the terrain
-vocabulary), the hex in the address indicates the "source" side.
-For a cliff, the referencing hex is at the base; the adjacent hex
-is at the top. For a slope, the referencing hex is the lower side.
-
-PDS: this seems like a semantic distinction that isn't our concern.
-is it enough that the hex in the address indicates the 'active' side, and game interprets what that means?
+vocabulary), the hex in the address indicates the "active" side.
+The format does not prescribe the semantic meaning of "active" — that
+is determined by the game. For example, a game might define `cliff`
+such that the active side is the base (climbing up costs extra) or the
+top (falling risk). The format provides the mechanism for asymmetric
+annotation; the game provides the interpretation.
 
 Both half-edges of an interior edge can be independently annotated.
 If an edge has annotations from both adjacent hexes, both are valid
@@ -599,15 +685,13 @@ features:
     label: "Moscow Highway"
 ```
 
-The edges crossed by the path are implicit — derived from the relative
-positions of consecutive hexes. Implementations compute these during
-parsing.
+Consecutive hexes in a path MUST be adjacent (sharing an edge). A path
+with non-adjacent consecutive hexes is a validation error. The edges
+crossed by the path are implicit — derived from the relative positions
+of consecutive hexes.
 
-PDS: consecutive hexes SHOULD be adjacent? or it's
-find to have a path with gaps?
-
-PDS: is there a shorthand for creating a path between
-two hexes (or edges) with a unique shortest-path?
+A shorthand for straight-line paths between two hexes is deferred to the
+geometry expression language (Appendix C, future).
 
 #### Along-edge paths
 
@@ -622,11 +706,9 @@ features:
     label: "Nara River"
 ```
 
-Each edge in the sequence SHOULD share a vertex with the next edge
-(i.e., the path should be connected).
-
-PDS: or that feature is at least partially invalid, or is 
-it fine to have paths with gaps?
+Consecutive edges in an edge path MUST share a vertex (i.e., the path
+must be connected). A disconnected sequence is a validation error. To
+represent a feature with gaps, use separate edge_path entries.
 
 #### Regions
 
@@ -653,7 +735,8 @@ features:
 | `region.id` | string | no | Unique identifier for this region. |
 | `region.hexes` | array | YES | List of hex user coordinates in this region. |
 
-PDS: is there a shorthand for creating a filled boundary?
+A shorthand for regions defined by a boundary (fill-from-edge) is
+deferred to the geometry expression language (Appendix C, future).
 
 #### Recommended tags
 
@@ -676,7 +759,26 @@ HexMap uses a compact notation for referencing hexes, edges, and vertices.
 This notation appears in the `features` list and wherever geometry is
 referenced.
 
-### 5.1 Hexes
+### 5.1 Grammar
+
+The addressing notation follows this grammar (ABNF-style):
+
+```
+hex-ref     = user-coord
+edge-ref    = user-coord "/" direction
+vertex-ref  = user-coord "." direction
+direction   = compass-dir / index
+compass-dir = "N" / "NE" / "E" / "SE" / "S" / "SW" / "W" / "NW"
+index       = "1" / "2" / "3" / "4" / "5" / "6"
+```
+
+Where `user-coord` is a string matching the label pattern defined in
+`grid.coordinates` (e.g., `"0304"` for XXYY).
+
+The `/` separator marks edge references. The `.` separator marks vertex
+references. Indices 1-6 are clockwise from 12 o'clock (see Section 5.5).
+
+### 5.2 Hexes
 
 A hex is referenced by its user coordinate string:
 
@@ -685,90 +787,104 @@ A hex is referenced by its user coordinate string:
 C4          # letter-number format
 ```
 
-### 5.2 Edges
+### 5.3 Edges
 
-An edge is referenced as `hex/direction`, where the hex is a user
-coordinate and the direction identifies which edge:
+An edge is referenced as `hex/direction`:
 
 ```
 0304/N      # north edge of hex 0304 (compass direction)
-0304/1      # same edge (clockwise index, see Appendix B)
+0304/1      # same edge, by clockwise index
 ```
 
-The `/` separator distinguishes edge references from hex references.
+### 5.4 Vertices
 
-**Compass directions for edges:**
-
-Flat-top (`hex_top: flat`):
+A vertex is referenced as `hex.direction`:
 
 ```
-          N
-    NW _______ NE
-      /       \
-     /         \
-     \         /
-      \_______/
-    SW         SE
-          S
+0304.NE     # northeast vertex of hex 0304 (compass direction)
+0304.1      # same vertex, by clockwise index
 ```
 
-Edge directions: **N, NE, SE, S, SW, NW**
+### 5.5 Edge and vertex directions
 
-Pointy-top (`hex_top: pointy`):
+The compass directions available for edges and vertices depend on
+`hex_top`. The following diagrams show both on the same hex shape.
+Edges are labeled along the sides; vertices are labeled at the corners:
 
-```
-        /\
-    NW /  \ NE
-      /    \
-   W |      | E
-      \    /
-    SW \  / SE
-        \/
-```
-
-Edge directions: **NE, E, SE, SW, W, NW**
-
-### 5.3 Vertices
-
-A vertex is referenced as `hex.direction`, where the dot separator
-distinguishes vertex references from edge references:
+**Flat-top** (`hex_top: flat`):
 
 ```
-0304.E      # east vertex of hex 0304 (compass direction)
-0304.2      # same vertex (clockwise index, see Appendix B)
+               NW (v)    N (e)    NE (v)
+                  · _____________ ·
+                  /               \
+      NW (e)    /                  \    NE (e)
+               /                    \
+          W (v)·                    · E (v)
+               \                    /
+      SW (e)    \                  /    SE (e)
+                 \               /
+                  · ____________·
+               SW (v)    S (e)    SE (v)
 ```
 
-PDS: the vertex and edge diagrams should have the same /-\ layout
-just with labels placed slight differently.   Maybe combine
-to a single side-by-side diagrams for each orientation showing
-edges vs vertex labels.
+Edge directions: **N, NE, SE, S, SW, NW** (6 edges)
+Vertex directions: **NE, E, SE, SW, W, NW** (6 vertices)
 
-**Compass directions for vertices:**
-
-Flat-top vertices: **NE, E, SE, SW, W, NW**
+**Pointy-top** (`hex_top: pointy`):
 
 ```
-     NW _______ NE
-       /       \
-   W  |         |  E
-       \_______/
-     SW         SE
+                       N (v)
+                        /\
+                       /  \
+            NW (e)   /     \   NE (e)
+                    /        \
+           NW (v) ·           · NE (v)
+                  |            |
+            W (e) |            | E (e)
+                  |            |
+           SW (v) ·           · SE (v)
+                    \        /
+            SW (e)   \     /   SE (e)
+                      \   /
+                       \/
+                       S (v)
 ```
 
-Pointy-top vertices: **N, NE, SE, S, SW, NW**
+Edge directions: **NE, E, SE, SW, W, NW** (6 edges)
+Vertex directions: **N, NE, SE, S, SW, NW** (6 vertices)
 
-```
-         N
-        /\
-       /  \
-   NW /    \ NE
-      \    /
-       \  /
-    SW  \/  SE
-         S
-```
+### 5.6 Numeric addressing with clock hours
 
-### 5.4 Edge and vertex equivalence
+Edges and vertices can also be addressed by clockwise index (1-6). The
+following tables show the mapping, including the corresponding clock
+hour position from the 12-position clock system (Appendix B):
+
+**Flat-top:**
+
+| Index | Edge | Clock | | Index | Vertex | Clock |
+|-------|------|-------|-|-------|--------|-------|
+| 1 | N | 12 | | 1 | NE | 1 |
+| 2 | NE | 2 | | 2 | E | 3 |
+| 3 | SE | 4 | | 3 | SE | 5 |
+| 4 | S | 6 | | 4 | SW | 7 |
+| 5 | SW | 8 | | 5 | W | 9 |
+| 6 | NW | 10 | | 6 | NW | 11 |
+
+**Pointy-top:**
+
+| Index | Edge | Clock | | Index | Vertex | Clock |
+|-------|------|-------|-|-------|--------|-------|
+| 1 | NE | 1 | | 1 | N | 12 |
+| 2 | E | 3 | | 2 | NE | 2 |
+| 3 | SE | 5 | | 3 | SE | 4 |
+| 4 | SW | 7 | | 4 | S | 6 |
+| 5 | W | 9 | | 5 | SW | 8 |
+| 6 | NW | 11 | | 6 | NW | 10 |
+
+So `0304/1` is the first edge clockwise from 12 o'clock, and `0304.1`
+is the first vertex. Both compass and numeric forms are valid.
+
+### 5.7 Edge and vertex equivalence
 
 Each interior edge is shared by two hexes, so the same physical edge can
 be referenced from either side. For example, if hex `0305` is directly
@@ -785,26 +901,6 @@ physical edge are equivalent. For directed features (`directed: true` in
 the terrain vocabulary), the choice of referencing hex carries semantic
 meaning (Section 4.7, Edge features).
 
-### 5.5 Numeric addressing
-
-As an alternative to compass directions, edges and vertices can be
-addressed by clockwise index starting from 12 o'clock (up):
-
-| Index | Flat-top edge | Flat-top vertex | Pointy-top edge | Pointy-top vertex |
-|-------|---------------|-----------------|-----------------|-------------------|
-| 1 | N | NE | NE | N |
-| 2 | NE | E | E | NE |
-| 3 | SE | SE | SE | SE |
-| 4 | S | SW | SW | S |
-| 5 | SW | W | W | SW |
-| 6 | NW | NW | NW | NW |
-
-So `0304/1` is the first edge clockwise from 12 o'clock, and `0304.1`
-is the first vertex. Both compass and numeric forms are valid. See
-Appendix B for the full clock direction system.
-
-PDS: this is slightly confusing since this uses indices 1 to 6
-for each of vertex and edge (fine), but doesn't show the corresponding clock direction.   Adding the clock hour to the table would help.  
 ---
 
 ## 6. Hex Geometry Reference
@@ -814,18 +910,16 @@ systems. It is normative: implementations MUST use these conversions.
 
 ### 6.1 Cube coordinates
 
-PDS: use u/v/w
-
-Cube coordinates (x, y, z) satisfy the constraint **x + y + z = 0**.
+Cube coordinates (u, v, w) satisfy the constraint **u + v + w = 0**.
 This constraint means any hex can be identified by two coordinates; the
 third is derived. The three axes are symmetric, which simplifies
 algorithms for distance, neighbors, rings, and line drawing.
 
 Axial coordinates (q, r) are a two-component shorthand:
 ```
-q = x
-r = z
-y = -q - r
+q = u
+r = w
+v = -q - r
 ```
 
 ### 6.2 Offset to cube conversion
@@ -835,47 +929,49 @@ pattern, then converted to cube coordinates. The conversion depends on
 hex_top and stagger.
 
 Let (col, row) be the parsed column and row, adjusted so the grid-origin
-hex is (0, 0).
+hex is (0, 0). (The `origin` field controls which visual corner maps to
+the lowest-numbered hex; the `first` field provides the starting number.
+The conversion below assumes col and row have been zero-indexed by
+subtracting `first`. The origin direction is handled separately as a
+reflection — for `"bottom-left"` or `"bottom-right"`, negate the row
+axis; for `"top-right"` or `"bottom-right"`, negate the column axis.)
 
-PDS: does this account for indexing direction (top/bottom/left/right) or does that not matter for the math, it can just be 
-flip transform into screen coords?
-
-**Flat-top, stagger: low (first column is lower):**
+**Flat-top, stagger: low (odd columns sit lower):**
 ```
-x = col
-z = row - floor(col / 2)
-y = -x - z
-```
-
-**Flat-top, stagger: high (first column is higher):**
-```
-x = col
-z = row - ceil(col / 2)
-y = -x - z
+u = col
+w = row - floor(col / 2)
+v = -u - w
 ```
 
-**Pointy-top, stagger: low (first row is further right):**
+**Flat-top, stagger: high (odd columns sit higher):**
 ```
-x = col - floor(row / 2)
-z = row
-y = -x - z
+u = col
+w = row - ceil(col / 2)
+v = -u - w
 ```
 
-**Pointy-top, stagger: high (first row is further left):**
+**Pointy-top, stagger: low (odd rows sit further right):**
 ```
-x = col - ceil(row / 2)
-z = row
-y = -x - z
+u = col - floor(row / 2)
+w = row
+v = -u - w
+```
+
+**Pointy-top, stagger: high (odd rows sit further left):**
+```
+u = col - ceil(row / 2)
+w = row
+v = -u - w
 ```
 
 ### 6.3 Neighbor directions in cube coordinates
 
-The six neighbors of hex (x, y, z) and their edge directions:
+The six neighbors of hex (u, v, w) and their edge directions:
 
 **Flat-top:**
 
-| Edge | Δx | Δy | Δz |
-|------|----|----|-----|
+| Edge | Delta u | Delta v | Delta w |
+|------|---------|---------|---------|
 | N    |  0 | +1 | -1 |
 | NE   | +1 |  0 | -1 |
 | SE   | +1 | -1 |  0 |
@@ -885,8 +981,8 @@ The six neighbors of hex (x, y, z) and their edge directions:
 
 **Pointy-top:**
 
-| Edge | Δx | Δy | Δz |
-|------|----|----|-----|
+| Edge | Delta u | Delta v | Delta w |
+|------|---------|---------|---------|
 | NE   | +1 |  0 | -1 |
 | E    | +1 | -1 |  0 |
 | SE   |  0 | -1 | +1 |
@@ -899,13 +995,13 @@ The six neighbors of hex (x, y, z) and their edge directions:
 The distance between two hexes in cube coordinates is:
 
 ```
-distance = max(|x1-x2|, |y1-y2|, |z1-z2|)
+distance = max(|u1-u2|, |v1-v2|, |w1-w2|)
 ```
 
 Or equivalently:
 
 ```
-distance = (|x1-x2| + |y1-y2| + |z1-z2|) / 2
+distance = (|u1-u2| + |v1-v2| + |w1-w2|) / 2
 ```
 
 ---
@@ -942,6 +1038,14 @@ Implementations SHOULD validate documents against the JSON Schema defined
 in Section 10. Validation MUST be performed against the JSON representation
 (converting from YAML first if necessary).
 
+### 7.4 Round-trip fidelity
+
+The format does not require byte-for-byte round-trip fidelity. An
+implementation that reads and re-serializes a HexMap document MAY produce
+different JSON/YAML (different whitespace, key ordering, feature
+grouping) as long as the semantic content is preserved. See Section 4.7
+for the definition of semantic equivalence.
+
 ---
 
 ## 8. Extensibility
@@ -965,9 +1069,9 @@ extensions:
 
 ### 8.2 The `properties` objects
 
-The `properties` field on feature entries is the primary mechanism for
-per-element extension data. Unrecognized properties MUST be preserved
-and passed through.
+The `properties` field on terrain type definitions and on feature entries
+is the primary mechanism for per-element extension data. Unrecognized
+properties MUST be preserved and passed through.
 
 ### 8.3 Forward compatibility
 
@@ -1005,6 +1109,7 @@ hexmap: "1.0"
 
 metadata:
   id: battle-for-moscow
+  version: "1.0"
   title: "Battle for Moscow"
   designer: "Frank Chadwick"
 
@@ -1013,12 +1118,12 @@ grid:
   columns: 22
   rows: 15
   stagger: low
-  scale:
-    meters_per_hex: 16000
   coordinates:
     label: XXYY
     origin: top-left
     first: [1, 1]
+  geo:
+    scale: 16000
 
 terrain:
   hex:
@@ -1109,8 +1214,8 @@ grid:
   hex_top: flat
   columns: 10
   rows: 8
-  scale:
-    meters_per_hex: 250
+  geo:
+    scale: 250
 
 terrain:
   hex:
@@ -1124,6 +1229,8 @@ terrain:
     stream: {}
     wall:
       name: "Stone Wall"
+  vertex:
+    bridge: {}
   path:
     road: {}
 
@@ -1153,7 +1260,7 @@ features:
     terrain: town
     label: "Bergdorf"
 
-  # Slope hexsides around the hill (directed: 0403 is the high side)
+  # Slope hexsides around the hill (directed: 0403 is the "active" side)
   - edges: ["0403/N", "0403/NE", "0403/SE",
             "0403/S", "0403/SW", "0403/NW"]
     terrain: slope
@@ -1167,6 +1274,11 @@ features:
   - edges: ["0504/NW", "0504/NE"]
     terrain: wall
 
+  # Bridge over the stream
+  - vertex: "0505.SW"
+    terrain: bridge
+    label: "Stone Bridge"
+
   # Road through the valley
   - path: ["0104", "0204", "0304", "0404", "0504", "0604"]
     terrain: road
@@ -1178,46 +1290,93 @@ features:
 ## 10. JSON Schema
 
 The normative JSON Schema for the HexMap format is maintained as a
-separate file: `hexmap.schema.json`. A summary of the schema structure:
+separate file: `hexmap.schema.json`. Below is a detailed outline of the
+schema structure and key constraints.
 
 ```
 HexMapDocument
-├── hexmap: string (enum: "1.0")
+├── hexmap: string (const: "1.0") [REQUIRED]
 ├── metadata: MetadataObject
-├── grid: GridObject (required)
-│   ├── hex_top: enum [flat, pointy]
-│   ├── columns, rows: integer
-│   ├── stagger: enum [low, high]
-│   ├── boundary: array of strings
+│   ├── id: string (pattern: "^[a-z][a-z0-9-]*$")
+│   ├── version: string
+│   ├── title, description, designer, publisher, date: string
+│   └── source: { url: string (format: uri), notes: string }
+├── grid: GridObject [REQUIRED]
+│   ├── hex_top: enum ["flat", "pointy"] [REQUIRED]
+│   ├── columns: integer (minimum: 1) [REQUIRED]
+│   ├── rows: integer (minimum: 1) [REQUIRED]
+│   ├── stagger: enum ["low", "high"]
+│   ├── boundary: array of string (minItems: 1)
 │   ├── coordinates: CoordinatesObject
-│   ├── scale: ScaleObject
+│   │   ├── label: string (default: "XXYY")
+│   │   ├── origin: enum ["top-left", "bottom-left",
+│   │   │                  "top-right", "bottom-right"]
+│   │   └── first: array [integer, integer] (default: [1, 1])
 │   └── geo: GeoObject
+│       ├── scale: number (exclusiveMinimum: 0)
+│       ├── anchor: array [number, number]
+│       ├── anchor_hex: string
+│       ├── bearing: number (minimum: 0, exclusiveMaximum: 360)
+│       └── projection: string (default: "mercator")
 ├── terrain: TerrainVocabulary
 │   ├── hex: map<string, TerrainTypeDef>
 │   ├── edge: map<string, TerrainTypeDef>
 │   ├── vertex: map<string, TerrainTypeDef>
 │   └── path: map<string, TerrainTypeDef>
+│   where TerrainTypeDef:
+│       ├── name: string
+│       ├── directed: boolean (only for edge subsection)
+│       ├── style: { color, pattern, stroke, stroke_width }
+│       └── properties: object
 ├── defaults: DefaultsObject
-│   ├── hex: { terrain, elevation }
-│   └── edge: { ... }
+│   ├── hex: { terrain: string, elevation: integer, ... }
+│   ├── edge: { terrain: string, ... }
+│   └── vertex: { terrain: string, ... }
 ├── features: array of FeatureEntry
-│   └── FeatureEntry: one-of
-│       ├── HexFeature: { hex | hexes, terrain, elevation, ... }
-│       ├── EdgeFeature: { edge | edges, terrain, ... }
-│       ├── VertexFeature: { vertex | vertices, terrain, ... }
-│       ├── PathFeature: { path | edge_path, terrain, ... }
-│       └── RegionFeature: { region, tags, ... }
-└── extensions: object
+│   └── FeatureEntry: oneOf
+│       ├── HexFeature: { hex: string | hexes: [string], ... }
+│       ├── EdgeFeature: { edge: string | edges: [string], ... }
+│       ├── VertexFeature: { vertex: string | vertices: [string], ... }
+│       ├── PathFeature: { path: [string] | edge_path: [string], ... }
+│       └── RegionFeature: { region: { id, hexes }, ... }
+│   common attributes:
+│       ├── terrain: string
+│       ├── elevation: integer
+│       ├── label: string
+│       ├── id: string
+│       ├── tags: array of string
+│       └── properties: object
+└── extensions: object (additionalProperties: true)
 ```
 
-The full JSON Schema is defined in a companion document.
+**Key constraints:**
+
+- Terrain type identifiers MUST match the pattern `^[a-z][a-z0-9_]*$`.
+- Feature `terrain` values MUST reference a type defined in the
+  appropriate terrain vocabulary subsection.
+- Edge references MUST match the pattern
+  `^.+/(N|NE|E|SE|S|SW|W|NW|[1-6])$`.
+- Vertex references MUST match the pattern
+  `^.+\.(N|NE|E|SE|S|SW|W|NW|[1-6])$`.
+- Path arrays MUST have at least 2 elements.
+- Region `hexes` arrays MUST have at least 1 element.
+
+The JSON Schema file is the authoritative reference for validation
+details including all required/optional field distinctions, type
+constraints, and enum values.
 
 ---
 
 ## 11. Test Cases
 
 The following real wargame maps are identified as test cases for format
-validation. Each exercises different aspects of the format:
+validation. Each exercises different aspects of the format. Reference
+encodings will be maintained in the `tests/` directory.
+
+**Acceptance criteria** for each test case: the reference HexMap file
+must (a) validate against the JSON Schema, (b) round-trip through a
+JSON<->YAML conversion with semantic equivalence, and (c) produce the
+correct graph structure (hex count, edge adjacencies, path connectivity).
 
 ### 11.1 Battle for Moscow (Frank Chadwick / GDW, 1986)
 
@@ -1237,7 +1396,8 @@ Geomorphic map boards (multiple boards per scenario).
 
 **Scale:** 250m/hex, 4 boards of ~16x10 each, flat-top.
 
-**Complexity:** Medium. Tests elevation, directed edges, multi-board.
+**Complexity:** Medium. Tests elevation, directed edges.
+Multi-board composition deferred to v2 (see Appendix D, Q1).
 
 ### 11.3 Advanced Squad Leader boards (MMP)
 
@@ -1362,6 +1522,14 @@ required to use these exact identifiers.
 | `ford` | Ford | no | Many |
 | `impassable` | Impassable Hexside | no | Various |
 
+### Vertex terrain types
+
+| Identifier | Name | Typical games |
+|------------|------|---------------|
+| `bridge` | Bridge | Many |
+| `ford` | Ford | Many |
+| `crossroads` | Crossroads | Tactical |
+
 ### Path terrain types
 
 | Identifier | Name | Typical games |
@@ -1385,66 +1553,59 @@ and which are vertices depends on `hex_top`:
 
 ### Flat-top (edges at even hours, vertices at odd hours)
 
-PDS: this diagram is a great idea but needs work.
-
 ```
-         12 (N edge)
-    11 .___________. 1
-  (NW  /           \  (NE
-  edge)/    hex     \  edge)
- 10 .|      center   |. 2
-(W   |               | (E
-vert)|               | vert)
-  9  |               |  3
-(NW  \             /  (SE
- edge) \_________/   edge)
-     8 .           . 4
-       7     6     5
-           (S edge)
+                  11       12        1
+                   ·________________·
+                  / (NW v)  (N e)    \
+         10     /    (NE v)           \     2
+        (NW e) /                       \ (NE e)
+              /                         \
+          9  ·                           ·  3
+        (W v)\                           /(E v)
+              \                         /
+         8     \                       /     4
+        (SW e)  \                     / (SE e)
+                 \___________________/
+                   ·                 ·
+                  7        6         5
+               (SW v)   (S e)     (SE v)
 ```
 
-| Position | Feature | Compass label |
-|----------|---------|---------------|
-| 1 | vertex | NE |
-| 2 | edge | NE |
-| 3 | vertex | E |
-| 4 | edge | SE |
-| 5 | vertex | SE |
-| 6 | edge | S |
-| 7 | vertex | SW |
-| 8 | edge | SW |
-| 9 | vertex | W |
-| 10 | edge | NW |
-| 11 | vertex | NW |
-| 12 | edge | N |
-
-So `/12` = N edge, `.1` = NE vertex, `/2` = NE edge, etc.
+| Clock | Feature | Compass | Index |
+|-------|---------|---------|-------|
+| 12 | edge | N | /1 |
+| 1 | vertex | NE | .1 |
+| 2 | edge | NE | /2 |
+| 3 | vertex | E | .2 |
+| 4 | edge | SE | /3 |
+| 5 | vertex | SE | .3 |
+| 6 | edge | S | /4 |
+| 7 | vertex | SW | .4 |
+| 8 | edge | SW | /5 |
+| 9 | vertex | W | .5 |
+| 10 | edge | NW | /6 |
+| 11 | vertex | NW | .6 |
 
 ### Pointy-top (vertices at even hours, edges at odd hours)
 
-| Position | Feature | Compass label |
-|----------|---------|---------------|
-| 1 | edge | NE |
-| 2 | vertex | NE |
-| 3 | edge | E |
-| 4 | vertex | SE |
-| 5 | edge | SE |
-| 6 | vertex | S |
-| 7 | edge | SW |
-| 8 | vertex | SW |
-| 9 | edge | W |
-| 10 | vertex | NW |
-| 11 | edge | NW |
-| 12 | vertex | N |
+| Clock | Feature | Compass | Index |
+|-------|---------|---------|-------|
+| 12 | vertex | N | .1 |
+| 1 | edge | NE | /1 |
+| 2 | vertex | NE | .2 |
+| 3 | edge | E | /2 |
+| 4 | vertex | SE | .3 |
+| 5 | edge | SE | /3 |
+| 6 | vertex | S | .4 |
+| 7 | edge | SW | /4 |
+| 8 | vertex | SW | .5 |
+| 9 | edge | W | /5 |
+| 10 | vertex | NW | .6 |
+| 11 | edge | NW | /6 |
 
 The pattern: for flat-top, edges are at even clock positions (12, 2, 4,
 6, 8, 10) and vertices at odd (1, 3, 5, 7, 9, 11). For pointy-top,
-it's reversed.
-
-The mnemonic: **even hours hit flat sides**. A flat-top hex has flat
-edges at the even positions. A pointy-top hex has flat... well, all edges
-are flat, but the "primary axis" edges (E/W for pointy-top) are at the
-even 3 and 9 o'clock positions.
+it's reversed. Mnemonic: **even hours hit flat sides**.
 
 This system is informative — compass directions remain the primary
 addressing mechanism. But clock positions are useful for algorithms and
@@ -1454,9 +1615,10 @@ for compact notation in geometry expressions (Appendix C).
 
 ## Appendix C: Geometry Expressions (Future)
 
-This appendix sketches a compact expression language for specifying
-geometric selections. This is **not part of the v1.0 format** but is
-recorded here as a design direction for future versions.
+**This appendix is NOT part of the v1.0 format.** It sketches a design
+direction for a compact expression language in future versions. Nothing
+in this appendix is normative or implemented. It is preserved here to
+record design thinking and invite feedback.
 
 ### Motivation
 
@@ -1535,6 +1697,9 @@ Issues to resolve in future revisions:
    compose them — including rotation and offset of coordinates. This
    could be a `boards` section that lists sub-maps with transforms, or
    a composition document that references separate HexMap files.
+   **v1.0 encodes single boards only.** Multi-board composition is
+   deferred to a future version. The `tile` terminology is reserved
+   for this use.
 
 2. **Terrain stacking.** Can a hex have multiple terrain types? (e.g.,
    forest + hill, or road passing through a town). Current model: a
@@ -1557,11 +1722,13 @@ Issues to resolve in future revisions:
 
 6. **Stagger naming.** Is `"low"` / `"high"` intuitive enough? Other
    candidates: `"indent-first"` / `"indent-second"`, or describe the
-   visual pattern with a small diagram in the spec.
+   visual pattern with a small diagram in the spec. (Diagrams are now
+   included in Section 4.3; the naming question remains open.)
 
 7. **Coordinate label patterns.** The `XXYY` / `AY` pattern system is
    simple but limited. Does it cover all real-world wargame labeling
    schemes? What about systems like "hex 3-1204" (board 3, hex 1204)?
+   Multi-board notation is deferred to v2.
 
 8. **Compact edge notation.** Rivers with many edges are still verbose
    even with `edge_path`. The geometry expression language (Appendix C)
