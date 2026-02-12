@@ -98,11 +98,15 @@ However, conversion to/from GeoJSON is straightforward and SHOULD be
 supported by implementations. A hex map with a defined geographic projection
 can be losslessly converted to GeoJSON feature collections.
 
+PDS: from GeoJSON seems a stretch?
 ---
 
 ## 2. Conventions and Terminology
 
 **hex**: A single hexagonal cell on the grid. Synonyms: tile, cell, face.
+
+PDS: tile should probably be reserved for geomorphic maps
+where a tile might be a superhex for example
 
 **edge**: A side of a hex. Each interior edge is shared by exactly two
 adjacent hexes. Boundary edges belong to only one hex. Synonym: hexside.
@@ -130,6 +134,8 @@ grids where x + y + z = 0. This is the canonical mathematical
 representation for hex math (distance, neighbors, line drawing, rings).
 Two coordinates suffice since the third is determined by the constraint;
 the two-component form (q, r) is called **axial coordinates**.
+
+PDS: i think u,v,w is better for the cube coords, to differentiate from screen or row/col coords
 
 **user coordinates**: A human-readable labeling scheme for hexes, such as
 `"0304"` (column 03, row 04) or `"C4"` (column C, row 4). Defined per map.
@@ -207,6 +213,9 @@ metadata:
     notes: "Freely available introductory wargame"
 ```
 
+PDS: version/revision would also be good unless that's part of ID,
+to allow for errata fixes etc
+
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | string | Machine-readable identifier. SHOULD be lowercase with hyphens. |
@@ -238,17 +247,25 @@ grid:
     bearing: 0                 # degrees, 0 = north up
 ```
 
+PDS: move meters_per_hex into geo, add geo.projection ?
+
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `hex_top` | string | YES | `"flat"` or `"pointy"`. |
 | `columns` | integer | conditional | Number of columns. REQUIRED for rectangular maps. |
 | `rows` | integer | conditional | Number of rows. REQUIRED for rectangular maps. |
-| `stagger` | string | no | Which columns (flat) or rows (pointy) are indented. See below. |
+| `stagger` | string | no | `"low"` or `"high"`.  Which columns (flat) or rows (pointy) are indented. See below. |
 | `boundary` | array | no | List of hex IDs for non-rectangular maps. |
 | `coordinates` | object | no | User coordinate labeling. See Section 4.4. |
 | `scale` | object | no | Physical scale of the map. |
 | `scale.meters_per_hex` | number | no | Distance across a hex in meters. |
 | `geo` | object | no | Geographic anchoring. See below. |
+
+PDS: i'm not sure how a non-rectangular map would work
+since most of the coordinate stuff depends on it.  
+Perhaps we always require rows/columns but
+have optional valid region which references a hex geometry
+defined later.  only hexes in that region would be rendered
 
 #### hex_top
 
@@ -377,6 +394,8 @@ terrain:
       name: "River"
 ```
 
+PDS: this example could be a lot better
+
 #### Type identifiers
 
 Type identifiers MUST be lowercase ASCII with underscores for word
@@ -394,6 +413,8 @@ snake_case to Title Case: `light_woods` → "Light Woods",
 | `directed` | boolean | no | Edge types only. If true, the feature is asymmetric (e.g., cliff). Default: false. |
 | `style` | object | no | Display hints (color, pattern, etc). See below. |
 | `properties` | object | no | Arbitrary additional properties. |
+
+PDS: properties is where gameplay semantics would be stored?
 
 The `style` object carries optional rendering hints:
 
@@ -417,6 +438,8 @@ design.
 
 A `vertex` subsection MAY also be included for games that annotate
 vertices (bridges, crossroads). It follows the same structure as `edge`.
+
+PDS: but vertex not directed?
 
 **The format does not define a fixed set of terrain types.** Each map
 declares its own vocabulary. This is intentional: terrain types are
@@ -445,6 +468,8 @@ defaults:
 | `hex.terrain` | string | Default hex terrain type. |
 | `hex.elevation` | integer | Default elevation level. |
 | `edge` | object | Default properties for all edges (rare). |
+
+PDS: similarly vertex should be legal but rare
 
 If `defaults.hex.terrain` is specified, hexes not mentioned in the
 features list are assumed to exist (within the grid bounds) with that
@@ -487,6 +512,8 @@ fields are attributes applied to the selected geometry.
 | `tags` | array of strings | Semantic tags (e.g., `"victory"`, `"fortified"`). |
 | `properties` | object | Arbitrary key-value data. |
 
+PDS: elevation is usually hex only, but i wouldn't forbid for edge (e.g. wall?) or even vertex for some applications
+
 #### Feature ordering and precedence
 
 Features are applied in document order. When multiple features affect
@@ -497,6 +524,10 @@ with later keys overriding.
 
 This enables a layered authoring style: set broad defaults first, then
 override specific areas:
+
+PDS: nice.  should the spec mandate anything about round-trip
+or is that up to implementations?  e.g. you could read/write
+a map and get the same effective result with different formats.
 
 ```yaml
 features:
@@ -546,6 +577,9 @@ vocabulary), the hex in the address indicates the "source" side.
 For a cliff, the referencing hex is at the base; the adjacent hex
 is at the top. For a slope, the referencing hex is the lower side.
 
+PDS: this seems like a semantic distinction that isn't our concern.
+is it enough that the hex in the address indicates the 'active' side, and game interprets what that means?
+
 Both half-edges of an interior edge can be independently annotated.
 If an edge has annotations from both adjacent hexes, both are valid
 and coexist. This allows asymmetric features: e.g., a cliff that is
@@ -569,6 +603,12 @@ The edges crossed by the path are implicit — derived from the relative
 positions of consecutive hexes. Implementations compute these during
 parsing.
 
+PDS: consecutive hexes SHOULD be adjacent? or it's
+find to have a path with gaps?
+
+PDS: is there a shorthand for creating a path between
+two hexes (or edges) with a unique shortest-path?
+
 #### Along-edge paths
 
 A path that follows hex edges. Used for rivers, walls, and other
@@ -584,6 +624,9 @@ features:
 
 Each edge in the sequence SHOULD share a vertex with the next edge
 (i.e., the path should be connected).
+
+PDS: or that feature is at least partially invalid, or is 
+it fine to have paths with gaps?
 
 #### Regions
 
@@ -609,6 +652,8 @@ features:
 |-------|------|----------|-------------|
 | `region.id` | string | no | Unique identifier for this region. |
 | `region.hexes` | array | YES | List of hex user coordinates in this region. |
+
+PDS: is there a shorthand for creating a filled boundary?
 
 #### Recommended tags
 
@@ -693,6 +738,11 @@ distinguishes vertex references from edge references:
 0304.2      # same vertex (clockwise index, see Appendix B)
 ```
 
+PDS: the vertex and edge diagrams should have the same /-\ layout
+just with labels placed slight differently.   Maybe combine
+to a single side-by-side diagrams for each orientation showing
+edges vs vertex labels.
+
 **Compass directions for vertices:**
 
 Flat-top vertices: **NE, E, SE, SW, W, NW**
@@ -738,7 +788,7 @@ meaning (Section 4.7, Edge features).
 ### 5.5 Numeric addressing
 
 As an alternative to compass directions, edges and vertices can be
-addressed by clockwise index starting from 12 o'clock:
+addressed by clockwise index starting from 12 o'clock (up):
 
 | Index | Flat-top edge | Flat-top vertex | Pointy-top edge | Pointy-top vertex |
 |-------|---------------|-----------------|-----------------|-------------------|
@@ -753,6 +803,8 @@ So `0304/1` is the first edge clockwise from 12 o'clock, and `0304.1`
 is the first vertex. Both compass and numeric forms are valid. See
 Appendix B for the full clock direction system.
 
+PDS: this is slightly confusing since this uses indices 1 to 6
+for each of vertex and edge (fine), but doesn't show the corresponding clock direction.   Adding the clock hour to the table would help.  
 ---
 
 ## 6. Hex Geometry Reference
@@ -761,6 +813,8 @@ This section defines the mathematical relationships between coordinate
 systems. It is normative: implementations MUST use these conversions.
 
 ### 6.1 Cube coordinates
+
+PDS: use u/v/w
 
 Cube coordinates (x, y, z) satisfy the constraint **x + y + z = 0**.
 This constraint means any hex can be identified by two coordinates; the
@@ -782,6 +836,9 @@ hex_top and stagger.
 
 Let (col, row) be the parsed column and row, adjusted so the grid-origin
 hex is (0, 0).
+
+PDS: does this account for indexing direction (top/bottom/left/right) or does that not matter for the math, it can just be 
+flip transform into screen coords?
 
 **Flat-top, stagger: low (first column is lower):**
 ```
@@ -1327,6 +1384,8 @@ Edges and vertices alternate around the hex. Which positions are edges
 and which are vertices depends on `hex_top`:
 
 ### Flat-top (edges at even hours, vertices at odd hours)
+
+PDS: this diagram is a great idea but needs work.
 
 ```
          12 (N edge)
