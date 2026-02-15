@@ -15,9 +15,9 @@ correct graph structure (hex count, edge adjacencies, path connectivity).
 forest, swamp, city, major city), rivers on edges, roads and railroads
 as paths, fortification regions, victory hexes.
 
-**Scale:** 16 km/hex, 22x15 grid, flat-top.
+**Scale:** 16 km/hex, 14x11 grid, flat-top.
 
-**Complexity:** Low. Ideal first complete encoding.
+**Complexity:** Low. Complete implementation.
 
 ### Panzer Blitz / Panzer Leader (Avalon Hill, 1970/1974)
 
