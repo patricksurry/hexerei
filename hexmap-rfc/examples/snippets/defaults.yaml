@@ -1,0 +1,6 @@
+defaults:
+  hex:
+    terrain: clear
+    elevation: 0
+  edge: {}
+  vertex: {}

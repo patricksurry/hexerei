@@ -1,0 +1,14 @@
+grid:
+  hex_top: flat
+  columns: 22
+  rows: 15
+  stagger: low
+  coordinates:
+    label: XXYY
+    origin: top-left
+    first: [1, 1]
+  geo:
+    scale: 16000              # meters per hex
+    anchor: [54.5, 35.0]      # lat, lng of hex 0101 center
+    bearing: 0                 # degrees, 0 = north up
+    projection: mercator

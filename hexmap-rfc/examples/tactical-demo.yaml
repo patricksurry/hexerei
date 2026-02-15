@@ -1,0 +1,79 @@
+hexmap: "1.0"
+
+metadata:
+  id: tactical-demo
+  title: "Tactical Demo - Hill 231"
+
+grid:
+  hex_top: flat
+  columns: 10
+  rows: 8
+  geo:
+    scale: 250
+
+terrain:
+  hex:
+    clear: {}
+    woods: {}
+    town: {}
+    rough: {}
+  edge:
+    slope:
+      directed: true
+    stream: {}
+    wall:
+      name: "Stone Wall"
+  vertex:
+    bridge: {}
+  path:
+    road: {}
+
+defaults:
+  hex:
+    terrain: clear
+    elevation: 0
+
+features:
+  # Wooded hills
+  - hexes: ["0303", "0304"]
+    terrain: woods
+    elevation: 1
+
+  # The hilltop
+  - hex: "0403"
+    terrain: rough
+    elevation: 2
+    label: "Hill 231"
+
+  - hex: "0404"
+    terrain: rough
+    elevation: 1
+
+  # Town
+  - hex: "0504"
+    terrain: town
+    label: "Bergdorf"
+
+  # Slope hexsides around the hill (directed: 0403 is the "active" side)
+  - edges: ["0403/N", "0403/NE", "0403/SE",
+            "0403/S", "0403/SW", "0403/NW"]
+    terrain: slope
+
+  # Stream south of town
+  - edge_path: ["0505/SW", "0505/S", "0605/SW"]
+    terrain: stream
+    label: "Bergbach"
+
+  # Stone walls around town
+  - edges: ["0504/NW", "0504/NE"]
+    terrain: wall
+
+  # Bridge over the stream
+  - vertex: "0505.SW"
+    terrain: bridge
+    label: "Stone Bridge"
+
+  # Road through the valley
+  - path: ["0104", "0204", "0304", "0404", "0504", "0604"]
+    terrain: road
+    id: main-road

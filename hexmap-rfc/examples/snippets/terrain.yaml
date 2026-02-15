@@ -1,0 +1,29 @@
+terrain:
+  hex:
+    clear:
+      name: "Clear"
+    forest: {}
+    swamp: {}
+    city: {}
+    major_city:
+      name: "Major City"
+
+  edge:
+    river: {}
+    cliff:
+      directed: true
+    wall:
+      name: "Stone Wall"
+    slope:
+      directed: true
+
+  vertex:
+    bridge: {}
+    crossroads: {}
+    ford: {}
+
+  path:
+    road: {}
+    railroad: {}
+    river:
+      name: "River"
