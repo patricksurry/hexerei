@@ -64,13 +64,13 @@ PDS: let's collect a set of real-world examples and review.
    cannot parse "A" and "AA" with a single rule.
    in general could use an invertible u/v/w <=> label function but don't really want that complexity
 
-8. **Compact edge notation.** Rivers with many edges are still verbose
-   even with `edge_path`. The geometry expression language (Appendix C)
-   addresses this for v2.
-PDS: yes we should solve for a version of appendix C
+8. **HexPath tie-breaking rules.** The current spec mentions a standard
+   nudge but does not define the algorithm in detail. Should the exact
+   pathing algorithm be normative to ensure identical geometry across
+   implementations?
 
-9. **Feature ordering guarantees.** The spec says "later entries override."
-   Should implementations also support explicit priority/z-order for
-   cases where document order isn't the desired precedence?
-PDS: worth exploring, but maybe back-references and labeled feature groups would be enough?
-seems like there is lots of prior art for how to do stuff like that in other structured doc types
+9. **Feature ordering and performance.** For extremely large maps with
+   thousands of features, document order overrides may become a
+   performance bottleneck. Should we consider a tiled or spatial index
+   for features?
+

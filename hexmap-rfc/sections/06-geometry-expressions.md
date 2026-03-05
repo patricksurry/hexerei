@@ -1,95 +1,61 @@
-## Geometry Expressions
+## Geometry Expressions (HexPath DSL)
 
-This section defines the compact expression language used to generate,
-combine, and transform collections of map geometry.
+HexPath is a domain-specific language (DSL) for concisely defining collections
+of hexes, edges, or vertices. It is the primary mechanism for specifying
+geometry in the HexMap format.
 
-### Overview
+### Atoms (Coordinates & References)
 
-The `features` list (Section 4.7) allows defining map content by targeting
-specific geometry. While explicit lists of coordinates are sufficient for
-machine generation, human authoring and complex map logic benefit from a
-richer expression language.
+*   **Hex**: `[column][row]` (e.g., `0105`, `A12`).
+*   **Edge**: `[hex]/[dir]` (e.g., `0105/N`).
+*   **Vertex**: `[hex].[vdir]` (e.g., `0105.NE`).
+*   **Reference**: `@[id]` (e.g., `@moscow`). Refers to the geometry collection
+    defined by a previously named feature or region.
+*   **Escaped Coords**: `'[string]'`. Use single quotes to escape coordinates
+    that start with digits or conflict with direction keys (e.g., `'1234'`, `'1n'`).
 
-Every geometry expression resolves to a **Geometry Collection**:
-a set of unique hexes, edges, or vertices.
+### Relative Steps
 
-### Geometry Selectors
+Steps move the "cursor" from the current position.
+*   **Syntax**: `[count][dir]`
+*   **Examples**: `3n` (3 steps North), `1sw` (1 step South-West), `ne` (shorthand for `1ne`).
+*   **Start-of-Path Logic**: If a path starts with a relative step followed by
+    an absolute atom (e.g., `1n 1701`), the first item in the collection is the
+    location calculated relative to that atom. This is useful for describing
+    off-board entry points.
 
-A feature defines its target geometry using one of the following root keys.
-The value can be a simple list of coordinates (implicit union) or a
-structured geometry expression.
+### Connectivity & Operators
 
-| Key | Collection Type | Description |
-|-----|-----------------|-------------|
-| `hexes` | `HexCollection` | Set of hexes. |
-| `edges` | `EdgeCollection` | Set of edges. |
-| `vertices` | `VertexCollection` | Set of vertices. |
+*   **Space (` `)**: **Shortest Path.** Connects the previous cursor to the next
+    atom using the geometric shortest path. If multiple shortest paths exist,
+    the implementation uses a standard tie-breaking rule (nudge).
+*   **Nudge (`>[dir]`)**: Breaks ties in shortest paths or forces a specific
+    directional bias.
+    *   Example: `a1 >ne c3`. Prefer the shortest path that "leans" toward the
+        North-East.
+*   **Comma (`,`)**: **Jump.** Ends the current segment. The next atom adds to
+    the collection without a connecting path from the previous cursor.
+*   **Semicolon (`;`)**: **Close.** Connects the current cursor back to the
+    start of the current segment and ends the segment.
+*   **Exclamation (`!`)**: **Close & Fill.** Closes the segment (like `;`) and
+    then adds all items contained within the resulting boundary to the collection.
+*   **Plus (`+`)**: **Include Mode.** (Default) Switches the cursor to add
+    subsequent atoms and paths to the collection.
+*   **Minus (`-`)**: **Exclude Mode.** Switches the cursor to subtract
+    subsequent atoms and paths from the collection.
 
-**Implicit Union:** If the value is a list, it represents the union of
-all elements in the list.
+The `+` and `-` operators are **modal switches**. They affect all following
+segments until the mode is changed again.
 
-**Set Operations:** A feature can explicitly define set operations:
-```yaml
-hexes:
-  include: <expression>   # Base set (default if explicit keys omitted)
-  exclude: <expression>   # Subtracted from the base set
-  intersect: <expression> # Intersection with the base set
-```
+### Type Inference
 
-### Expression Syntax
+The collection type (Hex, Edge, or Vertex) is inferred from the first absolute
+atom encountered in the expression. All subsequent atoms and paths in that
+expression must resolve to the same type.
 
-Expressions are used within selectors to generate or transform collections.
-
-**1. Literals and References**
-
-*   **Literals**: `"0101"` (Hex), `"0101/N"` (Edge), `"0101.N"` (Vertex).
-*   **References**: `"@feature-id"` resolves to the geometry collection
-    defined by the referenced feature.
-
-**2. Generators**
-
-**`range`** (Hexes): Selects a rectangular span of coordinates.
-
-```yaml
-{ range: ["0101", "0505"] }
-```
-
-**`path`** (Polymorphic): Selects the shortest path between points.
-Returns Hexes, Edges, or Vertices depending on the root selector.
-
-```yaml
-{ path: ["start", "end"], nudge: "N", loop: true }
-```
-
-**3. Topological Operators**
-
-Operators transform a collection of one type into another or filter it.
-
-| Operator | Input -> Output | Description |
-|----------|-----------------|-------------|
-| `boundary` | Hex -> Edge | Edges separating the set from the outside. |
-| `inside` | Hex -> Edge | Edges strictly interior to the set. |
-| `fill` | EdgePath -> Hex | Hexes enclosed by a closed edge loop. |
-| `touching` | Any -> Any | Items adjacent to any item in the target. |
-
-### One-Sided Edges
-
-When applying attributes to an `EdgeCollection`, the `side` modifier
-controls which side of the edge receives the property.
-
-| Value | Meaning |
-|-------|---------|
-| `both` (default) | The edge itself (e.g., river). |
-| `in` | The side facing the source hexes (e.g., cliff top). |
-| `out` | The side facing away from source (e.g., cliff base). |
-| `left`/`right` | Relative to path direction. |
-
-This conceptually separates the *geometry* (the edge) from the *semantics*
-(the active side).
-
+### Example: A Forested Ridge with a Clearing
 ```yaml
 features:
-  - edges: { boundary: "@fortress" }
-    terrain: wall
-    side: out
+  - hexes: "0105 1005 - 0505"   # A path of forest, minus one hex
+    terrain: forest
 ```

@@ -21,9 +21,3 @@ terrain:
     bridge: {}
     crossroads: {}
     ford: {}
-
-  path:
-    road: {}
-    railroad: {}
-    river:
-      name: "River"

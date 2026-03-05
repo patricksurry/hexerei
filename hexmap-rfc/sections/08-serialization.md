@@ -27,7 +27,7 @@ the same JSON Schema as a native JSON document.
 ### Validation
 
 Implementations SHOULD validate documents against the JSON Schema defined
-in Section 10. Validation MUST be performed against the JSON representation
+in Section 11. Validation MUST be performed against the JSON representation
 (converting from YAML first if necessary).
 
 ### Round-trip fidelity

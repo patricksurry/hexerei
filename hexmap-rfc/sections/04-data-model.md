@@ -42,86 +42,54 @@ them through unchanged.
 
 ### Grid Geometry
 
-The `grid` object defines the hex grid's physical geometry and shape.
+The `grid` object defines the hex grid's visual arrangement and logical extent.
 It is REQUIRED.
 
 {{../examples/snippets/grid.yaml}}
 
-PDS: what about stagger taking values like "<" and ">"?  Where "<" means that the first
-row(column) is offset towards increasing column(row) indices, and ">" vice versa.
-Is that problematic for YAML?  It's visually 'readable' and is clear about how
-indices increasing LR/TB vs RL/BT would work.
-
-PDS: alternative, use offset: indent vs hanging or some variation, since that's
-a familiar concept for first line of text vs next
-
-PDS: we need to explain a bit about how row, col relates to p, q (are they the same?)
-and u,v,w in an informal way (maybe a diagram) early on, and then refer to details later.
-
-PDS: for labeling, might there also be schemes that label along two of the u/v/w axes
-rather than just rows/columns?  Maybe labeling scheme based on axis letters (repeated
-if padded) with lower case meaning numeric and upper meaning letters?   e.g. Prrr
-would use P as letters, 3-digit r as number?
-
-
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `hex_top` | string | YES | `"flat"` or `"pointy"`. |
-| `columns` | integer | YES | Number of columns. |
-| `rows` | integer | YES | Number of rows. |
+| `hexes` | string | YES | HexPath defining the valid hexes in the map. |
 | `stagger` | string | no | `"low"` or `"high"`. Default: `"low"`. See below. |
-| `boundary` | array | no | Hex IDs of valid hexes for non-rectangular maps. |
+| `columns` | integer | no | Logical column count (for labeling hints). |
+| `rows` | integer | no | Logical row count (for labeling hints). |
 | `coordinates` | object | no | User coordinate labeling. See Section 4.4. |
 | `geo` | object | no | Geographic scale and anchoring. See below. |
 
-The `columns` and `rows` fields are always REQUIRED. They define the
-bounding rectangle and coordinate space for the map. For non-rectangular
-maps, all hexes within the bounding rectangle exist by default (if a
-default terrain is set in Section 4.6). The optional `boundary` field
-restricts which hexes are valid — hexes outside the boundary but within
-the bounding rectangle do not exist. If `boundary` is absent and no
-default terrain is set, only hexes explicitly mentioned in features exist.
+#### grid.hexes (The Map Boundary)
+
+The `hexes` field defines the map's boundary using the HexPath DSL. This
+mandatory field determines which hexes exist in the coordinate space. Any
+hex not included in this collection is considered "off-map" and cannot
+contain features.
+
+For standard rectangular maps, the boundary is defined by the four corner
+hexes and the fill operator (`!`):
+*   `"0101 1001 1010 0110 !"` (10x10 rectangle)
+
+For irregular maps (e.g., staggering offsets on the bottom edge), a
+directional nudge can be used to control the inclusion of specific hexes:
+*   `"A1 A10 >N K10 K1 !"` (Staggered bottom edge)
 
 #### hex_top
 
 Two values: `"flat"` (flat edge at 12 o'clock) or `"pointy"` (vertex at
-12 o'clock). These are the standard terms used across the hex grid
-literature.
+12 o'clock).
 
 #### stagger
 
 When hex columns (flat-top) or rows (pointy-top) are arranged in a
-rectangular grid, alternating columns/rows must be offset. The `stagger`
-field specifies which ones are shifted.
+rectangular grid, alternating columns/rows must be offset.
 
 | Value | Flat-top meaning | Pointy-top meaning |
 |-------|------------------|--------------------|
 | `"low"` (default) | Odd columns sit lower | Odd rows sit further right |
 | `"high"` | Odd columns sit higher | Odd rows sit further left |
 
-"Odd" columns/rows are those whose index (after applying `first`) is odd:
-columns 1, 3, 5, ... when `first` starts at 1. `"low"` corresponds to
-Red Blob Games' "odd-q" (flat-top) or "odd-r" (pointy-top).
-
-The following diagrams show the vertical offset of hex centers for flat-top
-grids. Each label shows the hex user coordinate (XXYY format, first: [1,1]):
-
-```
-stagger: low                     stagger: high
-(odd columns sit lower)          (odd columns sit higher)
-
-   c1     c2     c3                c1     c2     c3
-
-         0201                    0101          0301
-  0101          0301                    0201
-         0202                    0102          0302
-  0102          0302                    0202
-         0203                    0103          0303
-  0103          0303                    0203
-```
-
-For pointy-top grids, the pattern is analogous but applied to rows
-instead of columns, with the offset being horizontal rather than vertical.
+"Odd" columns/rows are those whose index (after applying `first`) is odd.
+`"low"` corresponds to Red Blob Games' "odd-q" (flat-top) or "odd-r"
+(pointy-top).
 
 #### geo (geographic anchoring and scale)
 
@@ -369,8 +337,8 @@ and MAY specify **Attributes** (properties to apply).
 #### Geometry Selectors
 
 A feature defines its target geometry using one of the following root keys.
-The value can be a simple list of coordinates (implicit union) or a
-structured geometry expression.
+The value is a **HexPath** string (Section 6) that resolves to a collection
+of the appropriate type.
 
 | Key | Collection Type | Description |
 |-----|-----------------|-------------|
@@ -378,27 +346,9 @@ structured geometry expression.
 | `edges` | `EdgeCollection` | Set of edges. |
 | `vertices` | `VertexCollection` | Set of vertices. |
 
-**Implicit Union:** If the value is a list, it represents the union of
-all elements in the list.
-
-**Set Operations:** A feature can explicitly define set operations:
-```yaml
-hexes:
-  include: <expression>   # Base set (default if explicit keys omitted)
-  exclude: <expression>   # Subtracted from the base set
-  intersect: <expression> # Intersection with the base set
-```
-
-#### Geometry Expressions
-
-See **Section 6: Geometry Expressions** for details on advanced selectors,
-set operations (`include`, `exclude`), generators (`range`, `path`), and
-topological operators (`boundary`, `inside`).
-
-#### One-Sided Edges
-
-See **Section 6: Geometry Expressions** for details on the `side` modifier.
-
+Exactly one primary selector key (`hexes`, `edges`, or `vertices`) MUST be
+present per feature entry. Any subtraction or complex set logic is
+handled within the HexPath string using the `+` and `-` operators (Section 6).
 
 #### Feature attributes
 
@@ -424,31 +374,22 @@ override specific areas:
 
 ```yaml
 features:
-  # Base terrain: everything is clear (or use defaults section)
-  - hexes: ["0301", "0302", "0303", "0304", "0305",
-            "0401", "0402", "0403", "0404", "0405"]
+  # Base terrain: everything is forest (reference to grid.hexes)
+  - hexes: "@grid-boundary"
     terrain: forest
 
-  # Override: one hex in the forest is actually a town
-  - hex: "0403"
-    terrain: town
+  # Override: a forest clearing
+  - hexes: "0403"
+    terrain: clear
     label: "Waldstadt"
 ```
-
-**Round-trip considerations.** The format does not mandate round-trip
-fidelity: an implementation that reads and writes a HexMap document MAY
-produce a structurally different file (e.g., flattened features, reordered
-entries) as long as the effective result is identical. Two documents are
-semantically equivalent if, after applying defaults and feature
-precedence, every hex, edge, and vertex has the same terrain, elevation,
-tags, and properties. Implementations that need to preserve authoring
-structure SHOULD treat the features list as opaque and pass it through.
 
 #### Hex features
 
 ```yaml
 features:
-  - hex: "0507"
+  - id: moscow
+    hexes: "0507"
     terrain: major_city
     label: "Moscow"
     elevation: 1
@@ -456,106 +397,50 @@ features:
     properties:
       victory_points: 3
 
-  - hexes: ["0302", "0303", "0402"]
+  - hexes: "0302 0303, 0402" # A path of two hexes, and one jump
     terrain: forest
 ```
 
 #### Edge features
 
-Edges are referenced using the addressing notation `hex/direction`
-(see Section 5):
+Edges are referenced using the HexPath notation `hex/direction`:
 
 ```yaml
 features:
-  - edges: ["0304/N", "0304/NE", "0404/N"]
+  - edges: "0304/N 0304/NE 0404/N" # A path of three edges
     terrain: river
 
-  - edge: "0503/SE"
+  - edges: "0503/SE"
     terrain: cliff    # directed: 0503 is the "active" side
 ```
 
-For directed edge types (where `directed: true` in the terrain
-vocabulary), the hex in the address indicates the "active" side.
-The format does not prescribe the semantic meaning of "active" — that
-is determined by the game. For example, a game might define `cliff`
-such that the active side is the base (climbing up costs extra) or the
-top (falling risk). The format provides the mechanism for asymmetric
-annotation; the game provides the interpretation.
+#### Vertex features
 
-Both half-edges of an interior edge can be independently annotated.
-If an edge has annotations from both adjacent hexes, both are valid
-and coexist. This allows asymmetric features: e.g., a cliff that is
-also a river.
-
-#### Through-hex paths
-
-A path that passes through hex centers, crossing the edge between each
-consecutive pair. Used for roads, railroads, and any feature that
-traverses hexes.
+Vertices are referenced using the HexPath notation `hex.direction`:
 
 ```yaml
 features:
-  - path: ["0104", "0204", "0304", "0404", "0504"]
-    terrain: road
-    id: moscow-highway
-    label: "Moscow Highway"
+  - vertices: "0503.NE"
+    terrain: bridge
 ```
-
-Consecutive hexes in a path MUST be adjacent (sharing an edge). A path
-with non-adjacent consecutive hexes is a validation error. The edges
-crossed by the path are implicit — derived from the relative positions
-of consecutive hexes.
-
-A shorthand for straight-line paths between two hexes is deferred to the
-geometry expression language (Appendix C, future).
-
-PDS: is the consecutive hex/edge requirement in paths actually necessary?
-does something break if we allow paths with gaps?  brainstorm as part of Appendix C.
-
-#### Along-edge paths
-
-A path that follows hex edges. Used for rivers, walls, and other
-features that live on hexsides.
-
-```yaml
-features:
-  - edge_path: ["0306/NE", "0306/N", "0206/NE", "0206/N"]
-    terrain: river
-    id: nara-river
-    label: "Nara River"
-```
-
-Consecutive edges in an edge path MUST share a vertex (i.e., the path
-must be connected). A disconnected sequence is a validation error. To
-represent a feature with gaps, use separate edge_path entries.
 
 #### Regions
 
-A named group of hexes. Regions can set terrain and tags on all
-member hexes.
+A region is simply a feature with an `id` and a `hexes` collection. Other
+features can refer to this region by ID using the `@` prefix in a HexPath.
 
 ```yaml
 features:
-  - region:
-      id: soviet-fortifications
-      hexes: ["0805", "0905", "1005", "1105"]
+  - id: soviet-fortifications
+    hexes: "0805 1105" # Path from 0805 to 1105
     tags: [fortified]
     label: "Soviet Fortification Line"
 
-  - region:
-      id: german-entry-west
-      hexes: ["0101", "0102", "0103", "0104", "0105"]
+  - id: german-entry-west
+    hexes: "0101 0105" # Path from 0101 to 0105
     tags: [entry]
     label: "German Entry Area"
 ```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `region.id` | string | no | Unique identifier for this region. |
-| `region.hexes` | array | YES | List of hex user coordinates in this region. |
-
-A shorthand for regions defined by a boundary (fill-from-edge) is
-deferred to the geometry expression language (Appendix C, future).
 
 #### Recommended tags
 

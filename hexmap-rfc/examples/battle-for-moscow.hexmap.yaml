@@ -2,7 +2,7 @@ hexmap: "1.0"
 
 metadata:
   id: battle-for-moscow
-  version: "1.1"
+  version: "1.2"
   title: "Battle for Moscow"
   description: "Introductory wargame representing the German advance on Moscow, 1941."
   designer: "Frank Chadwick"
@@ -14,9 +14,11 @@ metadata:
 
 grid:
   hex_top: flat
+  # Staggered bottom edge: even columns only go to row 10.
+  hexes: "0101 1401 1410 >N 0111 !"
+  stagger: high # Odd columns (01, 03...) are shifted UP
   columns: 14
   rows: 11
-  stagger: high # Odd columns (01, 03...) are shifted UP
   coordinates:
     label: CCRR
     origin: top-left
@@ -36,7 +38,7 @@ terrain:
       properties: { defense: 2, move_cost: 3 }
       style: { color: "#cccc88" }
     city:
-      properties: { defense: 3, move_cost: 1 } # Road bonus usually applies
+      properties: { defense: 3, move_cost: 1 }
       style: { color: "#888888" }
     major_city:
       properties: { defense: 4, move_cost: 1, supply_source: true }
@@ -45,8 +47,6 @@ terrain:
   edge:
     river:
       style: { stroke: "#4444ff", stroke_width: 3 }
-  
-  path:
     road:
       style: { stroke: "#666666", stroke_width: 2 }
     railroad:
@@ -58,130 +58,112 @@ defaults:
     elevation: 0
 
 features:
-  # Map Shape (Exclude non-existent hexes in 14x11 grid)
-  # Even columns (2,4...) only go to row 10.
-  - hexes:
-      exclude: ["0211", "0411", "0611", "0811", "1011", "1211", "1411"]
-    terrain: "off_map" # Or just exclude from mesh entirely
-
   # === Cities ===
 
-  - hexes: ["0105", "0205"]
+  - hexes: "0105 0205"
     terrain: city
     label: "Smolensk"
 
-  - hexes: ["0601", "0602"]
+  - hexes: "0601 0602"
     terrain: city
     label: "Rzhev"
 
-  - hexes: ["0603", "0604"]
+  - hexes: "0603 0604"
     terrain: city
     label: "Vyazma"
 
-  - hex: "0805"
+  - hexes: "0805"
     terrain: city
     label: "Kaluga"
 
-  - hex: "0207"
+  - hexes: "0207"
     terrain: city
     label: "Roslavl"
 
-  - hex: "0409"
+  - hexes: "0409"
     terrain: city
     label: "Bryansk"
 
-  - hex: "0809"
+  - hexes: "0809"
     terrain: city
     label: "Orel"
 
-  - hex: "1107"
+  - hexes: "1107"
     terrain: city
     label: "Tula"
     tags: [victory]
 
-  - hex: "1406"
+  - hexes: "1406"
     terrain: city
     label: "Ryazan"
 
-  - hexes: ["1301", "1401"]
+  - hexes: "1301 1401"
     terrain: city
     label: "Kalinin"
     tags: [victory]
 
-  - hexes: ["1202", "1203"]
+  - hexes: "1202 1203"
     terrain: major_city
     label: "Moscow"
     tags: [victory]
     properties: { victory_points: 10 }
 
   # === Forests ===
-  # Approximated based on map visual
 
-  # North forests (around Rzhev/Kalinin)
-  - hexes: 
-      range: ["0101", "0502"]
+  - hexes: "0101 0501 0502 0102 !" # Rectangular-ish forest block
     terrain: forest
     
-  - hexes: ["0701", "0801", "0901", "1001", "1101"]
+  - hexes: "0701 1101"
     terrain: forest
 
-  # Central forests (Vyazma/Kaluga gap)
-  - hexes: ["0302", "0402", "0403", "0502", "0503"]
+  - hexes: "0302 0402, 0403, 0502 0503"
     terrain: forest
 
-  # Bryansk forests
-  - hexes: ["0109", "0209", "0309", "0408", "0508"]
+  - hexes: "0109 0309, 0408 0508"
     terrain: forest
 
-  # Tula woods
-  - hexes: ["1007", "1008", "1108"]
+  - hexes: "1007 1008, 1108"
     terrain: forest
 
   # === Rivers ===
-  # Simplified paths for major rivers
 
-  - edges:
-      path: ["0104", "0204", "0304", "0404"]
+  - edges: "0104/N 0204/N 0304/N 0404/N"
     terrain: river
     label: "Dneiper"
 
-  - edges:
-      path: ["0605", "0705", "0805", "0905", "1006", "1106"]
+  - edges: "0605/N 0705/N 0805/N 0905/N 1006/N 1106/N"
     terrain: river
     label: "Oka"
 
-  - edges:
-      path: ["1002", "1102", "1202", "1303"]
+  - edges: "1002/N 1102/N 1202/N 1303/N"
     terrain: river
-    label: "Volga" # Near Kalinin
+    label: "Volga"
 
   # === Roads and Railroads ===
-  # Connecting the cities
 
-  - path: ["0205", "0304", "0404", "0503", "0603" ]
+  - edges: "0205 0304 0404 0503 0603"
     terrain: railroad
     label: "Smolensk-Vyazma Rail"
 
-  - path: ["0603", "0703", "0803", "0902", "1002", "1102", "1202"]
+  - edges: "0603 1202"
     terrain: railroad
     label: "Vyazma-Moscow Rail"
 
-  - path: ["0809", "0908", "1008", "1107"]
+  - edges: "0809 0908 1008 1107"
     terrain: railroad
     label: "Orel-Tula Rail"
     
-  - path: ["1107", "1106", "1105", "1104", "1203"]
+  - edges: "1107 1106 1105 1104 1203"
     terrain: railroad
     label: "Tula-Moscow Rail"
 
-  - path: ["0409", "0508", "0607", "0706", "0805"]
+  - edges: "0409 0508 0607 0706 0805"
     terrain: road
     label: "Bryansk-Kaluga Road"
 
-  # === Regions / Setup Zones ===
+  # === Setup Zones ===
   
-  - region:
-      id: german_setup
-      hexes: { range: ["0101", "0411"] }
+  - id: german_setup
+    hexes: "0101 0401 0411 0111 !"
     label: "German Start Line"
     tags: [setup]

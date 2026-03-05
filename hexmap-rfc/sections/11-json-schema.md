@@ -36,17 +36,13 @@ The normative JSON Schema for the HexMap format is defined below.
     },
     "grid": {
       "type": "object",
-      "required": ["hex_top", "columns", "rows"],
+      "required": ["hex_top", "hexes"],
       "properties": {
         "hex_top": { "enum": ["flat", "pointy"] },
+        "hexes": { "type": "string" },
+        "stagger": { "enum": ["low", "high"], "default": "low" },
         "columns": { "type": "integer", "minimum": 1 },
         "rows": { "type": "integer", "minimum": 1 },
-        "stagger": { "enum": ["low", "high"], "default": "low" },
-        "boundary": {
-          "type": "array",
-          "items": { "type": "string" },
-          "minItems": 1
-        },
         "coordinates": {
           "type": "object",
           "properties": {
@@ -86,8 +82,7 @@ The normative JSON Schema for the HexMap format is defined below.
       "properties": {
         "hex": { "$ref": "#/$defs/TerrainVocabulary" },
         "edge": { "$ref": "#/$defs/TerrainVocabulary" },
-        "vertex": { "$ref": "#/$defs/TerrainVocabulary" },
-        "path": { "$ref": "#/$defs/TerrainVocabulary" }
+        "vertex": { "$ref": "#/$defs/TerrainVocabulary" }
       }
     },
     "defaults": {
@@ -157,127 +152,28 @@ The normative JSON Schema for the HexMap format is defined below.
     "GeometrySelector": {
       "oneOf": [
         {
-          "properties": { "hexes": { "$ref": "#/$defs/HexExpression" } },
+          "type": "object",
+          "properties": { 
+            "hexes": { "type": "string" }
+          },
           "required": ["hexes"]
         },
         {
-          "properties": { "hex": { "$ref": "#/$defs/HexExpressionLiteral" } },
-          "required": ["hex"]
-        },
-        {
-          "properties": { "edges": { "$ref": "#/$defs/EdgeExpression" } },
+          "type": "object",
+          "properties": { 
+            "edges": { "type": "string" }
+          },
           "required": ["edges"]
         },
         {
-          "properties": { "edge": { "$ref": "#/$defs/EdgeExpressionLiteral" } },
-          "required": ["edge"]
-        },
-        {
-          "properties": { "vertices": { "$ref": "#/$defs/VertexExpression" } },
+          "type": "object",
+          "properties": { 
+            "vertices": { "type": "string" }
+          },
           "required": ["vertices"]
-        },
-        {
-          "properties": { "vertex": { "$ref": "#/$defs/VertexExpressionLiteral" } },
-          "required": ["vertex"]
-        },
-        {
-          "properties": { "path": { "$ref": "#/$defs/PathExpression" } },
-          "required": ["path"]
-        },
-        {
-           "title": "Region (Syntactic Sugar for Hexes)",
-           "properties": {
-             "region": {
-                "type": "object",
-                "required": ["hexes"],
-                "properties": {
-                    "id": { "type": "string" },
-                    "hexes": { "$ref": "#/$defs/HexExpression" }
-                }
-             }
-           },
-           "required": ["region"]
         }
       ]
-    },
-
-    "HexExpression": {
-      "oneOf": [
-        { "type": "array", "items": { "type": "string" } },
-        { "$ref": "#/$defs/GeometrySetOps" },
-        { "$ref": "#/$defs/GeneratorsAndOperators" }
-      ]
-    },
-    "HexExpressionLiteral": { "type": "string" },
-
-    "EdgeExpression": {
-      "oneOf": [
-        { "type": "array", "items": { "type": "string" } },
-        { "$ref": "#/$defs/GeometrySetOps" },
-        { "$ref": "#/$defs/GeneratorsAndOperators" }
-      ]
-    },
-    "EdgeExpressionLiteral": { "type": "string" },
-
-    "VertexExpression": {
-      "oneOf": [
-        { "type": "array", "items": { "type": "string" } },
-        { "$ref": "#/$defs/GeometrySetOps" },
-        { "$ref": "#/$defs/GeneratorsAndOperators" }
-      ]
-    },
-    "VertexExpressionLiteral": { "type": "string" },
-    
-    "PathExpression": {
-       "type": "array",
-       "items": { "type": "string" },
-       "minItems": 2
-    },
-
-    "GeometrySetOps": {
-      "type": "object",
-      "properties": {
-        "include": { "$ref": "#/$defs/AnyExpression" },
-        "exclude": { "$ref": "#/$defs/AnyExpression" },
-        "intersect": { "$ref": "#/$defs/AnyExpression" }
-      },
-      "additionalProperties": false
-    },
-
-    "GeneratorsAndOperators": {
-      "type": "object",
-      "properties": {
-        "range": {
-          "type": "array",
-          "items": { "type": "string" },
-          "minItems": 2,
-          "maxItems": 2
-        },
-        "path": {
-          "type": "array",
-          "items": { "type": "string" },
-          "minItems": 2
-        },
-        "nudge": { "type": "string" },
-        "loop": { "type": "boolean" },
-        
-        "boundary": { "$ref": "#/$defs/AnyExpression" },
-        "inside": { "$ref": "#/$defs/AnyExpression" },
-        "fill": { "$ref": "#/$defs/AnyExpression" },
-        "touching": { "$ref": "#/$defs/AnyExpression" }
-      },
-      "additionalProperties": false
-    },
-
-    "AnyExpression": {
-        "oneOf": [
-            { "type": "string" },
-            { "type": "array", "items": { "type": "string" } },
-            { "$ref": "#/$defs/GeometrySetOps" },
-            { "$ref": "#/$defs/GeneratorsAndOperators" }
-        ]
     }
   }
 }
 ]]></sourcecode>
-

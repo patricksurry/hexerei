@@ -6,18 +6,18 @@ referenced.
 
 ### Grammar
 
-The addressing notation follows this grammar (ABNF-style):
+The addressing notation for atoms follows this grammar (ABNF-style):
 
 ```
+atom        = hex-ref / edge-ref / vertex-ref / ref-id
 hex-ref     = user-coord
 edge-ref    = user-coord "/" direction
 vertex-ref  = user-coord "." direction
+ref-id      = "@" identifier
 direction   = compass-dir / index
 compass-dir = "N" / "NE" / "E" / "SE" / "S" / "SW" / "W" / "NW"
 index       = "1" / "2" / "3" / "4" / "5" / "6"
 ```
-
-PDS: user-coord | identifier (maybe identifier needs a prefix to avoid name clash?)
 
 Where `user-coord` is a string matching the label pattern defined in
 `grid.coordinates` (e.g., `"0304"` for XXYY).
@@ -27,11 +27,13 @@ references. Indices 1-6 are clockwise from 12 o'clock (see Section 5.5).
 
 ### Hexes
 
-A hex is referenced by its user coordinate string:
+A hex is referenced by its user coordinate string or by a reference to
+another feature:
 
 ```
 0304        # XXYY format
 C4          # letter-number format
+@moscow     # reference to feature 'moscow'
 ```
 
 ### Edges
