@@ -30,9 +30,6 @@ All fields are OPTIONAL.
 | `date` | string | Publication date or year. |
 | `source` | object | Provenance information. |
 
-PDS: why is source a nested object, what is notes v description?
-check pyproject metadata to see if any other obvious optional fields like license, keywords?
-
 The `version` field tracks revisions of the map data itself (not the
 format version, which is in the top-level `hexmap` field). Use semantic
 versioning or simple incrementing numbers.
@@ -62,7 +59,6 @@ contain features.
 
 Implementations MUST calculate the logical bounding box of the map by
 analyzing the set of hexes defined here. 
-
 
 For standard rectangular maps, the boundary is defined by the four corner
 hexes and the fill operator (`!`):
@@ -103,10 +99,6 @@ grid to real-world geography.
 | `anchor_hex` | string | Which hex the anchor refers to. Default: first hex. |
 | `bearing` | number | Rotation in degrees clockwise from north. Default: 0. |
 | `projection` | string | Map projection identifier. Default: `"mercator"`. |
-
-PDS: for anchor lng,lat is more typical no? or make it an object with latitude, longitude, hex for clarity
-
-PDS: is bearing the angle between top and the compass north on the map, or the bearing of up? should we rename eg. top_bearing for clarity?
 
 Only `scale` is needed for maps that specify physical size without geographic
 positioning. The full combination of anchor, scale, bearing, and projection
@@ -188,18 +180,7 @@ Most wargames use `"top-left"` (XXYY with 01,01 in the upper-left).
 The `terrain` object defines all terrain types used on this map, organized
 by the geometry they apply to: hexes, edges, vertices, or paths.
 
-PDS: solve for 'mutually exclusive' terrain, for ease of stencilling layers
-and overriding.  could use simple primary/secondary switch, or support
-sets (lists?) of terrains that are mutually exclusive.  could support
-optional constraints on terrain (requires, implies, excludes each listing names)
-which would allow richer validation but maybe that's overkill/or an extension?
-i'd be tempted to just distinguish primary terrain (which overrides previous primary)
-from modifiers (like city/road/objective etc) which stack.
-
-
 {{../examples/snippets/terrain.yaml}}
-
-PDS: should include properties and display examples
 
 #### Type identifiers
 
@@ -219,9 +200,6 @@ snake_case to Title Case: `light_woods` -> "Light Woods",
 | `onesided` | boolean | no | Edge types only. If true, the feature is asymmetric (e.g., cliff). Vertex types are never onesided. |
 | `style` | object | no | Display hints (color, pattern, etc). See below. |
 | `properties` | object | no | Arbitrary additional properties for game-specific semantics. |
-
-PDS: is 'directed' the right word here?  it's normally about which hex side rather than
-which vertex end which is what directed implies.  perhaps onesided, or sides=one|both?
 
 The `properties` field on terrain type definitions is intended for
 gameplay-relevant data that the format itself does not interpret: movement
@@ -251,15 +229,14 @@ Style is purely advisory. Renderers MAY ignore it entirely.
 
 #### Geometry subsections
 
-The four subsections — `hex`, `edge`, `vertex`, `path` — scope terrain
+The three subsections — `hex`, `edge`, `vertex` — scope terrain
 identifiers to their geometry. The same identifier MAY appear in multiple
-subsections (e.g., `river` as both an edge type and a path type).
+subsections (e.g., `river` as both an edge type and a hex type).
 
 **When to use each subsection:**
 
 - **`hex`**: The feature fills an entire hex. Use for terrain that
-  occupies the cell: forests, cities, swamps, open water. At operational
-  scale, a wide river may be hex-filling terrain.
+  occupies the cell: forests, cities, swamps, open water.
 
 - **`edge`**: The feature is a property of a hexside. Use for linear
   features that form boundaries between hexes: rivers at tactical scale,
@@ -268,26 +245,7 @@ subsections (e.g., `river` as both an edge type and a path type).
 
 - **`vertex`**: The feature sits at a hex corner. Use for point features
   where three hexes meet: bridges, fords, crossroads, hilltop
-  observation points. Vertex terrain types are never directed.
-
-- **`path`**: The feature is a connected linear route spanning multiple
-  hexes or edges. Use for the continuous course of a named feature:
-  roads, railroads, rivers. Path features often duplicate edge features
-  (e.g., individual river hexsides as `edge` terrain for game mechanics,
-  plus the full river course as a `path` for display and identification).
-
-PDS: do we really need path as a separate thing?  use case is when
-two hex-pathed rivers run parallel in adjacent hexes.  but couldn't
-that just be two separate path-like regions? from a game perspective
-it usually only matters that a hex contains a river or not, the connectivity
-is a rendering concern which could be inferred from the region structure perhaps?
-unless you have a good argument to keep it, i'd drop.
-
-A feature like "river" may reasonably appear in all three of `hex`,
-`edge`, and `path` depending on game scale and design. This is
-intentional — the format does not prescribe which representation to use.
-
-PDS: but hex:river, edge:river have no implied relationship, right?
+  observation points. Vertex terrain types are never onesided.
 
 **The format does not define a fixed set of terrain types.** Each map
 declares its own vocabulary. This is intentional: terrain types are
@@ -305,13 +263,11 @@ features list.
 
 {{../examples/snippets/defaults.yaml}}
 
-PDS: elevation might be a bad example since it should probably default to 0 globally
-
 | Field | Type | Description |
 |-------|------|-------------|
 | `hex` | object | Default properties for all hexes. |
 | `hex.terrain` | string | Default hex terrain type. |
-| `hex.elevation` | integer | Default elevation level. |
+| `hex.elevation` | integer | Default elevation level. Default: 0. |
 | `edge` | object | Default properties for all edges (uncommon). |
 | `vertex` | object | Default properties for all vertices (uncommon). |
 
@@ -320,15 +276,6 @@ does not imply a default elevation; if `defaults.hex.elevation` is
 also desired, it must be set explicitly. Similarly, a hex that appears
 in the features list with only `terrain` set still inherits the default
 `elevation` (if one is defined).
-
-PDS: default elevation to zero
-
-If `defaults.hex.terrain` is specified, all hexes within the grid bounds
-(constrained by `boundary` if present) are assumed to exist with that
-terrain. If no default terrain is specified, only hexes explicitly
-mentioned in features exist. This provides a natural way to define
-non-rectangular maps: omit the default terrain and enumerate only the
-valid hexes in features.
 
 ### Features
 
@@ -357,7 +304,7 @@ handled within the HexPath string using the `+` and `-` operators (Section 6).
 
 #### Feature attributes
 
-PDS: all optional?
+All attribute fields are OPTIONAL.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -367,9 +314,6 @@ PDS: all optional?
 | `id` | string | Unique identifier for this feature (for cross-referencing). |
 | `tags` | string | One or more space-separated semantic tags (e.g., `"victory supply"`). |
 | `properties` | object | Arbitrary key-value data. |
-
-PDS: tags could be a space-separated list, like css class?
-PDS: terrain could be a space-separated list?  e.g. "city objective"
 
 #### Feature ordering and precedence
 
@@ -412,14 +356,13 @@ features:
     properties:
       victory_points: 3
 
-  - hexes: "0302 0303, 0402" # A path of two hexes, and one jump
+  - hexes: "0302, 0303, 0402" # Three specific hexes
     terrain: "forest"
 ```
-PDS: a connected path from 0302 to 0303 isn't illuminating for , vs space (length of 1)
 
 #### Edge features
 
-Edges are referenced using the HexPath notation `hex/direction`:
+Edges are referenced using the HexPath notation `hex/direction` or `hex@hour`:
 
 ```yaml
 features:
@@ -427,12 +370,12 @@ features:
     terrain: river
 
   - edges: "0503/SE"
-    terrain: cliff    # directed: 0503 is the "active" side
+    terrain: cliff    # onesided: 0503 is the "active" side
 ```
 
 #### Vertex features
 
-Vertices are referenced using the HexPath notation `hex.direction`:
+Vertices are referenced using the HexPath notation `hex.direction` or `hex@hour`:
 
 ```yaml
 features:

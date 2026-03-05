@@ -9,7 +9,8 @@ ad-hoc CSV/JSON with no schema.
 The HexMap format fills this gap. Its design goals are:
 
 1. **Human-readable and hand-editable.** A designer should be able to author
-   a small map in a text editor without tooling.
+   a map in a text editor without specialized tooling. YAML is the primary 
+   authoring format, chosen for its readability and support for comments.
 
 2. **Machine-validatable.** A JSON Schema enables automated validation in
    any language with a JSON Schema library.

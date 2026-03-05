@@ -105,19 +105,15 @@ Vertex directions: **NE, E, SE, SW, W, NW** (6 vertices)
                        S (v)
 ```
 
-PDS: diagram is too squashed horizontally
-
 Edge directions: **NE, E, SE, SW, W, NW** (6 edges)
 Vertex directions: **N, NE, SE, S, SW, NW** (6 vertices)
 
 ### Numeric addressing with clock hours
 
-PDS: except they're not actually addressed with the clock hour,
-or also allow a syntax like hex@hour?
+Edges and vertices can also be addressed by clockwise index (1-6) or 
+directly by their 12-position clock hour position.
 
-Edges and vertices can also be addressed by clockwise index (1-6). The
-following tables show the mapping, including the corresponding clock
-hour position from the 12-position clock system (Appendix B):
+The following tables show the mapping:
 
 **Flat-top:**
 
@@ -142,7 +138,8 @@ hour position from the 12-position clock system (Appendix B):
 | 6 | NW | 11 | | 6 | NW | 10 |
 
 So `0304/1` is the first edge clockwise from 12 o'clock, and `0304.1`
-is the first vertex. Both compass and numeric forms are valid.
+is the first vertex. Using the clock separator, these are `0304@12`
+and `0304@1`.
 
 ### Edge and vertex equivalence
 
@@ -157,6 +154,6 @@ referenced from any of them.
 Implementations MUST treat equivalent references as identical. A document
 MAY reference the same edge or vertex from different hexes in different
 feature entries. For undirected features, all references to the same
-physical edge are equivalent. For directed features (`directed: true` in
+physical edge are equivalent. For onesided features (`onesided: true` in
 the terrain vocabulary), the choice of referencing hex carries semantic
 meaning (Section 4.7, Edge features).

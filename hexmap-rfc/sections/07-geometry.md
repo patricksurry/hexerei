@@ -59,7 +59,7 @@ w = row
 v = -u - w
 ```
 
-PDS: can't we combine the two pairs of equations by introducing a stagger=0/1 parameter?
+
 
 ### Neighbor directions in cube coordinates
 

@@ -1,13 +1,11 @@
 # Appendix B: Clock Direction System
 
-PDS: we should make more of this. "secret weapon" for making the format machine-friendly?
-Perhaps MUST support for implementations, even if the user-facing docs emphasize compass directions. It makes rotation and reflection algorithms much easier to write.  how
-to clarify indexed (1-6) vs hours (1-12)?
-
-
 The clock direction system provides a unified, orientation-independent
 way to reference the 12 geometric features around a hex (6 edges and
 6 vertices), numbered 1-12 clockwise from 12 o'clock (straight up).
+
+This system is integrated into the primary addressing notation (Section 5)
+using the `hex@hour` syntax.
 
 Edges and vertices alternate around the hex. Which positions are edges
 and which are vertices depends on `hex_top`:
@@ -31,8 +29,6 @@ and which are vertices depends on `hex_top`:
                   7        6         5
                (SW v)   (S e)     (SE v)
 ```
-
-PDS: can we add a pointy version side-by-side with above?  also the NW/N/NE labels should be outside not inside
 
 | Clock | Feature | Compass | Index |
 |-------|---------|---------|-------|
@@ -70,6 +66,5 @@ The pattern: for flat-top, edges are at even clock positions (12, 2, 4,
 6, 8, 10) and vertices at odd (1, 3, 5, 7, 9, 11). For pointy-top,
 it's reversed. Mnemonic: **even hours hit flat sides**.
 
-This system is informative — compass directions remain the primary
-addressing mechanism. But clock positions are useful for algorithms and
-for compact notation in geometry expressions (Appendix C).
+Clock positions are normative for rotation and reflection algorithms
+and provide a compact notation for manual authoring.

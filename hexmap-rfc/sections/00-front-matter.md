@@ -20,8 +20,7 @@ terrain, edge features, paths, and metadata in a human-readable structure
 with a formal schema for validation. It is designed for interchange between
 map editors, game engines, renderers, and AI systems.
 
-The canonical serialization is JSON. YAML is defined as an equivalent
-authoring-friendly serialization. A JSON Schema is provided for validation
-in both cases.
-
-PDS: should yaml be the canonical version to encourage hand-authoring?
+The primary authoring serialization is YAML (version 1.2), chosen for its
+readability and support for comments. JSON (RFC 8259) is the canonical 
+machine-interchange serialization. The two formats are semantically 
+equivalent, and a single JSON Schema is provided for validation of both.
