@@ -41,15 +41,10 @@ The normative JSON Schema for the HexMap format is defined below.
         "hex_top": { "enum": ["flat", "pointy"] },
         "hexes": { "type": "string" },
         "stagger": { "enum": ["low", "high"], "default": "low" },
-        "coordinates": {
-          "type": "object",
-          "properties": {
-            "label": { "type": "string", "default": "XXYY" },
-            "origin": {
-              "enum": ["top-left", "bottom-left", "top-right", "bottom-right"],
-              "default": "top-left"
-            }
-          }
+        "label": { "type": "string", "default": "auto" },
+        "origin": {
+          "enum": ["top-left", "bottom-left", "top-right", "bottom-right"],
+          "default": "top-left"
         },
         "geo": {
           "type": "object",

@@ -49,6 +49,9 @@ It is REQUIRED.
 | `hex_top` | string | YES | `"flat"` or `"pointy"`. |
 | `hexes` | string | YES | HexPath defining the valid hexes in the map. |
 | `stagger` | string | no | `"low"` or `"high"`. Default: `"low"`. See below. |
+| `label` | string | no | Label pattern (e.g., `"XXYY"`). Default: `"auto"`. |
+| `origin` | string | no | Visual corner where numbers start. Default: `"top-left"`. |
+| `geo` | object | no | Geographic scale and anchoring. See below. |
 
 #### grid.hexes (The Map Extent)
 
@@ -118,31 +121,12 @@ The HexMap format uses two coordinate representations:
    drawing). Cube coordinates do not appear in the file.
 
 The mapping between user coordinates and cube coordinates is determined
-by the grid geometry (hex_top, stagger) and the coordinate label format.
+by the grid geometry (`hex_top`, `stagger`, `label`, `origin`).
 
-#### User coordinate label format
+#### User coordinate labeling
 
-The `coordinates` object defines the labeling scheme:
-
-```yaml
-coordinates:
-  label: XXYY
-  origin: top-left
-```
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `label` | string | `"XXYY"` | Label pattern (see below). |
-| `origin` | string | `"top-left"` | Directional orientation of axes (visual). |
-
-**`origin`** specifies the visual corner of the map where the lowest-
-numbered hexes appear — it controls the *direction* in which coordinate
-values increase. 
-
-The numbers parsed from the labels are used as **literal numeric indices** 
-for the geometric conversions in Section 7. There is no implicit 
-translation; if a map uses labels `1010` through `2020`, the internal 
-column and row indices for those hexes are `10` through `20`.
+The `label` and `origin` fields define how human-readable coordinates
+map to numeric grid indices.
 
 **Label patterns** use `X` for column digits, `Y` for row digits, and
 `A` for column letters. The number of repeated characters indicates
@@ -150,20 +134,20 @@ zero-padded width. Any other characters are literal punctuation.
 
 | Pattern | Example | Description |
 |---------|---------|-------------|
-| `XXYY` | `"0304"` | 2-digit column + 2-digit row (most common) |
-| `XXXYY` | `"00304"` | 3-digit column + 2-digit row |
-| `AYY` | `"C04"` | Letter column + 2-digit row |
-| `AY` | `"C4"` | Letter column + unpadded row |
-| `(X,Y)` | `"(3,4)"` | Parenthesized, comma-separated |
-| `XX.YY` | `"03.04"` | Dot-separated |
+| `XXYY` | `"0304"` | 2-digit column + 2-digit row (most common). |
+| `XXXYY` | `"00304"` | 3-digit column + 2-digit row. |
+| `AYY` | `"C04"` | Letter column + 2-digit row. |
+| `AY` | `"C4"` | Letter column + unpadded row. |
+| `(X,Y)` | `"(3,4)"` | Parenthesized, comma-separated. |
+| `XX.YY` | `"03.04"` | Dot-separated. |
+| `auto` | — | **(Default)** Inferred from the first coordinate in `grid.hexes`. |
 
-These patterns cover the most common wargame labeling schemes. The set is
-intentionally minimal for v1.0. Future versions may add support for more
-complex schemes (e.g., board-prefixed notation like `"3-1204"` for
-geomorphic multi-board maps). For unusual labeling needs, the `properties`
-field on features can carry alternative identifiers.
+The numbers parsed from the labels are used as **literal numeric indices** 
+for the geometric conversions in Section 7. There is no implicit 
+translation; if a map uses labels `1010` through `2020`, the internal 
+column and row indices for those hexes are `10` through `20`.
 
-**Origin** specifies the corner where numbering begins:
+**Origin** specifies the visual corner where coordinate numbering begins:
 
 | Value | Column numbers increase | Row numbers increase |
 |-------|------------------------|---------------------|

@@ -2,9 +2,8 @@ grid:
   hex_top: flat
   hexes: "0101 2201 2215 0115 !" # 22x15 rectangle
   stagger: low
-  coordinates:
-    label: XXYY
-    origin: top-left
+  label: XXYY
+  origin: top-left
   geo:
     scale: 16000              # meters per hex
     anchor: { lat: 54.5, lng: 35.0 }

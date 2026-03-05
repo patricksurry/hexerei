@@ -19,9 +19,8 @@ grid:
   hex_top: flat
   hexes: "0101 4301 4332 0132 !"
   stagger: high
-  coordinates:
-    label: XXYY
-    origin: top-left
+  label: XXYY
+  origin: top-left
   geo:
     scale: 55000 # 55km per hex (some editions say 32 miles)
     projection: conic

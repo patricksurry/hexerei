@@ -17,9 +17,8 @@ grid:
   # Staggered bottom edge: even columns only go to row 10.
   hexes: "0101 1401 1410 >N 0111 !"
   stagger: high # Odd columns (01, 03...) are shifted UP
-  coordinates:
-    label: CCRR
-    origin: top-left
+  label: CCRR
+  origin: top-left
   geo:
     scale: 16000 # ~10 miles per hex
     projection: mercator
