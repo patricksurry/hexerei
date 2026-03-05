@@ -2,7 +2,7 @@ hexmap: "1.0"
 
 metadata:
   id: battle-for-moscow
-  version: "1.2"
+  version: "1.3"
   title: "Battle for Moscow"
   description: "Introductory wargame representing the German advance on Moscow, 1941."
   designer: "Frank Chadwick"
@@ -89,7 +89,7 @@ features:
   - hexes: "1107"
     terrain: city
     label: "Tula"
-    tags: [victory]
+    tags: "victory"
 
   - hexes: "1406"
     terrain: city
@@ -98,12 +98,12 @@ features:
   - hexes: "1301 1401"
     terrain: city
     label: "Kalinin"
-    tags: [victory]
+    tags: "victory"
 
   - hexes: "1202 1203"
     terrain: major_city
     label: "Moscow"
-    tags: [victory]
+    tags: "victory"
     properties: { victory_points: 10 }
 
   # === Forests ===
@@ -164,4 +164,4 @@ features:
   - id: german_setup
     hexes: "0101 0401 0411 0111 !"
     label: "German Start Line"
-    tags: [setup]
+    tags: "setup"

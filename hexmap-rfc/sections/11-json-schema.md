@@ -63,10 +63,12 @@ The normative JSON Schema for the HexMap format is defined below.
           "properties": {
             "scale": { "type": "number", "exclusiveMinimum": 0 },
             "anchor": {
-              "type": "array",
-              "items": { "type": "number" },
-              "minItems": 2,
-              "maxItems": 2
+              "type": "object",
+              "properties": {
+                "lat": { "type": "number" },
+                "lng": { "type": "number" }
+              },
+              "required": ["lat", "lng"]
             },
             "anchor_hex": { "type": "string" },
             "bearing": { "type": "number", "minimum": 0, "exclusiveMaximum": 360 },
@@ -113,7 +115,8 @@ The normative JSON Schema for the HexMap format is defined below.
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "directed": { "type": "boolean", "default": false },
+        "type": { "enum": ["base", "modifier"], "default": "base" },
+        "onesided": { "type": "boolean", "default": false },
         "style": {
           "type": "object",
           "properties": {
@@ -133,7 +136,7 @@ The normative JSON Schema for the HexMap format is defined below.
         "elevation": { "type": "integer" },
         "label": { "type": "string" },
         "id": { "type": "string" },
-        "tags": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "string" },
         "properties": { "type": "object", "additionalProperties": true },
         "side": {
              "enum": ["both", "in", "out", "left", "right"],

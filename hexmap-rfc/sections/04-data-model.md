@@ -99,7 +99,7 @@ grid to real-world geography.
 | Field | Type | Description |
 |-------|------|-------------|
 | `scale` | number | Meters across a hex (center to center of opposite edges). |
-| `anchor` | [number, number] | [latitude, longitude] of a reference hex center. |
+| `anchor` | object | `{ lat: number, lng: number }` of a reference hex center. |
 | `anchor_hex` | string | Which hex the anchor refers to. Default: first hex. |
 | `bearing` | number | Rotation in degrees clockwise from north. Default: 0. |
 | `projection` | string | Map projection identifier. Default: `"mercator"`. |
@@ -193,6 +193,9 @@ and overriding.  could use simple primary/secondary switch, or support
 sets (lists?) of terrains that are mutually exclusive.  could support
 optional constraints on terrain (requires, implies, excludes each listing names)
 which would allow richer validation but maybe that's overkill/or an extension?
+i'd be tempted to just distinguish primary terrain (which overrides previous primary)
+from modifiers (like city/road/objective etc) which stack.
+
 
 {{../examples/snippets/terrain.yaml}}
 
@@ -212,7 +215,8 @@ snake_case to Title Case: `light_woods` -> "Light Woods",
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | no | Human-readable display name. Auto-generated from identifier if omitted. |
-| `directed` | boolean | no | Edge types only. If true, the feature is asymmetric (e.g., cliff). Default: false. Vertex types are never directed. |
+| `type` | string | no | Either `"base"` or `"modifier"`. Default: `"base"`. |
+| `onesided` | boolean | no | Edge types only. If true, the feature is asymmetric (e.g., cliff). Vertex types are never onesided. |
 | `style` | object | no | Display hints (color, pattern, etc). See below. |
 | `properties` | object | no | Arbitrary additional properties for game-specific semantics. |
 
@@ -277,12 +281,13 @@ two hex-pathed rivers run parallel in adjacent hexes.  but couldn't
 that just be two separate path-like regions? from a game perspective
 it usually only matters that a hex contains a river or not, the connectivity
 is a rendering concern which could be inferred from the region structure perhaps?
+unless you have a good argument to keep it, i'd drop.
 
 A feature like "river" may reasonably appear in all three of `hex`,
 `edge`, and `path` depending on game scale and design. This is
 intentional — the format does not prescribe which representation to use.
 
-PDS: but hex:river, edge:river no implied relationship?
+PDS: but hex:river, edge:river have no implied relationship, right?
 
 **The format does not define a fixed set of terrain types.** Each map
 declares its own vocabulary. This is intentional: terrain types are
@@ -352,22 +357,32 @@ handled within the HexPath string using the `+` and `-` operators (Section 6).
 
 #### Feature attributes
 
+PDS: all optional?
+
 | Field | Type | Description |
 |-------|------|-------------|
-| `terrain` | string | Terrain type from the appropriate vocabulary subsection. |
-| `elevation` | integer | Elevation level. Primarily used for hexes, but MAY also appear on edge or vertex features for games that require it (e.g., wall heights, bridge elevations). |
+| `terrain` | string | One or more space-separated terrain types. |
+| `elevation` | integer | Elevation level. |
 | `label` | string | Display name or label text. |
 | `id` | string | Unique identifier for this feature (for cross-referencing). |
-| `tags` | array of strings | Semantic tags (e.g., `"victory"`, `"fortified"`). |
+| `tags` | string | One or more space-separated semantic tags (e.g., `"victory supply"`). |
 | `properties` | object | Arbitrary key-value data. |
+
+PDS: tags could be a space-separated list, like css class?
+PDS: terrain could be a space-separated list?  e.g. "city objective"
 
 #### Feature ordering and precedence
 
 Features are applied in document order. When multiple features affect
 the same hex, edge, or vertex, **later entries override earlier ones**
-for scalar attributes (`terrain`, `elevation`, `label`). Array attributes
-(`tags`) are merged (union). Object attributes (`properties`) are merged
-with later keys overriding.
+for scalar attributes (`elevation`, `label`). 
+
+For **terrain** and **tags** (space-separated strings), the engine calculates
+the effective value by concatenating later strings with earlier ones. 
+For terrain, the last defined "base" type in the final string determines the
+primary rendering and mechanics.
+
+Object attributes (`properties`) are merged with later keys overriding.
 
 This enables a layered authoring style: set broad defaults first, then
 override specific areas:
@@ -393,13 +408,14 @@ features:
     terrain: major_city
     label: "Moscow"
     elevation: 1
-    tags: [victory]
+    tags: "victory"
     properties:
       victory_points: 3
 
   - hexes: "0302 0303, 0402" # A path of two hexes, and one jump
-    terrain: forest
+    terrain: "forest"
 ```
+PDS: a connected path from 0302 to 0303 isn't illuminating for , vs space (length of 1)
 
 #### Edge features
 
@@ -421,7 +437,7 @@ Vertices are referenced using the HexPath notation `hex.direction`:
 ```yaml
 features:
   - vertices: "0503.NE"
-    terrain: bridge
+    terrain: tower
 ```
 
 #### Regions
@@ -433,12 +449,12 @@ features can refer to this region by ID using the `@` prefix in a HexPath.
 features:
   - id: soviet-fortifications
     hexes: "0805 1105" # Path from 0805 to 1105
-    tags: [fortified]
+    tags: "fortified"
     label: "Soviet Fortification Line"
 
   - id: german-entry-west
     hexes: "0101 0105" # Path from 0101 to 0105
-    tags: [entry]
+    tags: "entry"
     label: "German Entry Area"
 ```
 

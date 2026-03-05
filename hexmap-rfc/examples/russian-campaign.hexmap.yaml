@@ -2,7 +2,7 @@ hexmap: "1.0"
 
 metadata:
   id: the-russian-campaign
-  version: "1.2"
+  version: "1.3"
   title: "The Russian Campaign"
   description: "Strategic wargame of the Eastern Front, 1941-45."
   designer: "John Edwards"
@@ -52,20 +52,20 @@ features:
   - hexes: "1008"
     terrain: major_city
     label: "Leningrad"
-    tags: [objective]
+    tags: "objective"
 
   # Moscow V12 -> 2212
   - hexes: "2212"
     terrain: major_city
     label: "Moscow"
-    tags: [capital, objective]
+    tags: "capital objective"
 
   # Stalingrad JJ14 -> JJ is 10th double letter -> 26+17 = 43?
   # Actually if doubling starts at AA=27.
   - hexes: "3614"
     terrain: major_city
     label: "Stalingrad"
-    tags: [objective]
+    tags: "objective"
 
   # Kiev S18 -> 1918
   - hexes: "1918"
@@ -81,7 +81,7 @@ features:
   - hexes: "0119"
     terrain: major_city
     label: "Berlin"
-    tags: [capital]
+    tags: "capital"
   
   # Gorki QQ06 -> QQ is 17th double letter -> 26+17 = 43?
   # Actually if doubling starts at AA=27.

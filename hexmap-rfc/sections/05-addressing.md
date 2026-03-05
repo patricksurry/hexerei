@@ -9,21 +9,23 @@ referenced.
 The addressing notation for atoms follows this grammar (ABNF-style):
 
 ```
-atom        = hex-ref / edge-ref / vertex-ref / ref-id
+atom        = hex-ref / edge-ref / vertex-ref / clock-ref / ref-id
 hex-ref     = user-coord
 edge-ref    = user-coord "/" direction
 vertex-ref  = user-coord "." direction
+clock-ref   = user-coord "@" hour
 ref-id      = "@" identifier
 direction   = compass-dir / index
 compass-dir = "N" / "NE" / "E" / "SE" / "S" / "SW" / "W" / "NW"
+hour        = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "10" / "11" / "12"
 index       = "1" / "2" / "3" / "4" / "5" / "6"
 ```
 
-Where `user-coord` is a string matching the label pattern defined in
-`grid.coordinates` (e.g., `"0304"` for XXYY).
+Where `user-coord` is a string matching the label pattern.
 
-The `/` separator marks edge references. The `.` separator marks vertex
-references. Indices 1-6 are clockwise from 12 o'clock (see Section 5.5).
+The `/` separator marks edge references, the `.` separator marks vertex
+references, and the `@` separator marks **clock-based** references (Section 5.6).
+Indices 1-6 are clockwise from 12 o'clock (see Section 5.5).
 
 ### Hexes
 
@@ -38,20 +40,24 @@ C4          # letter-number format
 
 ### Edges
 
-An edge is referenced as `hex/direction`:
+An edge is referenced as `hex/direction` (compass or index) or using the
+universal clock notation `hex@hour`:
 
 ```
 0304/N      # north edge of hex 0304 (compass direction)
 0304/1      # same edge, by clockwise index
+0304@12     # same edge, using 12-position clock
 ```
 
 ### Vertices
 
-A vertex is referenced as `hex.direction`:
+A vertex is referenced as `hex.direction` (compass or index) or using the
+universal clock notation `hex@hour`:
 
 ```
 0304.NE     # northeast vertex of hex 0304 (compass direction)
 0304.1      # same vertex, by clockwise index
+0304@1      # same vertex, using 12-position clock
 ```
 
 ### Edge and vertex directions

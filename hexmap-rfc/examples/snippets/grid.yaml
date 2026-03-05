@@ -8,6 +8,6 @@ grid:
     first: [1, 1]
   geo:
     scale: 16000              # meters per hex
-    anchor: [54.5, 35.0]      # lat, lng of hex 0101 center
+    anchor: { lat: 54.5, lng: 35.0 }
     bearing: 0                 # degrees, 0 = north up
     projection: mercator
