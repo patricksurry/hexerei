@@ -2,7 +2,7 @@ hexmap: "1.0"
 
 metadata:
   id: the-russian-campaign
-  version: "1.3"
+  version: "1.4"
   title: "The Russian Campaign"
   description: "Strategic wargame of the Eastern Front, 1941-45."
   designer: "John Edwards"
@@ -40,12 +40,12 @@ terrain:
     major_river: { style: { stroke: "#000080", stroke_width: 3 } }
     railroad: { style: { stroke: "#000000", pattern: "dashed" } }
 
-defaults:
-  hex:
+features:
+  # === Base Layer ===
+  - hexes: "@all"
     terrain: clear
 
-features:
-  # Cities (Coords converted A=1...Z=26, AA=27...)
+  # === Cities ===
   # Leningrad J8 -> 1008
   - hexes: "1008"
     terrain: major_city
@@ -59,7 +59,6 @@ features:
     tags: "capital objective"
 
   # Stalingrad JJ14 -> JJ is 10th double letter -> 26+17 = 43?
-  # Actually if doubling starts at AA=27.
   - hexes: "3614"
     terrain: major_city
     label: "Stalingrad"
@@ -82,7 +81,6 @@ features:
     tags: "capital"
   
   # Gorki QQ06 -> QQ is 17th double letter -> 26+17 = 43?
-  # Actually if doubling starts at AA=27.
   - hexes: "4306"
     terrain: major_city
     label: "Gorki"
@@ -90,7 +88,6 @@ features:
   # Terrain Features
   
   # Pripet Marshes (Central Swamp)
-  # Roughly bounding box N-20 to R-23
   - hexes: "1420 1820 1823 1423 ! - 1621 1622" # N20 - R23, minus clear pockets
     terrain: swamp
     label: "Pripet Marshes"
@@ -101,13 +98,11 @@ features:
     label: "Carpathians"
 
   # Volga River (Major)
-  # From North edge down past Gorki to Stalingrad/Astrakhan
   - edges: "4301 4306 4010 3614 3818" # Rough trace
     terrain: major_river
     label: "Volga"
 
   # Dnepr River
-  # From Smolensk (near Moscow) down past Kiev to Black Sea
   - edges: "2011 1918 2125" # Very rough trace
     terrain: major_river
     label: "Dnepr"

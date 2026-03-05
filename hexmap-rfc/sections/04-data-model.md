@@ -161,104 +161,37 @@ Most wargames use `"top-left"` (XXYY with 01,01 in the upper-left).
 ### Terrain Vocabulary
 
 The `terrain` object defines all terrain types used on this map, organized
-by the geometry they apply to: hexes, edges, vertices, or paths.
+by the geometry they apply to: hexes, edges, or vertices.
 
 <{{../examples/snippets/terrain.yaml}}
-
-#### Type identifiers
-
-Type identifiers MUST be lowercase ASCII with underscores for word
-separation (e.g., `light_woods`, `major_river`).
-
-When `name` is omitted, it defaults to the identifier converted from
-snake_case to Title Case: `light_woods` -> "Light Woods",
-`major_river` -> "Major River".
 
 #### Terrain type definition object
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | no | Human-readable display name. Auto-generated from identifier if omitted. |
+| `name` | string | no | Human-readable display name. |
 | `type` | string | no | Either `"base"` or `"modifier"`. Default: `"base"`. |
-| `onesided` | boolean | no | Edge types only. If true, the feature is asymmetric (e.g., cliff). Vertex types are never onesided. |
-| `style` | object | no | Display hints (color, pattern, etc). See below. |
-| `properties` | object | no | Arbitrary additional properties for game-specific semantics. |
+| `onesided` | boolean | no | Edge types only. Feature is asymmetric (e.g., cliff). |
+| `style` | object | no | Display hints (color, pattern, etc). |
+| `properties` | object | no | Arbitrary game-specific metadata. |
 
-The `properties` field on terrain type definitions is intended for
-gameplay-relevant data that the format itself does not interpret: movement
-costs, combat modifiers, line-of-sight effects, etc. The format carries
-this data opaquely. Example:
+#### Default values and the @all identifier
+
+The HexMap format applies a minimal default state to the map extent:
+no terrain, 0 elevation, and no tags or properties.
+
+The reserved identifier **`@all`** always resolves to the full collection
+of hexes defined in `grid.hexes`. 
+
+To set global defaults (e.g., "the whole map is clear terrain"), designers 
+should use a **Base Feature** as the first entry in the `features` list:
 
 ```yaml
-terrain:
-  hex:
-    forest:
-      properties:
-        movement_cost: 2
-        defense_modifier: +1
-        blocks_los: true
+features:
+  # Base Layer: everything is clear terrain
+  - hexes: "@all"
+    terrain: clear
 ```
-
-The `style` object carries optional rendering hints:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `color` | string | Suggested fill color (CSS hex, e.g. `"#2d5a1e"`). |
-| `pattern` | string | Suggested fill pattern name. |
-| `stroke` | string | Suggested line color for edges/paths. |
-| `stroke_width` | number | Suggested line width for edges/paths. |
-
-Style is purely advisory. Renderers MAY ignore it entirely.
-
-#### Geometry subsections
-
-The three subsections — `hex`, `edge`, `vertex` — scope terrain
-identifiers to their geometry. The same identifier MAY appear in multiple
-subsections (e.g., `river` as both an edge type and a hex type).
-
-**When to use each subsection:**
-
-- **`hex`**: The feature fills an entire hex. Use for terrain that
-  occupies the cell: forests, cities, swamps, open water.
-
-- **`edge`**: The feature is a property of a hexside. Use for linear
-  features that form boundaries between hexes: rivers at tactical scale,
-  cliffs, walls, hedges. Edge features carry game-mechanical meaning
-  (cost to cross, line-of-sight effects).
-
-- **`vertex`**: The feature sits at a hex corner. Use for point features
-  where three hexes meet: bridges, fords, crossroads, hilltop
-  observation points. Vertex terrain types are never onesided.
-
-**The format does not define a fixed set of terrain types.** Each map
-declares its own vocabulary. This is intentional: terrain types are
-game-specific, not universal. A format that baked in "forest" and "swamp"
-would fail for science fiction, naval, or abstract games.
-
-However, Appendix A provides a recommended conventional vocabulary for
-common hex wargames as a non-normative interoperability aid.
-
-### Defaults
-
-The `defaults` object specifies property values applied to every hex,
-edge, or vertex that does not have an explicit value set in the
-features list.
-
-<{{../examples/snippets/defaults.yaml}}
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `hex` | object | Default properties for all hexes. |
-| `hex.terrain` | string | Default hex terrain type. |
-| `hex.elevation` | integer | Default elevation level. Default: 0. |
-| `edge` | object | Default properties for all edges (uncommon). |
-| `vertex` | object | Default properties for all vertices (uncommon). |
-
-Each property defaults independently. Setting `defaults.hex.terrain`
-does not imply a default elevation; if `defaults.hex.elevation` is
-also desired, it must be set explicitly. Similarly, a hex that appears
-in the features list with only `terrain` set still inherits the default
-`elevation` (if one is defined).
 
 ### Features
 
@@ -317,7 +250,7 @@ override specific areas:
 ```yaml
 features:
   # Base terrain: everything is forest (reference to grid.hexes)
-  - hexes: "@grid-boundary"
+  - hexes: "@all"
     terrain: forest
 
   # Override: a forest clearing

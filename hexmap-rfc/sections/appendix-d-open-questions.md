@@ -5,7 +5,11 @@ Issues to resolve in future revisions:
 1. **Multi-board / geomorphic maps.** Panzer Blitz and ASL use
    interchangeable map boards composed into different configurations per
    scenario. The format needs a way to define individual boards and
-   compose them — including rotation and offset of coordinates. 
+   compose them — including rotation and offset of coordinates.
+   The current simplification of the `grid` and the use of reserved 
+   identifiers like `@all` provides a natural path for this: a master 
+   document could compose several `@board-id` collections into a single 
+   coordinate space. 
 
 2. **Terrain type constraints.** Should the format support optional
    constraints on terrain (e.g., "forest requires clear base") to allow

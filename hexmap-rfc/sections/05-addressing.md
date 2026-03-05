@@ -29,13 +29,14 @@ Indices 1-6 are clockwise from 12 o'clock (see Section 5.5).
 
 ### Hexes
 
-A hex is referenced by its user coordinate string or by a reference to
-another feature:
+A hex is referenced by its user coordinate string, by a reference to
+another feature, or using a reserved identifier:
 
 ```
 0304        # XXYY format
 C4          # letter-number format
 @moscow     # reference to feature 'moscow'
+@all        # reserved: resolves to all hexes in grid.hexes
 ```
 
 ### Edges

@@ -1,6 +1,4 @@
-defaults:
-  hex:
-    terrain: clear
-    elevation: 0
-  edge: {}
-  vertex: {}
+features:
+  # Base Layer: set entire grid to elevation 1
+  - hexes: "@all"
+    elevation: 1

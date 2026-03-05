@@ -73,14 +73,6 @@ The normative JSON Schema for the HexMap format is defined below.
         "vertex": { "$ref": "#/$defs/TerrainVocabulary" }
       }
     },
-    "defaults": {
-      "type": "object",
-      "properties": {
-        "hex": { "$ref": "#/$defs/FeatureAttributes" },
-        "edge": { "$ref": "#/$defs/FeatureAttributes" },
-        "vertex": { "$ref": "#/$defs/FeatureAttributes" }
-      }
-    },
     "features": {
       "type": "array",
       "items": { "$ref": "#/$defs/FeatureEntry" }
