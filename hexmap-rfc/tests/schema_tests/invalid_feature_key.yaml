@@ -1,0 +1,8 @@
+hexmap: "1.0"
+grid:
+  hex_top: flat
+  columns: 5
+  rows: 5
+features:
+  - circles: ["0101"] # Invalid: unknown key 'circles', must be hexes, edges, etc.
+    terrain: clear

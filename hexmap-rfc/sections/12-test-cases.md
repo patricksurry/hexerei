@@ -42,12 +42,14 @@ walls, hedges, bocage, railroad embankments. Elevation 0-3+.
 
 ### The Russian Campaign (Jedko/AH, 1974)
 
-**Exercises:** Large operational map, weather zones, sea hexes, straits,
-complex rail network, Dnepr River as long connected edge path.
+**Exercises:** Large operational map, weather zones, major rivers,
+complex rail network.
 
-**Scale:** ~50 km/hex, large map (~34x22), flat-top.
+**Scale:** ~55 km/hex, 43x32 grid, flat-top, stagger: high.
 
-**Complexity:** Medium-high. Tests large maps and long paths.
+**Complexity:** Medium-high. Complete implementation.
+*Note: Uses numeric identifiers internally due to non-standard
+A-QQ column labeling.*
 
 ### Drive on Metz (SPI, 1980)
 

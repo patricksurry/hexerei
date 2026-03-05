@@ -1,0 +1,5 @@
+hexmap: "1.0"
+grid:
+  hex_top: flat
+  rows: 10
+  columns: 0 # Invalid: minimum is 1

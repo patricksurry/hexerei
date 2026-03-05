@@ -55,11 +55,14 @@ PDS: ya, i don't think it's intuitive, which should brainstorm alternatives
    simple but limited. Does it cover all real-world wargame labeling
    schemes? What about systems like "hex 3-1204" (board 3, hex 1204)?
    Multi-board notation is deferred to v2.
-PDS: let's collect a set of real-world examples and review.  i
-think there might also be different alpha counting schems,
-e.g. A .. Z, AA, BB, CC, ... vs A .. Z, AA, AB, AC ...
-eg. excel style base-26 vs repeating A .., AA ..., AAA ...
-in general could use an invertible u/v/w <=> label function but don't really want that complexity
+PDS: let's collect a set of real-world examples and review.
+   think there might also be different alpha counting schems,
+   e.g. A .. Z, AA, BB, CC, ... vs A .. Z, AA, AB, AC ...
+   eg. excel style base-26 vs repeating A .., AA ..., AAA ...
+   *Update v1.1:* Validating "The Russian Campaign" revealed this gap.
+   The map uses A-Z then AA-QQ. The current fixed-width pattern logic
+   cannot parse "A" and "AA" with a single rule.
+   in general could use an invertible u/v/w <=> label function but don't really want that complexity
 
 8. **Compact edge notation.** Rivers with many edges are still verbose
    even with `edge_path`. The geometry expression language (Appendix C)

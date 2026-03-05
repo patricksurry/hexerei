@@ -58,6 +58,12 @@ defaults:
     elevation: 0
 
 features:
+  # Map Shape (Exclude non-existent hexes in 14x11 grid)
+  # Even columns (2,4...) only go to row 10.
+  - hexes:
+      exclude: ["0211", "0411", "0611", "0811", "1011", "1211", "1411"]
+    terrain: "off_map" # Or just exclude from mesh entirely
+
   # === Cities ===
 
   - hexes: ["0105", "0205"]

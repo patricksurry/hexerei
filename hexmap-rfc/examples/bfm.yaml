@@ -1,0 +1,141 @@
+hexmap: "1.0"
+
+metadata:
+  id: battle-for-moscow
+  version: "1.2"
+  title: "Battle for Moscow"
+  description: "Re-creation of Battle for Moscow based on the bfm.md experiment."
+  designer: "Frank Chadwick"
+  publisher: "Game Designers' Workshop"
+  date: "1986"
+  source:
+    url: "https://grognard.com/bfm/game.html"
+    notes: "Coordinates 1701-3010 as per bfm.md"
+
+grid:
+  hex_top: flat
+  columns: 14
+  rows: 10
+  stagger: high
+  coordinates:
+    label: XXYY
+    origin: top-left
+    first: [17, 1]
+  geo:
+    scale: 16000
+
+terrain:
+  hex:
+    clear: { name: "Plain" }
+    forest: { name: "Forest" }
+    city: { name: "City" }
+    major_city: { name: "Major City" }
+    german_setup: { name: "German Setup" }
+    russian_setup: { name: "Russian Setup" }
+    fortification: { name: "Fortification" }
+  edge:
+    river: { name: "River" }
+    fortification: { name: "Fortification" }
+  path:
+    railroad: { name: "Railroad" }
+
+defaults:
+  hex:
+    terrain: clear
+
+features:
+  # === Major Cities ===
+  - hex: "2703"
+    terrain: major_city
+    label: "Moscow"
+    tags: [victory]
+
+  # === Cities ===
+  - hex: "2201"
+    terrain: city
+    label: "Rzhev"
+  - hex: "1804"
+    terrain: city
+    label: "Smolensk"
+  - hex: "2203"
+    terrain: city
+    label: "Vyazma"
+  - hex: "2403"
+    terrain: city
+    label: "Mozhaisk"
+  - hex: "1907"
+    terrain: city
+    label: "Roslavl"
+  - hex: "2109"
+    terrain: city
+    label: "Bryansk"
+  - hex: "2405"
+    terrain: city
+    label: "Kaluga"
+  - hex: "2409"
+    terrain: city
+    label: "Orel"
+  - hex: "2707"
+    terrain: city
+    label: "Tula"
+  - hex: "3005"
+    terrain: city
+    label: "Ryazan"
+
+  # === Railroads ===
+  # 1702-Rzhev-Moscow
+  - path: ["1702", "2201", "2703"]
+    terrain: railroad
+    label: "Northern Rail"
+  
+  # Smolensk-Vyazma-Rzhev
+  - path: ["1804", "1905", "2203", "2201"]
+    terrain: railroad
+
+  # Vyazma-Mozhaisk-Moscow
+  - path: ["2203", "2303", "2403", "2703"]
+    terrain: railroad
+
+  # Moscow-Ryazan-3006/SE
+  - path: ["2703", "3005", "3006"]
+    terrain: railroad
+
+  # Moscow-Tula-Orel-2410
+  - path: ["2703", "2707", "2409", "2410"]
+    terrain: railroad
+
+  # === Rivers ===
+  # 1706/N-2004/SE...
+  - edges: ["1706/N", "2004/SE", "2103/SE"]
+    terrain: river
+
+  # 2105/S-2203/N-2406/NE-2509/NE-2510/SE
+  - edges: ["2105/S", "2203/N", "2406/NE", "2509/NE", "2510/SE"]
+    terrain: river
+
+  # === Fortifications ===
+  # Vyazma Defense Line
+  - region:
+      id: vyazma-defense
+      hexes: { range: ["2101", "2107"] }
+    terrain: fortification
+    label: "Vyazma Defense Line"
+
+  # Mozhaisk Defense Line
+  - region:
+      id: mozhaisk-defense
+      hexes: ["2401", "2402", "2403", "2404", "2405"] # 2401-Kaluga
+    terrain: fortification
+    label: "Mozhaisk Defense Line"
+
+  # === Forest ===
+  - hexes: ["1801", "1802", "2001"]
+    terrain: forest
+  - hexes: ["2204", "2308", "2501", "2801", "2903", "3004"]
+    terrain: forest
+
+  # === Setup Zones ===
+  - hexes: ["1703", "1704", "1706", "1707"]
+    terrain: german_setup
+  - hexes: ["1901", "2005", "2104"]
+    terrain: russian_setup

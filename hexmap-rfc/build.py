@@ -149,6 +149,49 @@ def build_txt(build_dir: Path) -> bool:
         return False
 
 
+def validate_examples(script_dir: Path) -> bool:
+    """Validate all example maps against the JSON schema."""
+    print_info("Validating examples...")
+
+    try:
+        import jsonschema
+        import yaml
+        import json
+    except ImportError:
+        print_warning("jsonschema or pyyaml not found. Skipping validation.")
+        print("  Install with: uv add jsonschema pyyaml")
+        return True  # Don't fail the build if dependencies missing, just warn
+
+    schema_path = script_dir / "hexmap.schema.json"
+    if not schema_path.exists():
+        print_error(f"Schema not found: {schema_path}")
+        return False
+
+    with open(schema_path, 'r') as f:
+        schema = json.load(f)
+
+    examples_dir = script_dir / "examples"
+    success = True
+
+    for map_file in examples_dir.glob("*.hexmap.yaml"):
+        try:
+            with open(map_file, 'r') as f:
+                data = yaml.safe_load(f)
+            
+            jsonschema.validate(instance=data, schema=schema)
+            print_success(f"Validated: {map_file.name}")
+        except jsonschema.ValidationError as e:
+            print_error(f"Validation failed for {map_file.name}")
+            print(f"  Message: {e.message}")
+            print(f"  Path: {e.json_path}")
+            success = False
+        except Exception as e:
+            print_error(f"Error processing {map_file.name}: {e}")
+            success = False
+
+    return success
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Build HexMap RFC documentation',
@@ -167,6 +210,7 @@ Examples:
     parser.add_argument('--txt', action='store_true', help='Build text output')
     parser.add_argument('--all', action='store_true', help='Build all formats')
     parser.add_argument('--clean', action='store_true', help='Clean build directory first')
+    parser.add_argument('--no-validate', action='store_true', help='Skip example validation')
 
     args = parser.parse_args()
 
@@ -201,6 +245,12 @@ Examples:
 
     # Create build directory
     build_dir.mkdir(exist_ok=True)
+
+    # Validate Examples
+    if not args.no_validate:
+        if not validate_examples(script_dir):
+            print_error("Example validation failed.")
+            sys.exit(1)
 
     # Build outputs
     success = True

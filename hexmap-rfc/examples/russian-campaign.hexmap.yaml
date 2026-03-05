@@ -1,0 +1,136 @@
+hexmap: "1.0"
+
+metadata:
+  id: the-russian-campaign
+  version: "1.0"
+  title: "The Russian Campaign"
+  description: "Strategic wargame of the Eastern Front, 1941-45."
+  designer: "John Edwards"
+  publisher: "Jedko Games / Avalon Hill"
+  date: "1974"
+  source:
+    url: "https://boardgamegeek.com/boardgame/1676/the-russian-campaign"
+    notes: >
+      Map spans Berlin to Gorki. 
+      Original coordinates usage A-Z, AA-QQ. 
+      Features encoded using XXYY numeric coordinates for spec compliance.
+
+grid:
+  hex_top: flat
+  columns: 43 # A-Z (26) + AA-QQ (17) -> 43 cols
+  rows: 32
+  stagger: high
+  coordinates:
+    label: XXYY
+    origin: top-left
+    first: [1, 1]
+  geo:
+    scale: 55000 # 55km per hex (some editions say 32 miles)
+    projection: conic
+
+terrain:
+  hex:
+    clear: { style: { color: "#f0f0e0" } }
+    forest: { style: { color: "#a0c0a0" }, properties: { def: 2 } }
+    swamp: { style: { color: "#c0c080" }, properties: { move: 3 } }
+    mountain: { style: { color: "#a08060" }, properties: { def: 3 } }
+    city: { style: { color: "#808080" }, properties: { def: 2 } }
+    major_city: { style: { color: "#404040" }, properties: { def: 4, supply: true } }
+    water: { style: { color: "#a0a0ff" } } # Sea/Lake
+
+  edge:
+    river: { style: { stroke: "#0000ff" } }
+    major_river: { style: { stroke: "#000080", stroke_width: 3 } }
+
+  path:
+    railroad: { style: { stroke: "#000000", pattern: "dashed" } }
+
+defaults:
+  hex:
+    terrain: clear
+
+features:
+  # Cities (Coords converted A=1...Z=26, AA=27...)
+  # Leningrad J8 -> 1008
+  - hex: "1008"
+    terrain: major_city
+    label: "Leningrad"
+    tags: [objective]
+
+  # Moscow V12 -> 2212
+  - hex: "2212"
+    terrain: major_city
+    label: "Moscow"
+    tags: [capital, objective]
+
+  # Stalingrad JJ14 -> JJ is 10th double letter? 
+  # If A..Z(26), AA(27)..JJ(36). 
+  - hex: "3614"
+    terrain: major_city
+    label: "Stalingrad"
+    tags: [objective]
+
+  # Kiev S18 -> 1918
+  - hex: "1918"
+    terrain: major_city
+    label: "Kiev"
+
+  # Warsaw J22 -> 1022
+  - hex: "1022"
+    terrain: city
+    label: "Warsaw"
+
+  # Berlin A19 -> 0119
+  - hex: "0119"
+    terrain: major_city
+    label: "Berlin"
+    tags: [capital]
+  
+  # Gorki QQ06 -> QQ is 17th double letter -> 26+17 = 43?
+  # Actually if doubling starts at AA=27.
+  - hex: "4306"
+    terrain: major_city
+    label: "Gorki"
+
+  # Terrain Features
+  
+  # Pripet Marshes (Central Swamp)
+  # Roughly bounding box N-20 to R-23
+  - hexes:
+      include: 
+        range: ["1420", "1823"] # N20 - R23
+      exclude: ["1621", "1622"] # Some clear pockets
+    terrain: swamp
+    label: "Pripet Marshes"
+
+  # Carpathian Mountains (South West)
+  - hexes:
+      range: ["1225", "1628"]
+    terrain: mountain
+    label: "Carpathians"
+
+  # Volga River (Major)
+  # From North edge down past Gorki to Stalingrad/Astrakhan
+  - edges:
+      path: ["4301", "4306", "4010", "3614", "3818"] # Rough trace
+    terrain: major_river
+    label: "Volga"
+
+  # Dnepr River
+  # From Smolensk (near Moscow) down past Kiev to Black Sea
+  - edges:
+      path: ["2011", "1918", "2125"] # Very rough trace
+    terrain: major_river
+    label: "Dnepr"
+
+  # Rail Network (Strategic movement)
+  # Moscow - Leningrad
+  - path: ["2212", "1810", "1409", "1008"]
+    terrain: railroad
+    label: "Moscow-Leningrad Rail"
+
+  # Moscow - Kiev
+  - path: ["2212", "2015", "1918"]
+    terrain: railroad
+    label: "Moscow-Kiev Rail"
+
