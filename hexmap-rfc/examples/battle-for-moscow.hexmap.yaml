@@ -20,7 +20,6 @@ grid:
   coordinates:
     label: CCRR
     origin: top-left
-    first: [1, 1]
   geo:
     scale: 16000 # ~10 miles per hex
     projection: mercator

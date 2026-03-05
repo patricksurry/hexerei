@@ -23,13 +23,15 @@ User coordinates are parsed into (col, row) integers via the label
 pattern, then converted to cube coordinates. The conversion depends on
 hex_top and stagger.
 
-Let (col, row) be the parsed column and row, adjusted so the grid-origin
-hex is (0, 0). (The `origin` field controls which visual corner maps to
-the lowest-numbered hex; the `first` field provides the starting number.
-The conversion below assumes col and row have been zero-indexed by
-subtracting `first`. The origin direction is handled separately as a
-reflection — for `"bottom-left"` or `"bottom-right"`, negate the row
-axis; for `"top-right"` or `"bottom-right"`, negate the column axis.)
+Let (col, row) be the parsed column and row indices from the user
+coordinates. 
+
+The `origin` field (Section 4.4) determines the directional orientation of
+the axes. For conversions to standard internal coordinates (where columns 
+increase right and rows increase down), the following reflections MUST 
+be applied if the origin is not `"top-left"`:
+*   If origin is `"bottom-left"` or `"bottom-right"`, negate the row axis.
+*   If origin is `"top-right"` or `"bottom-right"`, negate the column axis.
 
 **Flat-top, stagger: low (odd columns sit lower):**
 ```

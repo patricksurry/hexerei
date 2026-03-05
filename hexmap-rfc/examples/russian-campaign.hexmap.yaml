@@ -22,7 +22,6 @@ grid:
   coordinates:
     label: XXYY
     origin: top-left
-    first: [1, 1]
   geo:
     scale: 55000 # 55km per hex (some editions say 32 miles)
     projection: conic

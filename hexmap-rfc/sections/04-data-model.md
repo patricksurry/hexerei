@@ -128,22 +128,21 @@ The `coordinates` object defines the labeling scheme:
 coordinates:
   label: XXYY
   origin: top-left
-  first: [1, 1]
 ```
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `label` | string | `"XXYY"` | Label pattern (see below). |
-| `origin` | string | `"top-left"` | Corner where numbering starts (visual direction). |
-| `first` | [int, int] | `[1, 1]` | Starting [column, row] number at the origin. |
+| `origin` | string | `"top-left"` | Directional orientation of axes (visual). |
 
 **`origin`** specifies the visual corner of the map where the lowest-
-numbered hex appears — it controls the *direction* numbers increase.
-**`first`** specifies what number to assign that corner hex — it controls
-the *starting value*. Together: `origin: top-left` with `first: [1, 1]`
-means hex (1,1) is at the top-left, columns increase rightward, rows
-increase downward. Changing `first: [0, 0]` makes that same corner hex
-(0,0) instead, but doesn't change the visual layout.
+numbered hexes appear — it controls the *direction* in which coordinate
+values increase. 
+
+The numbers parsed from the labels are used as **literal numeric indices** 
+for the geometric conversions in Section 7. There is no implicit 
+translation; if a map uses labels `1010` through `2020`, the internal 
+column and row indices for those hexes are `10` through `20`.
 
 **Label patterns** use `X` for column digits, `Y` for row digits, and
 `A` for column letters. The number of repeated characters indicates

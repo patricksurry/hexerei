@@ -48,13 +48,6 @@ The normative JSON Schema for the HexMap format is defined below.
             "origin": {
               "enum": ["top-left", "bottom-left", "top-right", "bottom-right"],
               "default": "top-left"
-            },
-            "first": {
-              "type": "array",
-              "items": { "type": "integer" },
-              "minItems": 2,
-              "maxItems": 2,
-              "default": [1, 1]
             }
           }
         },
