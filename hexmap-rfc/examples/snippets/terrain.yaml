@@ -11,11 +11,11 @@ terrain:
   edge:
     river: {}
     cliff:
-      directed: true
+      onesided: true
     wall:
       name: "Stone Wall"
     slope:
-      directed: true
+      onesided: true
 
   vertex:
     bridge: {}

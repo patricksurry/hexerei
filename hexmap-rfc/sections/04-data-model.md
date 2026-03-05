@@ -17,7 +17,7 @@
 The `metadata` object carries descriptive information about the map.
 All fields are OPTIONAL.
 
-{{../examples/snippets/metadata.yaml}}
+<{{../examples/snippets/metadata.yaml}}
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -42,7 +42,7 @@ them through unchanged.
 The `grid` object defines the hex grid's visual arrangement and logical extent.
 It is REQUIRED.
 
-{{../examples/snippets/grid.yaml}}
+<{{../examples/snippets/grid.yaml}}
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -180,7 +180,7 @@ Most wargames use `"top-left"` (XXYY with 01,01 in the upper-left).
 The `terrain` object defines all terrain types used on this map, organized
 by the geometry they apply to: hexes, edges, vertices, or paths.
 
-{{../examples/snippets/terrain.yaml}}
+<{{../examples/snippets/terrain.yaml}}
 
 #### Type identifiers
 
@@ -261,7 +261,7 @@ The `defaults` object specifies property values applied to every hex,
 edge, or vertex that does not have an explicit value set in the
 features list.
 
-{{../examples/snippets/defaults.yaml}}
+<{{../examples/snippets/defaults.yaml}}
 
 | Field | Type | Description |
 |-------|------|-------------|
