@@ -18,8 +18,6 @@ metadata:
 grid:
   hex_top: flat
   hexes: "0101 4301 4332 0132 !"
-  columns: 43 # A-Z (26) + AA-QQ (17) -> 43 cols
-  rows: 32
   stagger: high
   coordinates:
     label: XXYY

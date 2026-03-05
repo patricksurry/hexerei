@@ -52,17 +52,17 @@ It is REQUIRED.
 | `hex_top` | string | YES | `"flat"` or `"pointy"`. |
 | `hexes` | string | YES | HexPath defining the valid hexes in the map. |
 | `stagger` | string | no | `"low"` or `"high"`. Default: `"low"`. See below. |
-| `columns` | integer | no | Logical column count (for labeling hints). |
-| `rows` | integer | no | Logical row count (for labeling hints). |
-| `coordinates` | object | no | User coordinate labeling. See Section 4.4. |
-| `geo` | object | no | Geographic scale and anchoring. See below. |
 
-#### grid.hexes (The Map Boundary)
+#### grid.hexes (The Map Extent)
 
-The `hexes` field defines the map's boundary using the HexPath DSL. This
-mandatory field determines which hexes exist in the coordinate space. Any
-hex not included in this collection is considered "off-map" and cannot
+The `hexes` field defines the map's physical extent using the HexPath DSL. 
+This mandatory field determines which hexes exist in the coordinate space.
+Any hex not included in this collection is considered "off-map" and cannot
 contain features.
+
+Implementations MUST calculate the logical bounding box of the map by
+analyzing the set of hexes defined here. 
+
 
 For standard rectangular maps, the boundary is defined by the four corner
 hexes and the fill operator (`!`):

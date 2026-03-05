@@ -5,6 +5,8 @@ with the following top-level structure:
 
 {{../examples/snippets/doc-envelope.yaml}}
 
+PDS ^^ needs 'code' format?
+
 Only `hexmap` and `grid` are REQUIRED. All other sections are OPTIONAL
 and default to empty.
 

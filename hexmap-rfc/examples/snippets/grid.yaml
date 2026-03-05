@@ -2,8 +2,6 @@ grid:
   hex_top: flat
   hexes: "0101 2201 2215 0115 !" # 22x15 rectangle
   stagger: low
-  columns: 22                  # logical count (hint)
-  rows: 15                     # logical count (hint)
   coordinates:
     label: XXYY
     origin: top-left

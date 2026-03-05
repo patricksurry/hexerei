@@ -17,8 +17,6 @@ grid:
   # Staggered bottom edge: even columns only go to row 10.
   hexes: "0101 1401 1410 >N 0111 !"
   stagger: high # Odd columns (01, 03...) are shifted UP
-  columns: 14
-  rows: 11
   coordinates:
     label: CCRR
     origin: top-left
