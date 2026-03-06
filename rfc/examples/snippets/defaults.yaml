@@ -1,0 +1,4 @@
+features:
+  # Base Layer: set entire grid to elevation 1
+  - at: "@all"
+    elevation: 1

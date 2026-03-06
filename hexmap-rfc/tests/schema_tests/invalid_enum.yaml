@@ -1,6 +1,0 @@
-hexmap: "1.0"
-grid:
-  hex_top: pointy
-  columns: 10
-  rows: 10
-  stagger: middle # Invalid: must be low or high

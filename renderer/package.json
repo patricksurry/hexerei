@@ -1,0 +1,22 @@
+{
+  "name": "@hexmap/renderer",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/hexmap-renderer.umd.cjs",
+  "module": "./dist/hexmap-renderer.js",
+  "exports": {
+    ".": {
+      "import": "./dist/hexmap-renderer.js",
+      "require": "./dist/hexmap-renderer.umd.cjs"
+    }
+  },
+  "dependencies": {
+    "@types/d3": "^7.4.3",
+    "d3": "^7.9.0",
+    "@hexmap/core": "*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "vite build"
+  }
+}

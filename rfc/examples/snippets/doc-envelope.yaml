@@ -1,0 +1,7 @@
+hexmap: "1.0"              # format version (REQUIRED)
+metadata: { ... }          # map identity and descriptive info
+layout: { ... }              # hex geometry and coordinate system
+terrain: { ... }           # terrain type vocabulary (hex, edge, vertex)
+# (Section defaults removed in favor of @all features)
+features: [ ... ]          # the map content: terrain, paths, regions
+extensions: { ... }        # implementation-specific extensions

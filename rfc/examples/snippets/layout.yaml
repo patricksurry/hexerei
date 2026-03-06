@@ -1,0 +1,11 @@
+layout:
+  hex_top: flat
+  all: "0101 2201 2215 0115 !" # 22x15 rectangle
+  stagger: low
+  label: XXYY
+  origin: top-left
+  georef:
+    scale: 16000              # meters per hex
+    anchor: { lat: 54.5, lng: 35.0 }
+    bearing: 0                 # degrees, 0 = north up
+    projection: mercator

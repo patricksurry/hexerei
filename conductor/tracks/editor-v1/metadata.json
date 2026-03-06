@@ -1,0 +1,7 @@
+{
+  "id": "hexmap-editor-v1",
+  "name": "HexMap Editor V1 (Basic UI & Skeleton)",
+  "status": "design",
+  "owner": "Gemini CLI",
+  "tags": ["web", "react", "editor", "hexmap"]
+}

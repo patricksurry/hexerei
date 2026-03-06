@@ -1,0 +1,4 @@
+- Use TypeScript for web/API modules and Python for computer vision/scripting modules.
+- Ensure type hints are used in Python (`hexmap-importer`) where appropriate, and strict typing in TypeScript.
+- Follow standard Python PEP8 styles and TypeScript/eslint configurations present in the subprojects.
+- The project relies on standard JSON/YAML interchanges.

@@ -1,0 +1,21 @@
+{
+  "name": "hexerei",
+  "private": true,
+  "description": "Monorepo for HexMap tools",
+  "workspaces": [
+    "core",
+    "renderer",
+    "editor"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.1",
+    "jsdom": "^24.0.0",
+    "@types/node": "^20.11.10"
+  }
+}

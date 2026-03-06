@@ -1,4 +1,0 @@
-features:
-  # Base Layer: set entire grid to elevation 1
-  - hexes: "@all"
-    elevation: 1

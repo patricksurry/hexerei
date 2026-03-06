@@ -1,0 +1,11 @@
+{
+  "image": "tests/battle-for-moscow-map-full.jpg",
+  "grid_type": "hex_flat",
+  "side_length": 102.29587871010528,
+  "rotation_deg": -0.27037409715368904,
+  "origin_x": 7.534788346309554e-05,
+  "origin_y": 9.501248477967371e-05,
+  "tilt_x": 6.1460856822786e-05,
+  "tilt_y": 0.00010293030704678472,
+  "focal": 1010.5240932294864
+}

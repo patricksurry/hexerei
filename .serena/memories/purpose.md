@@ -1,0 +1,1 @@
+The `hexerei` project is a toolkit for hexagonal wargaming maps. It provides a standard interchange format and tools for working with hex grids, specifically tailored for wargame designers, digital implementations, and AI analysis.

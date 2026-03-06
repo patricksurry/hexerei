@@ -24,6 +24,7 @@ The canonical serialization is JSON. YAML is defined as an equivalent
 authoring-friendly serialization. A JSON Schema is provided for validation
 in both cases.
 
+PDS: should yaml be the canonical version to encourage hand-authoring?
 ---
 
 ## Table of Contents
@@ -227,6 +228,9 @@ metadata:
 | `date` | string | Publication date or year. |
 | `source` | object | Provenance information. |
 
+PDS: why is source a nested object, what is notes v description?
+check pyproject metadata to see if any other obvious optional fields like license, keywords?
+
 The `version` field tracks revisions of the map data itself (not the
 format version, which is in the top-level `hexmap` field). Use semantic
 versioning or simple incrementing numbers.
@@ -255,6 +259,23 @@ grid:
     bearing: 0                 # degrees, 0 = north up
     projection: mercator
 ```
+
+PDS: what about stagger taking values like "<" and ">"?  Where "<" means that the first 
+row(column) is offset towards increasing column(row) indices, and ">" vice versa.
+Is that problematic for YAML?  It's visually 'readable' and is clear about how
+indices increasing LR/TB vs RL/BT would work.
+
+PDS: alternative, use offset: indent vs hanging or some variation, since that's
+a familiar concept for first line of text vs next
+
+PDS: we need to explain a bit about how row, col relates to p, q (are they the same?)
+and u,v,w in an informal way (maybe a diagram) early on, and then refer to details later.
+
+PDS: for labeling, might there also be schemes that label along two of the u/v/w axes
+rather than just rows/columns?  Maybe labeling scheme based on axis letters (repeated
+if padded) with lower case meaning numeric and upper meaning letters?   e.g. Prrr
+would use P as letters, 3-digit r as number?
+
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -327,6 +348,10 @@ grid to real-world geography.
 | `anchor_hex` | string | Which hex the anchor refers to. Default: first hex. |
 | `bearing` | number | Rotation in degrees clockwise from north. Default: 0. |
 | `projection` | string | Map projection identifier. Default: `"mercator"`. |
+
+PDS: for anchor lng,lat is more typical no? or make it an object with latitude, longitude, hex for clarity
+
+PDS: is bearing the angle between top and the compass north on the map, or the bearing of up? should we rename eg. top_bearing for clarity?
 
 Only `scale` is needed for maps that specify physical size without geographic
 positioning. The full combination of anchor, scale, bearing, and projection
@@ -408,6 +433,12 @@ Most wargames use `"top-left"` (XXYY with 01,01 in the upper-left).
 The `terrain` object defines all terrain types used on this map, organized
 by the geometry they apply to: hexes, edges, vertices, or paths.
 
+PDS: solve for 'mutually exclusive' terrain, for ease of stencilling layers
+and overriding.  could use simple primary/secondary switch, or support
+sets (lists?) of terrains that are mutually exclusive.  could support
+optional constraints on terrain (requires, implies, excludes each listing names) 
+which would allow richer validation but maybe that's overkill/or an extension?
+
 ```yaml
 terrain:
   hex:
@@ -440,6 +471,8 @@ terrain:
       name: "River"
 ```
 
+PDS: should include properties and display examples
+
 #### Type identifiers
 
 Type identifiers MUST be lowercase ASCII with underscores for word
@@ -457,6 +490,9 @@ snake_case to Title Case: `light_woods` -> "Light Woods",
 | `directed` | boolean | no | Edge types only. If true, the feature is asymmetric (e.g., cliff). Default: false. Vertex types are never directed. |
 | `style` | object | no | Display hints (color, pattern, etc). See below. |
 | `properties` | object | no | Arbitrary additional properties for game-specific semantics. |
+
+PDS: is 'directed' the right word here?  it's normally about which hex side rather than
+which vertex end which is what directed implies.  perhaps onesided, or sides=one|both?
 
 The `properties` field on terrain type definitions is intended for
 gameplay-relevant data that the format itself does not interpret: movement
@@ -511,9 +547,17 @@ subsections (e.g., `river` as both an edge type and a path type).
   (e.g., individual river hexsides as `edge` terrain for game mechanics,
   plus the full river course as a `path` for display and identification).
 
+PDS: do we really need path as a separate thing?  use case is when
+two hex-pathed rivers run parallel in adjacent hexes.  but couldn't
+that just be two separate path-like regions? from a game perspective
+it usually only matters that a hex contains a river or not, the connectivity
+is a rendering concern which could be inferred from the region structure perhaps?
+
 A feature like "river" may reasonably appear in all three of `hex`,
 `edge`, and `path` depending on game scale and design. This is
 intentional — the format does not prescribe which representation to use.
+
+PDS: but hex:river, edge:river no implied relationship?
 
 **The format does not define a fixed set of terrain types.** Each map
 declares its own vocabulary. This is intentional: terrain types are
@@ -538,6 +582,8 @@ defaults:
   vertex: {}
 ```
 
+PDS: elevation might be a bad example since it should probably default to 0 globally
+
 | Field | Type | Description |
 |-------|------|-------------|
 | `hex` | object | Default properties for all hexes. |
@@ -551,6 +597,8 @@ does not imply a default elevation; if `defaults.hex.elevation` is
 also desired, it must be set explicitly. Similarly, a hex that appears
 in the features list with only `terrain` set still inherits the default
 `elevation` (if one is defined).
+
+PDS: default elevation to zero
 
 If `defaults.hex.terrain` is specified, all hexes within the grid bounds
 (constrained by `boundary` if present) are assumed to exist with that
@@ -583,6 +631,9 @@ of the following keys:
 
 Exactly one selector key MUST be present per feature entry. The remaining
 fields are attributes applied to the selected geometry.
+
+PDS: "... by user coordinate" - should support backward references 
+to features by id; brainstorm as part of appendix C
 
 #### Feature attributes
 
@@ -693,6 +744,9 @@ of consecutive hexes.
 A shorthand for straight-line paths between two hexes is deferred to the
 geometry expression language (Appendix C, future).
 
+PDS: is the consecutive hex/edge requirement in paths actually necessary?
+does something break if we allow paths with gaps?  brainstorm as part of Appendix C.
+
 #### Along-edge paths
 
 A path that follows hex edges. Used for rivers, walls, and other
@@ -772,6 +826,8 @@ compass-dir = "N" / "NE" / "E" / "SE" / "S" / "SW" / "W" / "NW"
 index       = "1" / "2" / "3" / "4" / "5" / "6"
 ```
 
+PDS: user-coord | identifier (maybe identifier needs a prefix to avoid name clash?)
+
 Where `user-coord` is a string matching the label pattern defined in
 `grid.coordinates` (e.g., `"0304"` for XXYY).
 
@@ -850,10 +906,15 @@ Vertex directions: **NE, E, SE, SW, W, NW** (6 vertices)
                        S (v)
 ```
 
+PDS: diagram is too squashed horizontally
+
 Edge directions: **NE, E, SE, SW, W, NW** (6 edges)
 Vertex directions: **N, NE, SE, S, SW, NW** (6 vertices)
 
 ### 5.6 Numeric addressing with clock hours
+
+PDS: except they're not actually addressed with the clock hour, 
+or also allow a syntax like hex@hour?
 
 Edges and vertices can also be addressed by clockwise index (1-6). The
 following tables show the mapping, including the corresponding clock
@@ -963,6 +1024,8 @@ u = col - ceil(row / 2)
 w = row
 v = -u - w
 ```
+
+PDS: can't we combine the two pairs of equations by introducing a stagger=0/1 parameter?
 
 ### 6.3 Neighbor directions in cube coordinates
 
@@ -1544,6 +1607,11 @@ required to use these exact identifiers.
 
 ## Appendix B: Clock Direction System
 
+PDS: we should make more of this. "secret weapon" for making the format machine-friendly?
+Perhaps MUST support for implementations, even if the user-facing docs emphasize compass directions. It makes rotation and reflection algorithms much easier to write.  how
+to clarify indexed (1-6) vs hours (1-12)?
+
+
 The clock direction system provides a unified, orientation-independent
 way to reference the 12 geometric features around a hex (6 edges and
 6 vertices), numbered 1-12 clockwise from 12 o'clock (straight up).
@@ -1570,6 +1638,8 @@ and which are vertices depends on `hex_top`:
                   7        6         5
                (SW v)   (S e)     (SE v)
 ```
+
+PDS: can we add a pointy version side-by-side with above?  also the NW/N/NE labels should be outside not inside
 
 | Clock | Feature | Compass | Index |
 |-------|---------|---------|-------|
@@ -1619,6 +1689,106 @@ for compact notation in geometry expressions (Appendix C).
 direction for a compact expression language in future versions. Nothing
 in this appendix is normative or implemented. It is preserved here to
 record design thinking and invite feedback.
+
+PDS: feels like there's a happy median where we extend the current
+structured features using arrays, nested arrays etc.  maybe that looks a bit
+like more like geojson tho i don't know that we need all the formalism of rings and holes etc?
+
+don't implement full Boolean set operations, that's more a geometry engine.
+rely on stencilling layers, e.g. set all as swamp, then reset a hex as island
+
+each feature resolves to a HexCollection, EdgeCollection or VertexCollection
+for hex paths we want connectivity info, but that could be an edge collection.
+
+implicit conversion, e.g. HexCollection can be converted to all edges it contains
+(excluding half edge boundary?) so hex path => interior edges for river/road crossings
+
+or maybe need explicit conversion like inf/sup?
+
+operators:
+  border(collection) returns the subset of collection which have neighbors not in collection
+  filled(collection) returns superset of collection adding items within the the boundary 
+    of adjacent neighbors (e.g. for vertices within the edge boundary)
+
+boundary (sided?)
+within/inside
+span/incident/closure = boundary + within
+
+  hexes => having_all(edges)
+  hexes => having_any(edges)
+
+
+  path: [start, end], closed?, nudge?
+features: 
+  - { hex: a23, id: moscow }
+  - { hex: [ #moscow, #leningrad, z13 ], id: cities }
+  - { hex: #some-edges }
+  - { hexes: }
+  - { hexpath: [ b13, '...', e13] } # resolves to edge collection, equiv to edges: hexes: [ ... ]
+  hexes: 
+
+Gemini ideas:
+
+```
+features:
+  - hexes: 
+      rect: ["0101", "1010"] # Selects a bounding box
+      exclude: ["0505"]      # Set subtraction
+    terrain: forest
+    
+  - edge_path:
+      from: "0101"
+      to: "0501"
+      nudge: "N"             # Resolves the "tie-break" shortest path problem
+    terrain: road
+
+# Selects all edges that form the perimeter of a hex-set
+- edges:
+    boundary_of: 
+      region: "soviet-fortifications"
+    side: "internal"  # Targets the half-edges belonging to the hexes inside
+  terrain: wall    
+
+features:
+  - region:
+      id: soviet-fortifications
+      # Instead of listing every hex, define a span
+      span: ["0805..1105"]  # or explicit operator ["0805", "...", "1105"] ?
+    tags: [fortified]
+    label: "Soviet Fortification Line"
+
+# this seems a bit forced
+features:
+  - edge_path:
+      # Trace defines the "river bed" by listing the hexes it flows between
+      trace: ["0910", "1010", "1009", "1109"]
+      # 'side' resolves which specific hexside is used when moving between hexes
+      mode: "between" 
+    terrain: river
+    label: "Nara River"
+
+features:
+  - edges:
+      boundary_of: { hex: "0403" }
+      # 'directed: true' in your terrain vocabulary (Section 4.5) 
+      # is satisfied here by the selector implicitly targeting the half-edges of 0403.
+    terrain: slope   
+
+- path:
+    from: "0101"
+    to: "0505"
+    nudge: "NE" # Prefers the most North-Eastern route if multiple exist
+  terrain: railroad     
+
+features:
+  - id: "soviet_zone"
+    hexes: { rect: ["1010", "2020"] }
+    # This entry just defines a region, no terrain yet
+    
+  - name: "Fortified Line"
+    edges: { boundary_of: { ref: "soviet_zone" } }
+    terrain: trench
+```
 
 ### Motivation
 
@@ -1701,6 +1871,9 @@ Issues to resolve in future revisions:
    deferred to a future version. The `tile` terminology is reserved
    for this use.
 
+PDS: we should solve in v1.  Most of the map setup (metadata, terrain, grid) would be shared,
+perhaps just allow a list of mapboard: { id: defaults: features: extensions: }  ?
+
 2. **Terrain stacking.** Can a hex have multiple terrain types? (e.g.,
    forest + hill, or road passing through a town). Current model: a
    hex has one `terrain` type plus `elevation` plus `tags`. The layered
@@ -1708,32 +1881,52 @@ Issues to resolve in future revisions:
    Should `terrain` be an array? Or is elevation + tags + properties
    sufficient to capture stacking?
 
+PDS: perhaps distinguish a set of base terrains that are mutually 
+exclusive (last one applied wins) from 'modifier' terrains which 
+can stack.  e.g. one of forrest, swamp or plains; but several of road, river, fort?
+
 3. **Road junctions.** Some roads fork inside a hex (entering via one
    edge, exiting via two). The path model assumes linear sequences.
    Solutions: allow branching paths, or decompose into multiple paths
    sharing a waypoint.
+PDS: decomposition seems fine 
 
 4. **Partial hexes.** Real maps have partial hexes at boundaries. Should
    these be explicitly marked, or inferred from the boundary?
+PDS: seems more like a rendering concern, unless they have different play 
+mechanics?  ie. are they regular hexes that are just clipped at the boundary,
+are the excluded from the map (invalid) or somehow special?
 
 5. **River/road intersection semantics.** When a road path crosses a
    river edge, is there an implicit bridge? Or must bridges be
    explicitly annotated as vertex features?
+PDS: typically a road would be thru hexes, and river along edges,
+with bridge as edge terrain.  we shouldn't build any semantics for 
+how terrains interact.
 
 6. **Stagger naming.** Is `"low"` / `"high"` intuitive enough? Other
    candidates: `"indent-first"` / `"indent-second"`, or describe the
    visual pattern with a small diagram in the spec. (Diagrams are now
    included in Section 4.3; the naming question remains open.)
+PDS: ya, i don't think it's intuitive, which should brainstorm alternatives
 
 7. **Coordinate label patterns.** The `XXYY` / `AY` pattern system is
    simple but limited. Does it cover all real-world wargame labeling
    schemes? What about systems like "hex 3-1204" (board 3, hex 1204)?
    Multi-board notation is deferred to v2.
+PDS: let's collect a set of real-world examples and review.  i 
+think there might also be different alpha counting schems, 
+e.g. A .. Z, AA, BB, CC, ... vs A .. Z, AA, AB, AC ...  
+eg. excel style base-26 vs repeating A .., AA ..., AAA ...
+in general could use an invertible u/v/w <=> label function but don't really want that complexity 
 
 8. **Compact edge notation.** Rivers with many edges are still verbose
    even with `edge_path`. The geometry expression language (Appendix C)
    addresses this for v2.
+PDS: yes we should solve for a version of appendix C
 
 9. **Feature ordering guarantees.** The spec says "later entries override."
    Should implementations also support explicit priority/z-order for
    cases where document order isn't the desired precedence?
+PDS: worth exploring, but maybe back-references and labeled feature groups would be enough?
+seems like there is lots of prior art for how to do stuff like that in other structured doc types

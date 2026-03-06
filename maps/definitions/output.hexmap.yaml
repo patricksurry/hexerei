@@ -1,0 +1,1701 @@
+hexmap: '1.0'
+metadata:
+  title: Imported ASL Map
+  source:
+    generated_by: hexmap-importer
+grid:
+  hex_top: flat
+  columns: 31
+  rows: 9
+  coordinates:
+    label: custom
+    origin: top-left
+terrain:
+  hex:
+    clear:
+      style:
+        color: '#aaddaa'
+    forest:
+      style:
+        color: '#228822'
+    city:
+      style:
+        color: '#888888'
+    unknown:
+      style:
+        color: '#cccccc'
+features:
+- hex: C2
+  terrain: unknown
+  debug:
+    q: -1
+    r: -1
+    cluster: 8
+- hex: C1
+  terrain: unknown
+  debug:
+    q: -1
+    r: -2
+    cluster: 7
+- hex: C3
+  terrain: unknown
+  debug:
+    q: -1
+    r: 0
+    cluster: 8
+- hex: C4
+  terrain: unknown
+  debug:
+    q: -1
+    r: 1
+    cluster: 7
+- hex: C5
+  terrain: unknown
+  debug:
+    q: -1
+    r: 2
+    cluster: 5
+- hex: C6
+  terrain: unknown
+  debug:
+    q: -1
+    r: 3
+    cluster: 4
+- hex: C7
+  terrain: unknown
+  debug:
+    q: -1
+    r: 4
+    cluster: 8
+- hex: C8
+  terrain: unknown
+  debug:
+    q: -1
+    r: 5
+    cluster: 8
+- hex: C9
+  terrain: unknown
+  debug:
+    q: -1
+    r: 6
+    cluster: 5
+- hex: B2
+  terrain: unknown
+  debug:
+    q: -2
+    r: -1
+    cluster: 1
+- hex: B1
+  terrain: unknown
+  debug:
+    q: -2
+    r: -2
+    cluster: 1
+- hex: B3
+  terrain: unknown
+  debug:
+    q: -2
+    r: 0
+    cluster: 8
+- hex: B4
+  terrain: unknown
+  debug:
+    q: -2
+    r: 1
+    cluster: 8
+- hex: B5
+  terrain: unknown
+  debug:
+    q: -2
+    r: 2
+    cluster: 5
+- hex: B6
+  terrain: unknown
+  debug:
+    q: -2
+    r: 3
+    cluster: 5
+- hex: B7
+  terrain: unknown
+  debug:
+    q: -2
+    r: 4
+    cluster: 1
+- hex: B8
+  terrain: unknown
+  debug:
+    q: -2
+    r: 5
+    cluster: 8
+- hex: B9
+  terrain: unknown
+  debug:
+    q: -2
+    r: 6
+    cluster: 8
+- hex: A2
+  terrain: unknown
+  debug:
+    q: -3
+    r: -1
+    cluster: 5
+- hex: A1
+  terrain: unknown
+  debug:
+    q: -3
+    r: -2
+    cluster: 5
+- hex: A3
+  terrain: unknown
+  debug:
+    q: -3
+    r: 0
+    cluster: 8
+- hex: A4
+  terrain: unknown
+  debug:
+    q: -3
+    r: 1
+    cluster: 5
+- hex: A5
+  terrain: unknown
+  debug:
+    q: -3
+    r: 2
+    cluster: 5
+- hex: A6
+  terrain: unknown
+  debug:
+    q: -3
+    r: 3
+    cluster: 1
+- hex: A7
+  terrain: unknown
+  debug:
+    q: -3
+    r: 4
+    cluster: 5
+- hex: A8
+  terrain: unknown
+  debug:
+    q: -3
+    r: 5
+    cluster: 5
+- hex: A9
+  terrain: unknown
+  debug:
+    q: -3
+    r: 6
+    cluster: 5
+- hex: D2
+  terrain: unknown
+  debug:
+    q: 0
+    r: -1
+    cluster: 5
+- hex: D1
+  terrain: unknown
+  debug:
+    q: 0
+    r: -2
+    cluster: 10
+- hex: D3
+  terrain: unknown
+  debug:
+    q: 0
+    r: 0
+    cluster: 5
+- hex: D4
+  terrain: unknown
+  debug:
+    q: 0
+    r: 1
+    cluster: 5
+- hex: D5
+  terrain: unknown
+  debug:
+    q: 0
+    r: 2
+    cluster: 5
+- hex: D6
+  terrain: unknown
+  debug:
+    q: 0
+    r: 3
+    cluster: 5
+- hex: D7
+  terrain: unknown
+  debug:
+    q: 0
+    r: 4
+    cluster: 6
+- hex: D8
+  terrain: unknown
+  debug:
+    q: 0
+    r: 5
+    cluster: 6
+- hex: D9
+  terrain: unknown
+  debug:
+    q: 0
+    r: 6
+    cluster: 1
+- hex: N2
+  terrain: unknown
+  debug:
+    q: 10
+    r: -1
+    cluster: 5
+- hex: N1
+  terrain: unknown
+  debug:
+    q: 10
+    r: -2
+    cluster: 1
+- hex: N3
+  terrain: unknown
+  debug:
+    q: 10
+    r: 0
+    cluster: 0
+- hex: N4
+  terrain: unknown
+  debug:
+    q: 10
+    r: 1
+    cluster: 2
+- hex: N5
+  terrain: unknown
+  debug:
+    q: 10
+    r: 2
+    cluster: 11
+- hex: N6
+  terrain: unknown
+  debug:
+    q: 10
+    r: 3
+    cluster: 2
+- hex: N7
+  terrain: unknown
+  debug:
+    q: 10
+    r: 4
+    cluster: 9
+- hex: N8
+  terrain: unknown
+  debug:
+    q: 10
+    r: 5
+    cluster: 9
+- hex: N9
+  terrain: unknown
+  debug:
+    q: 10
+    r: 6
+    cluster: 6
+- hex: O2
+  terrain: unknown
+  debug:
+    q: 11
+    r: -1
+    cluster: 6
+- hex: O1
+  terrain: unknown
+  debug:
+    q: 11
+    r: -2
+    cluster: 5
+- hex: O3
+  terrain: unknown
+  debug:
+    q: 11
+    r: 0
+    cluster: 2
+- hex: O4
+  terrain: unknown
+  debug:
+    q: 11
+    r: 1
+    cluster: 2
+- hex: O5
+  terrain: unknown
+  debug:
+    q: 11
+    r: 2
+    cluster: 11
+- hex: O6
+  terrain: unknown
+  debug:
+    q: 11
+    r: 3
+    cluster: 3
+- hex: O7
+  terrain: unknown
+  debug:
+    q: 11
+    r: 4
+    cluster: 0
+- hex: O8
+  terrain: unknown
+  debug:
+    q: 11
+    r: 5
+    cluster: 0
+- hex: O9
+  terrain: unknown
+  debug:
+    q: 11
+    r: 6
+    cluster: 5
+- hex: P2
+  terrain: unknown
+  debug:
+    q: 12
+    r: -1
+    cluster: 6
+- hex: P1
+  terrain: unknown
+  debug:
+    q: 12
+    r: -2
+    cluster: 5
+- hex: P3
+  terrain: unknown
+  debug:
+    q: 12
+    r: 0
+    cluster: 9
+- hex: P4
+  terrain: unknown
+  debug:
+    q: 12
+    r: 1
+    cluster: 3
+- hex: P5
+  terrain: unknown
+  debug:
+    q: 12
+    r: 2
+    cluster: 2
+- hex: P6
+  terrain: unknown
+  debug:
+    q: 12
+    r: 3
+    cluster: 11
+- hex: P7
+  terrain: unknown
+  debug:
+    q: 12
+    r: 4
+    cluster: 0
+- hex: P8
+  terrain: unknown
+  debug:
+    q: 12
+    r: 5
+    cluster: 5
+- hex: P9
+  terrain: unknown
+  debug:
+    q: 12
+    r: 6
+    cluster: 5
+- hex: Q2
+  terrain: unknown
+  debug:
+    q: 13
+    r: -1
+    cluster: 2
+- hex: Q1
+  terrain: unknown
+  debug:
+    q: 13
+    r: -2
+    cluster: 5
+- hex: Q3
+  terrain: unknown
+  debug:
+    q: 13
+    r: 0
+    cluster: 3
+- hex: Q4
+  terrain: unknown
+  debug:
+    q: 13
+    r: 1
+    cluster: 0
+- hex: Q5
+  terrain: unknown
+  debug:
+    q: 13
+    r: 2
+    cluster: 2
+- hex: Q6
+  terrain: unknown
+  debug:
+    q: 13
+    r: 3
+    cluster: 0
+- hex: Q7
+  terrain: unknown
+  debug:
+    q: 13
+    r: 4
+    cluster: 5
+- hex: Q8
+  terrain: unknown
+  debug:
+    q: 13
+    r: 5
+    cluster: 1
+- hex: Q9
+  terrain: unknown
+  debug:
+    q: 13
+    r: 6
+    cluster: 5
+- hex: R2
+  terrain: unknown
+  debug:
+    q: 14
+    r: -1
+    cluster: 5
+- hex: R1
+  terrain: unknown
+  debug:
+    q: 14
+    r: -2
+    cluster: 1
+- hex: R3
+  terrain: unknown
+  debug:
+    q: 14
+    r: 0
+    cluster: 8
+- hex: R4
+  terrain: unknown
+  debug:
+    q: 14
+    r: 1
+    cluster: 0
+- hex: R5
+  terrain: unknown
+  debug:
+    q: 14
+    r: 2
+    cluster: 3
+- hex: R6
+  terrain: unknown
+  debug:
+    q: 14
+    r: 3
+    cluster: 3
+- hex: R7
+  terrain: unknown
+  debug:
+    q: 14
+    r: 4
+    cluster: 2
+- hex: R8
+  terrain: unknown
+  debug:
+    q: 14
+    r: 5
+    cluster: 5
+- hex: R9
+  terrain: unknown
+  debug:
+    q: 14
+    r: 6
+    cluster: 1
+- hex: S2
+  terrain: unknown
+  debug:
+    q: 15
+    r: -1
+    cluster: 5
+- hex: S1
+  terrain: unknown
+  debug:
+    q: 15
+    r: -2
+    cluster: 7
+- hex: S3
+  terrain: unknown
+  debug:
+    q: 15
+    r: 0
+    cluster: 0
+- hex: S4
+  terrain: unknown
+  debug:
+    q: 15
+    r: 1
+    cluster: 0
+- hex: S5
+  terrain: unknown
+  debug:
+    q: 15
+    r: 2
+    cluster: 8
+- hex: S6
+  terrain: unknown
+  debug:
+    q: 15
+    r: 3
+    cluster: 2
+- hex: S7
+  terrain: unknown
+  debug:
+    q: 15
+    r: 4
+    cluster: 5
+- hex: S8
+  terrain: unknown
+  debug:
+    q: 15
+    r: 5
+    cluster: 7
+- hex: S9
+  terrain: unknown
+  debug:
+    q: 15
+    r: 6
+    cluster: 8
+- hex: T2
+  terrain: unknown
+  debug:
+    q: 16
+    r: -1
+    cluster: 5
+- hex: T1
+  terrain: unknown
+  debug:
+    q: 16
+    r: -2
+    cluster: 6
+- hex: T3
+  terrain: unknown
+  debug:
+    q: 16
+    r: 0
+    cluster: 5
+- hex: T4
+  terrain: unknown
+  debug:
+    q: 16
+    r: 1
+    cluster: 9
+- hex: T5
+  terrain: unknown
+  debug:
+    q: 16
+    r: 2
+    cluster: 1
+- hex: T6
+  terrain: unknown
+  debug:
+    q: 16
+    r: 3
+    cluster: 4
+- hex: T7
+  terrain: unknown
+  debug:
+    q: 16
+    r: 4
+    cluster: 4
+- hex: T8
+  terrain: unknown
+  debug:
+    q: 16
+    r: 5
+    cluster: 4
+- hex: T9
+  terrain: unknown
+  debug:
+    q: 16
+    r: 6
+    cluster: 1
+- hex: U2
+  terrain: unknown
+  debug:
+    q: 17
+    r: -1
+    cluster: 1
+- hex: U1
+  terrain: unknown
+  debug:
+    q: 17
+    r: -2
+    cluster: 5
+- hex: U3
+  terrain: unknown
+  debug:
+    q: 17
+    r: 0
+    cluster: 5
+- hex: U4
+  terrain: unknown
+  debug:
+    q: 17
+    r: 1
+    cluster: 5
+- hex: U5
+  terrain: unknown
+  debug:
+    q: 17
+    r: 2
+    cluster: 5
+- hex: U6
+  terrain: unknown
+  debug:
+    q: 17
+    r: 3
+    cluster: 1
+- hex: U7
+  terrain: unknown
+  debug:
+    q: 17
+    r: 4
+    cluster: 4
+- hex: U8
+  terrain: unknown
+  debug:
+    q: 17
+    r: 5
+    cluster: 7
+- hex: U9
+  terrain: unknown
+  debug:
+    q: 17
+    r: 6
+    cluster: 5
+- hex: V2
+  terrain: unknown
+  debug:
+    q: 18
+    r: -1
+    cluster: 1
+- hex: V1
+  terrain: unknown
+  debug:
+    q: 18
+    r: -2
+    cluster: 5
+- hex: V3
+  terrain: unknown
+  debug:
+    q: 18
+    r: 0
+    cluster: 7
+- hex: V4
+  terrain: unknown
+  debug:
+    q: 18
+    r: 1
+    cluster: 1
+- hex: V5
+  terrain: unknown
+  debug:
+    q: 18
+    r: 2
+    cluster: 2
+- hex: V6
+  terrain: unknown
+  debug:
+    q: 18
+    r: 3
+    cluster: 6
+- hex: V7
+  terrain: unknown
+  debug:
+    q: 18
+    r: 4
+    cluster: 7
+- hex: V8
+  terrain: unknown
+  debug:
+    q: 18
+    r: 5
+    cluster: 5
+- hex: V9
+  terrain: unknown
+  debug:
+    q: 18
+    r: 6
+    cluster: 7
+- hex: W2
+  terrain: unknown
+  debug:
+    q: 19
+    r: -1
+    cluster: 6
+- hex: W1
+  terrain: unknown
+  debug:
+    q: 19
+    r: -2
+    cluster: 5
+- hex: W3
+  terrain: unknown
+  debug:
+    q: 19
+    r: 0
+    cluster: 3
+- hex: W4
+  terrain: unknown
+  debug:
+    q: 19
+    r: 1
+    cluster: 3
+- hex: W5
+  terrain: unknown
+  debug:
+    q: 19
+    r: 2
+    cluster: 0
+- hex: W6
+  terrain: unknown
+  debug:
+    q: 19
+    r: 3
+    cluster: 6
+- hex: W7
+  terrain: unknown
+  debug:
+    q: 19
+    r: 4
+    cluster: 5
+- hex: W8
+  terrain: unknown
+  debug:
+    q: 19
+    r: 5
+    cluster: 1
+- hex: W9
+  terrain: unknown
+  debug:
+    q: 19
+    r: 6
+    cluster: 8
+- hex: E2
+  terrain: unknown
+  debug:
+    q: 1
+    r: -1
+    cluster: 1
+- hex: E1
+  terrain: unknown
+  debug:
+    q: 1
+    r: -2
+    cluster: 5
+- hex: E3
+  terrain: unknown
+  debug:
+    q: 1
+    r: 0
+    cluster: 7
+- hex: E4
+  terrain: unknown
+  debug:
+    q: 1
+    r: 1
+    cluster: 5
+- hex: E5
+  terrain: unknown
+  debug:
+    q: 1
+    r: 2
+    cluster: 5
+- hex: E6
+  terrain: unknown
+  debug:
+    q: 1
+    r: 3
+    cluster: 6
+- hex: E7
+  terrain: unknown
+  debug:
+    q: 1
+    r: 4
+    cluster: 9
+- hex: E8
+  terrain: unknown
+  debug:
+    q: 1
+    r: 5
+    cluster: 6
+- hex: E9
+  terrain: unknown
+  debug:
+    q: 1
+    r: 6
+    cluster: 5
+- hex: X2
+  terrain: unknown
+  debug:
+    q: 20
+    r: -1
+    cluster: 5
+- hex: X1
+  terrain: unknown
+  debug:
+    q: 20
+    r: -2
+    cluster: 5
+- hex: X3
+  terrain: unknown
+  debug:
+    q: 20
+    r: 0
+    cluster: 0
+- hex: X4
+  terrain: unknown
+  debug:
+    q: 20
+    r: 1
+    cluster: 9
+- hex: X5
+  terrain: unknown
+  debug:
+    q: 20
+    r: 2
+    cluster: 3
+- hex: X6
+  terrain: unknown
+  debug:
+    q: 20
+    r: 3
+    cluster: 9
+- hex: X7
+  terrain: unknown
+  debug:
+    q: 20
+    r: 4
+    cluster: 3
+- hex: X8
+  terrain: unknown
+  debug:
+    q: 20
+    r: 5
+    cluster: 5
+- hex: X9
+  terrain: unknown
+  debug:
+    q: 20
+    r: 6
+    cluster: 5
+- hex: Y2
+  terrain: unknown
+  debug:
+    q: 21
+    r: -1
+    cluster: 5
+- hex: Y1
+  terrain: unknown
+  debug:
+    q: 21
+    r: -2
+    cluster: 7
+- hex: Y3
+  terrain: unknown
+  debug:
+    q: 21
+    r: 0
+    cluster: 0
+- hex: Y4
+  terrain: unknown
+  debug:
+    q: 21
+    r: 1
+    cluster: 9
+- hex: Y5
+  terrain: unknown
+  debug:
+    q: 21
+    r: 2
+    cluster: 3
+- hex: Y6
+  terrain: unknown
+  debug:
+    q: 21
+    r: 3
+    cluster: 9
+- hex: Y7
+  terrain: unknown
+  debug:
+    q: 21
+    r: 4
+    cluster: 6
+- hex: Y8
+  terrain: unknown
+  debug:
+    q: 21
+    r: 5
+    cluster: 1
+- hex: Y9
+  terrain: unknown
+  debug:
+    q: 21
+    r: 6
+    cluster: 8
+- hex: Z2
+  terrain: unknown
+  debug:
+    q: 22
+    r: -1
+    cluster: 5
+- hex: Z1
+  terrain: unknown
+  debug:
+    q: 22
+    r: -2
+    cluster: 8
+- hex: Z3
+  terrain: unknown
+  debug:
+    q: 22
+    r: 0
+    cluster: 6
+- hex: Z4
+  terrain: unknown
+  debug:
+    q: 22
+    r: 1
+    cluster: 9
+- hex: Z5
+  terrain: unknown
+  debug:
+    q: 22
+    r: 2
+    cluster: 2
+- hex: Z6
+  terrain: unknown
+  debug:
+    q: 22
+    r: 3
+    cluster: 2
+- hex: Z7
+  terrain: unknown
+  debug:
+    q: 22
+    r: 4
+    cluster: 0
+- hex: Z8
+  terrain: unknown
+  debug:
+    q: 22
+    r: 5
+    cluster: 6
+- hex: Z9
+  terrain: unknown
+  debug:
+    q: 22
+    r: 6
+    cluster: 8
+- hex: AA2
+  terrain: unknown
+  debug:
+    q: 23
+    r: -1
+    cluster: 5
+- hex: AA1
+  terrain: unknown
+  debug:
+    q: 23
+    r: -2
+    cluster: 8
+- hex: AA3
+  terrain: unknown
+  debug:
+    q: 23
+    r: 0
+    cluster: 0
+- hex: AA4
+  terrain: unknown
+  debug:
+    q: 23
+    r: 1
+    cluster: 0
+- hex: AA5
+  terrain: unknown
+  debug:
+    q: 23
+    r: 2
+    cluster: 2
+- hex: AA6
+  terrain: unknown
+  debug:
+    q: 23
+    r: 3
+    cluster: 2
+- hex: AA7
+  terrain: unknown
+  debug:
+    q: 23
+    r: 4
+    cluster: 0
+- hex: AA8
+  terrain: unknown
+  debug:
+    q: 23
+    r: 5
+    cluster: 6
+- hex: AA9
+  terrain: unknown
+  debug:
+    q: 23
+    r: 6
+    cluster: 5
+- hex: AB2
+  terrain: unknown
+  debug:
+    q: 24
+    r: -1
+    cluster: 6
+- hex: AB1
+  terrain: unknown
+  debug:
+    q: 24
+    r: -2
+    cluster: 1
+- hex: AB3
+  terrain: unknown
+  debug:
+    q: 24
+    r: 0
+    cluster: 5
+- hex: AB4
+  terrain: unknown
+  debug:
+    q: 24
+    r: 1
+    cluster: 6
+- hex: AB5
+  terrain: unknown
+  debug:
+    q: 24
+    r: 2
+    cluster: 0
+- hex: AB6
+  terrain: unknown
+  debug:
+    q: 24
+    r: 3
+    cluster: 2
+- hex: AB7
+  terrain: unknown
+  debug:
+    q: 24
+    r: 4
+    cluster: 0
+- hex: AB8
+  terrain: unknown
+  debug:
+    q: 24
+    r: 5
+    cluster: 9
+- hex: AB9
+  terrain: unknown
+  debug:
+    q: 24
+    r: 6
+    cluster: 0
+- hex: AC2
+  terrain: unknown
+  debug:
+    q: 25
+    r: -1
+    cluster: 8
+- hex: AC1
+  terrain: unknown
+  debug:
+    q: 25
+    r: -2
+    cluster: 6
+- hex: AC3
+  terrain: unknown
+  debug:
+    q: 25
+    r: 0
+    cluster: 5
+- hex: AC4
+  terrain: unknown
+  debug:
+    q: 25
+    r: 1
+    cluster: 5
+- hex: AC5
+  terrain: unknown
+  debug:
+    q: 25
+    r: 2
+    cluster: 0
+- hex: AC6
+  terrain: unknown
+  debug:
+    q: 25
+    r: 3
+    cluster: 0
+- hex: AC7
+  terrain: unknown
+  debug:
+    q: 25
+    r: 4
+    cluster: 0
+- hex: AC8
+  terrain: unknown
+  debug:
+    q: 25
+    r: 5
+    cluster: 0
+- hex: AC9
+  terrain: unknown
+  debug:
+    q: 25
+    r: 6
+    cluster: 5
+- hex: AD2
+  terrain: unknown
+  debug:
+    q: 26
+    r: -1
+    cluster: 1
+- hex: AD1
+  terrain: unknown
+  debug:
+    q: 26
+    r: -2
+    cluster: 10
+- hex: AD3
+  terrain: unknown
+  debug:
+    q: 26
+    r: 0
+    cluster: 8
+- hex: AD4
+  terrain: unknown
+  debug:
+    q: 26
+    r: 1
+    cluster: 1
+- hex: AD5
+  terrain: unknown
+  debug:
+    q: 26
+    r: 2
+    cluster: 5
+- hex: AD6
+  terrain: unknown
+  debug:
+    q: 26
+    r: 3
+    cluster: 6
+- hex: AD7
+  terrain: unknown
+  debug:
+    q: 26
+    r: 4
+    cluster: 5
+- hex: AD8
+  terrain: unknown
+  debug:
+    q: 26
+    r: 5
+    cluster: 1
+- hex: AD9
+  terrain: unknown
+  debug:
+    q: 26
+    r: 6
+    cluster: 6
+- hex: AE2
+  terrain: unknown
+  debug:
+    q: 27
+    r: -1
+    cluster: 5
+- hex: AE1
+  terrain: unknown
+  debug:
+    q: 27
+    r: -2
+    cluster: 5
+- hex: AE3
+  terrain: unknown
+  debug:
+    q: 27
+    r: 0
+    cluster: 8
+- hex: AE4
+  terrain: unknown
+  debug:
+    q: 27
+    r: 1
+    cluster: 5
+- hex: AE5
+  terrain: unknown
+  debug:
+    q: 27
+    r: 2
+    cluster: 5
+- hex: AE6
+  terrain: unknown
+  debug:
+    q: 27
+    r: 3
+    cluster: 1
+- hex: AE7
+  terrain: unknown
+  debug:
+    q: 27
+    r: 4
+    cluster: 1
+- hex: AE8
+  terrain: unknown
+  debug:
+    q: 27
+    r: 5
+    cluster: 5
+- hex: AE9
+  terrain: unknown
+  debug:
+    q: 27
+    r: 6
+    cluster: 5
+- hex: F2
+  terrain: unknown
+  debug:
+    q: 2
+    r: -1
+    cluster: 5
+- hex: F1
+  terrain: unknown
+  debug:
+    q: 2
+    r: -2
+    cluster: 7
+- hex: F3
+  terrain: unknown
+  debug:
+    q: 2
+    r: 0
+    cluster: 6
+- hex: F4
+  terrain: unknown
+  debug:
+    q: 2
+    r: 1
+    cluster: 6
+- hex: F5
+  terrain: unknown
+  debug:
+    q: 2
+    r: 2
+    cluster: 5
+- hex: F6
+  terrain: unknown
+  debug:
+    q: 2
+    r: 3
+    cluster: 6
+- hex: F7
+  terrain: unknown
+  debug:
+    q: 2
+    r: 4
+    cluster: 0
+- hex: F8
+  terrain: unknown
+  debug:
+    q: 2
+    r: 5
+    cluster: 0
+- hex: F9
+  terrain: unknown
+  debug:
+    q: 2
+    r: 6
+    cluster: 1
+- hex: G2
+  terrain: unknown
+  debug:
+    q: 3
+    r: -1
+    cluster: 0
+- hex: G1
+  terrain: unknown
+  debug:
+    q: 3
+    r: -2
+    cluster: 5
+- hex: G3
+  terrain: unknown
+  debug:
+    q: 3
+    r: 0
+    cluster: 9
+- hex: G4
+  terrain: unknown
+  debug:
+    q: 3
+    r: 1
+    cluster: 0
+- hex: G5
+  terrain: unknown
+  debug:
+    q: 3
+    r: 2
+    cluster: 0
+- hex: G6
+  terrain: unknown
+  debug:
+    q: 3
+    r: 3
+    cluster: 3
+- hex: G7
+  terrain: unknown
+  debug:
+    q: 3
+    r: 4
+    cluster: 1
+- hex: G8
+  terrain: unknown
+  debug:
+    q: 3
+    r: 5
+    cluster: 8
+- hex: G9
+  terrain: unknown
+  debug:
+    q: 3
+    r: 6
+    cluster: 8
+- hex: H2
+  terrain: unknown
+  debug:
+    q: 4
+    r: -1
+    cluster: 5
+- hex: H1
+  terrain: unknown
+  debug:
+    q: 4
+    r: -2
+    cluster: 5
+- hex: H3
+  terrain: unknown
+  debug:
+    q: 4
+    r: 0
+    cluster: 3
+- hex: H4
+  terrain: unknown
+  debug:
+    q: 4
+    r: 1
+    cluster: 2
+- hex: H5
+  terrain: unknown
+  debug:
+    q: 4
+    r: 2
+    cluster: 2
+- hex: H6
+  terrain: unknown
+  debug:
+    q: 4
+    r: 3
+    cluster: 0
+- hex: H7
+  terrain: unknown
+  debug:
+    q: 4
+    r: 4
+    cluster: 3
+- hex: H8
+  terrain: unknown
+  debug:
+    q: 4
+    r: 5
+    cluster: 3
+- hex: H9
+  terrain: unknown
+  debug:
+    q: 4
+    r: 6
+    cluster: 4
+- hex: I2
+  terrain: unknown
+  debug:
+    q: 5
+    r: -1
+    cluster: 5
+- hex: I1
+  terrain: unknown
+  debug:
+    q: 5
+    r: -2
+    cluster: 8
+- hex: I3
+  terrain: unknown
+  debug:
+    q: 5
+    r: 0
+    cluster: 0
+- hex: I4
+  terrain: unknown
+  debug:
+    q: 5
+    r: 1
+    cluster: 11
+- hex: I5
+  terrain: unknown
+  debug:
+    q: 5
+    r: 2
+    cluster: 2
+- hex: I6
+  terrain: unknown
+  debug:
+    q: 5
+    r: 3
+    cluster: 3
+- hex: I7
+  terrain: unknown
+  debug:
+    q: 5
+    r: 4
+    cluster: 0
+- hex: I8
+  terrain: unknown
+  debug:
+    q: 5
+    r: 5
+    cluster: 6
+- hex: I9
+  terrain: unknown
+  debug:
+    q: 5
+    r: 6
+    cluster: 1
+- hex: J2
+  terrain: unknown
+  debug:
+    q: 6
+    r: -1
+    cluster: 5
+- hex: J1
+  terrain: unknown
+  debug:
+    q: 6
+    r: -2
+    cluster: 8
+- hex: J3
+  terrain: unknown
+  debug:
+    q: 6
+    r: 0
+    cluster: 0
+- hex: J4
+  terrain: unknown
+  debug:
+    q: 6
+    r: 1
+    cluster: 9
+- hex: J5
+  terrain: unknown
+  debug:
+    q: 6
+    r: 2
+    cluster: 11
+- hex: J6
+  terrain: unknown
+  debug:
+    q: 6
+    r: 3
+    cluster: 0
+- hex: J7
+  terrain: unknown
+  debug:
+    q: 6
+    r: 4
+    cluster: 9
+- hex: J8
+  terrain: unknown
+  debug:
+    q: 6
+    r: 5
+    cluster: 0
+- hex: J9
+  terrain: unknown
+  debug:
+    q: 6
+    r: 6
+    cluster: 6
+- hex: K2
+  terrain: unknown
+  debug:
+    q: 7
+    r: -1
+    cluster: 3
+- hex: K1
+  terrain: unknown
+  debug:
+    q: 7
+    r: -2
+    cluster: 5
+- hex: K3
+  terrain: unknown
+  debug:
+    q: 7
+    r: 0
+    cluster: 3
+- hex: K4
+  terrain: unknown
+  debug:
+    q: 7
+    r: 1
+    cluster: 0
+- hex: K5
+  terrain: unknown
+  debug:
+    q: 7
+    r: 2
+    cluster: 2
+- hex: K6
+  terrain: unknown
+  debug:
+    q: 7
+    r: 3
+    cluster: 2
+- hex: K7
+  terrain: unknown
+  debug:
+    q: 7
+    r: 4
+    cluster: 9
+- hex: K8
+  terrain: unknown
+  debug:
+    q: 7
+    r: 5
+    cluster: 3
+- hex: K9
+  terrain: unknown
+  debug:
+    q: 7
+    r: 6
+    cluster: 1
+- hex: L2
+  terrain: unknown
+  debug:
+    q: 8
+    r: -1
+    cluster: 5
+- hex: L1
+  terrain: unknown
+  debug:
+    q: 8
+    r: -2
+    cluster: 7
+- hex: L3
+  terrain: unknown
+  debug:
+    q: 8
+    r: 0
+    cluster: 3
+- hex: L4
+  terrain: unknown
+  debug:
+    q: 8
+    r: 1
+    cluster: 3
+- hex: L5
+  terrain: unknown
+  debug:
+    q: 8
+    r: 2
+    cluster: 11
+- hex: L6
+  terrain: unknown
+  debug:
+    q: 8
+    r: 3
+    cluster: 2
+- hex: L7
+  terrain: unknown
+  debug:
+    q: 8
+    r: 4
+    cluster: 3
+- hex: L8
+  terrain: unknown
+  debug:
+    q: 8
+    r: 5
+    cluster: 0
+- hex: L9
+  terrain: unknown
+  debug:
+    q: 8
+    r: 6
+    cluster: 4
+- hex: M2
+  terrain: unknown
+  debug:
+    q: 9
+    r: -1
+    cluster: 6
+- hex: M1
+  terrain: unknown
+  debug:
+    q: 9
+    r: -2
+    cluster: 5
+- hex: M3
+  terrain: unknown
+  debug:
+    q: 9
+    r: 0
+    cluster: 3
+- hex: M4
+  terrain: unknown
+  debug:
+    q: 9
+    r: 1
+    cluster: 2
+- hex: M5
+  terrain: unknown
+  debug:
+    q: 9
+    r: 2
+    cluster: 11
+- hex: M6
+  terrain: unknown
+  debug:
+    q: 9
+    r: 3
+    cluster: 3
+- hex: M7
+  terrain: unknown
+  debug:
+    q: 9
+    r: 4
+    cluster: 0
+- hex: M8
+  terrain: unknown
+  debug:
+    q: 9
+    r: 5
+    cluster: 0
+- hex: M9
+  terrain: unknown
+  debug:
+    q: 9
+    r: 6
+    cluster: 5

@@ -1,0 +1,11 @@
+{
+  "image": "tests/the-russian-campaign.jpeg",
+  "grid_type": "hex_pointy",
+  "side_length": 21.504776186331462,
+  "rotation_deg": 0.013836582553705078,
+  "origin_x": 37.45960175840383,
+  "origin_y": 6.229423495866794,
+  "tilt_x": 0.00012852208507136846,
+  "tilt_y": 0.00011712871411165095,
+  "focal": 1024.031988367904
+}
