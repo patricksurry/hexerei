@@ -3,5 +3,5 @@ import { App } from './App';
 
 test('renders without crashing', () => {
   render(<App />);
-  expect(screen.getByText(/hexerei/i)).toBeInTheDocument();
+  expect(screen.getByText(/Omni-Path/i)).toBeInTheDocument();
 });

@@ -1,7 +1,13 @@
+import { AppLayout } from './layout/AppLayout';
+
 export function App() {
   return (
-    <div>
-      <h1>Hexerei Editor</h1>
-    </div>
+    <AppLayout
+      commandBar={<div>Omni-Path</div>}
+      leftPanel={<div>Feature Stack</div>}
+      canvas={<div>Canvas</div>}
+      rightPanel={<div>Inspector</div>}
+      statusBar={<div>Status</div>}
+    />
   );
 }
