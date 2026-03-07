@@ -2,14 +2,16 @@
 
 ### Document Envelope
 
+The top-level structure of a HexMap document.
+
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `hexmap` | string | YES | Format version. MUST be `"1.0"` for this spec. |
-| `metadata` | object | no | Descriptive metadata (Section 4.2). |
-| `layout` | object | YES | Grid geometry and coordinates (Section 4.3). |
-| `terrain` | object | no | Terrain type definitions (Section 4.5). |
-| `features` | array | no | Map content (Section 4.7). |
-| `extensions` | object | no | Reserved for extensions (Section 8). |
+| `metadata` | object | no | Descriptive metadata (see [Metadata](#metadata) below). |
+| `layout` | object | YES | Grid geometry and coordinates (see [Layout Geometry](#layout-geometry) below). |
+| `terrain` | object | no | Terrain type definitions (see [Terrain Vocabulary](#terrain-vocabulary) below). |
+| `features` | array | no | Map content (see [Features](#features) below). |
+| `extensions` | object | no | Reserved for extensions. |
 
 ### Metadata
 
@@ -46,18 +48,20 @@ It is REQUIRED.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `hex_top` | string | YES | `"flat"` or `"pointy"`. |
-| `at` | string | YES | HexPath defining the valid hexes in the map. |
+| `all` | string | YES | HexPath defining the valid hexes in the map. |
 | `stagger` | string | no | `"low"` or `"high"`. Default: `"low"`. See below. |
 | `label` | string | no | Label pattern (e.g., `"XXYY"`). Default: `"auto"`. |
 | `origin` | string | no | Visual corner where numbers start. Default: `"top-left"`. |
-| `geo` | object | no | Geographic scale and anchoring. See below. |
+| `georef` | object | no | Geographic scale and anchoring. See below. |
 
 #### layout.all (The Map Extent)
 
-The `at` field defines the map's physical extent using the HexPath DSL. 
+The `all` field defines the map's physical extent using the HexPath DSL. 
 This mandatory field determines which hexes exist in the coordinate space.
 Any hex not included in this collection is considered "off-map" and cannot
 contain features.
+
+The identifier **`@all`** (see [Default values and the @all identifier](#default-values-and-the-all-identifier) below) always resolves to this full collection of hexes.
 
 Implementations MUST calculate the logical bounding box of the map by
 analyzing the set of hexes defined here. 
@@ -89,9 +93,9 @@ rectangular layout, alternating columns/rows must be offset.
 `"low"` corresponds to Red Blob Games' "odd-q" (flat-top) or "odd-r"
 (pointy-top).
 
-#### geo (geographic anchoring and scale)
+#### georef (geographic anchoring and scale)
 
-The optional `geo` object provides physical scale and anchors the hex
+The optional `georef` object provides physical scale and anchors the hex
 layout to real-world geography.
 
 | Field | Type | Description |
@@ -99,7 +103,7 @@ layout to real-world geography.
 | `scale` | number | Meters across a hex (center to center of opposite edges). |
 | `anchor` | object | `{ lat: number, lng: number }` of a reference hex center. |
 | `anchor_hex` | string | Which hex the anchor refers to. Default: first hex. |
-| `bearing` | number | Rotation in degrees clockwise from north. Default: 0. |
+| `bearing` | number | The clockwise angle between 'up/top' on the map and real-world North. Default: 0. |
 | `projection` | string | Map projection identifier. Default: `"mercator"`. |
 
 Only `scale` is needed for maps that specify physical size without geographic
@@ -141,8 +145,10 @@ zero-padded width. Any other characters are literal punctuation.
 | `XX.YY` | `"03.04"` | Dot-separated. |
 | `auto` | — | **(Default)** Inferred from the first coordinate in `layout.all`. |
 
+Note that `auto` mode must resolve `XXYY` as column/row (i.e., X, Y), but with ambiguous coordinates, it is RECOMMENDED to specify an explicit label pattern.
+
 The numbers parsed from the labels are used as **literal numeric indices** 
-for the geometric conversions in Section 7. There is no implicit 
+for the geometric conversions in [Section 7 (Hex Geometry Reference)](#hex-geometry-reference). There is no implicit 
 translation; if a map uses labels `1010` through `2020`, the internal 
 column and row indices for those hexes are `10` through `20`.
 
@@ -204,7 +210,7 @@ and MAY specify **Attributes** (properties to apply).
 #### Geometry Selector
 
 A feature defines its target geometry using the `at` key. The value is a
-**HexPath** string (Section 6).
+**HexPath** string (see [HexPath DSL](#hexpath-dsl) in Section 6).
 
 | Key | Collection Type | Description |
 |-----|-----------------|-------------|
@@ -213,7 +219,7 @@ A feature defines its target geometry using the `at` key. The value is a
 The geometry type (Hex, Edge, or Vertex) is inferred from the first absolute
 atom in the HexPath string. All atoms in a single expression MUST resolve
 to the same type. Any subtraction or complex set logic is handled within the
-HexPath string using the `+` and `-` operators (Section 6).
+HexPath string using the `+` and `-` operators (see [Connectivity and Operators](#connectivity--operators) in Section 6).
 
 #### Feature attributes
 

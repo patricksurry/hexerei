@@ -135,7 +135,7 @@ def build_txt(build_dir: Path) -> bool:
 
     try:
         result = subprocess.run(
-            ['xml2rfc', '--text', str(xml_in), '-o', str(txt_out)],
+            [sys.executable, '-m', 'xml2rfc.run', '--text', str(xml_in), '-o', str(txt_out)],
             stderr=subprocess.PIPE,
             text=True,
             check=True

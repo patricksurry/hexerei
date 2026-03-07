@@ -26,7 +26,7 @@ the same JSON Schema as a native JSON document.
 
 ### Validation
 
-Implementations SHOULD validate documents against the JSON Schema defined
+Implementations SHOULD validate documents against the [JSON Schema](#json-schema) defined
 in Section 11. Validation MUST be performed against the JSON representation
 (converting from YAML first if necessary).
 
@@ -35,5 +35,5 @@ in Section 11. Validation MUST be performed against the JSON representation
 The format does not require byte-for-byte round-trip fidelity. An
 implementation that reads and re-serializes a HexMap document MAY produce
 different JSON/YAML (different whitespace, key ordering, feature
-grouping) as long as the semantic content is preserved. See Section 4.7
+grouping) as long as the semantic content is preserved. See [Features](#features) in Section 4
 for the definition of semantic equivalence.

@@ -26,27 +26,48 @@ atom acts as the "Type Anchor" for the entire expression.
     before the first absolute atom (e.g., `1n 0101`). If an expression starts with
     relative steps, they are tracked as offsets from a virtual origin until the
     first absolute atom is encountered. At that point, all preceding steps are
-    retroactively resolved relative to that anchor's coordinate.
+    retroactively resolved relative to that anchor's coordinate. 
+    This is particularly important for off-board path entry (e.g., a river 
+    entering at a specific hexside), where absolute off-board coordinates are 
+    unnatural.
+
 *   **Multiple Anchors**: If multiple absolute atoms appear, each one resets the
     cursor to that absolute position. All atoms MUST still resolve to the same
     geometry type (Hex, Edge, or Vertex).
 
-### Connectivity & Operators
+### Connectivity and Operators
 
 *   **Space (` `)**: **Shortest Path.** Connects the previous cursor to the next
     atom using the geometric shortest path.
+
 *   **Nudge (`>[dir]`)**: Breaks ties in shortest paths or forces a specific
-    directional bias.
+    directional bias. Nudges can use either cardinal compass directions (e.g., `>NE`) 
+    or integer hours (e.g., `>1`).
     *   Example: `a1 >ne c3`. Prefer the shortest path that "leans" toward the
-        North-East.
+        North-East (approx 1:30 position).
+
+    Note that there is an implicit nudge towards equal coordinates (e.g., `A1 A10` 
+    implies the straight column `A1, A2, ..., A10`) even in staggered layouts.
+
 *   **Comma (`,`)**: **Jump.** Ends the current segment. The next atom adds to
     the collection without a connecting path from the previous cursor.
+
 *   **Semicolon (`;`)**: **Close.** Connects the current cursor back to the
     start of the current segment and ends the segment.
+    The path is closed along a straight line between the two points, with explicit 
+    or implicit nudge applied. An error occurs if there are geometric ties 
+    that cannot be resolved by the current nudge.
+
 *   **Exclamation (`!`)**: **Close & Fill.** Closes the segment (like `;`) and
     then adds all items contained within the resulting boundary to the collection.
+    The fill operation uses the same geometry type as the expression:
+    *   A hex path fills with all hexes within the closed boundary.
+    *   An edge path fills with all interior edges within the boundary.
+    *   A vertex path fills with all interior vertices within the boundary.
+
 *   **Plus (`+`)**: **Include Mode.** (Default) Switches the cursor to add
     subsequent atoms and paths to the collection.
+
 *   **Minus (`-`)**: **Exclude Mode.** Switches the cursor to subtract
     subsequent atoms and paths from the collection.
 

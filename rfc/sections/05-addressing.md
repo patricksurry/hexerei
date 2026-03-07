@@ -11,21 +11,18 @@ The addressing notation for atoms follows this grammar (ABNF-style):
 ```
 atom        = hex-ref / edge-ref / vertex-ref / clock-ref / ref-id
 hex-ref     = user-coord
-edge-ref    = user-coord "/" direction
-vertex-ref  = user-coord "." direction
+edge-ref    = user-coord "/" compass-dir
+vertex-ref  = user-coord "." compass-dir
 clock-ref   = user-coord "@" hour
 ref-id      = "@" identifier
-direction   = compass-dir / index
 compass-dir = "N" / "NE" / "E" / "SE" / "S" / "SW" / "W" / "NW"
 hour        = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "10" / "11" / "12"
-index       = "1" / "2" / "3" / "4" / "5" / "6"
 ```
 
 Where `user-coord` is a string matching the label pattern.
 
 The `/` separator marks edge references, the `.` separator marks vertex
-references, and the `@` separator marks **clock-based** references (Section 5.6).
-Indices 1-6 are clockwise from 12 o'clock (see Section 5.5).
+references, and the `@` separator marks **clock-based** references (see [Numeric addressing with clock hours](#numeric-addressing-with-clock-hours) below).
 
 ### Hexes
 
@@ -36,28 +33,26 @@ another feature, or using a reserved identifier:
 0304        # XXYY format
 C4          # letter-number format
 @moscow     # reference to feature 'moscow'
-@all        # reserved: resolves to all hexes in layout.hexes
+@all        # reserved: resolves to all hexes in layout.at
 ```
 
 ### Edges
 
-An edge is referenced as `hex/direction` (compass or index) or using the
+An edge is referenced as `hex/direction` (using cardinal compass directions) or using the
 universal clock notation `hex@hour`:
 
 ```
 0304/N      # north edge of hex 0304 (compass direction)
-0304/1      # same edge, by clockwise index
 0304@12     # same edge, using 12-position clock
 ```
 
 ### Vertices
 
-A vertex is referenced as `hex.direction` (compass or index) or using the
+A vertex is referenced as `hex.direction` (using cardinal compass directions) or using the
 universal clock notation `hex@hour`:
 
 ```
 0304.NE     # northeast vertex of hex 0304 (compass direction)
-0304.1      # same vertex, by clockwise index
 0304@1      # same vertex, using 12-position clock
 ```
 
@@ -111,36 +106,20 @@ Vertex directions: **N, NE, SE, S, SW, NW** (6 vertices)
 
 ### Numeric addressing with clock hours
 
-Edges and vertices can also be addressed by clockwise index (1-6) or 
-directly by their 12-position clock hour position.
+Edges and vertices can be addressed by their 12-position clock hour position using the `@` separator.
+This provides a orientation-independent way to reference geometry.
 
-The following tables show the mapping:
+The cardinal directions N, E, S, W always correspond to the hours 12, 3, 6, 9. 
+The compound directions NE, SE, SW, NW correspond to either even or odd hours depending on the hex orientation and whether an edge or vertex is being referenced.
 
-**Flat-top:**
+#### Addressing Reference Table
 
-| Index | Edge | Clock | | Index | Vertex | Clock |
-|-------|------|-------|-|-------|--------|-------|
-| 1 | N | 12 | | 1 | NE | 1 |
-| 2 | NE | 2 | | 2 | E | 3 |
-| 3 | SE | 4 | | 3 | SE | 5 |
-| 4 | S | 6 | | 4 | SW | 7 |
-| 5 | SW | 8 | | 5 | W | 9 |
-| 6 | NW | 10 | | 6 | NW | 11 |
+| Clock | 12 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Flat-top** | Edge N | Vert NE | Edge NE | Vert E | Edge SE | Vert SE | Edge S | Vert SW | Edge SW | Vert W | Edge NW | Vert NW |
+| **Pointy-top**| Vert N | Edge NE | Vert NE | Edge E | Vert SE | Edge SE | Vert S | Edge SW | Vert SW | Edge W | Vert NW | Edge NW |
 
-**Pointy-top:**
-
-| Index | Edge | Clock | | Index | Vertex | Clock |
-|-------|------|-------|-|-------|--------|-------|
-| 1 | NE | 1 | | 1 | N | 12 |
-| 2 | E | 3 | | 2 | NE | 2 |
-| 3 | SE | 5 | | 3 | SE | 4 |
-| 4 | SW | 7 | | 4 | S | 6 |
-| 5 | W | 9 | | 5 | SW | 8 |
-| 6 | NW | 11 | | 6 | NW | 10 |
-
-So `0304/1` is the first edge clockwise from 12 o'clock, and `0304.1`
-is the first vertex. Using the clock separator, these are `0304@12`
-and `0304@1`.
+So `0304@12` is the North edge of a flat-top hex, and `0304@1` is its North-East vertex.
 
 ### Edge and vertex equivalence
 
@@ -157,4 +136,4 @@ MAY reference the same edge or vertex from different hexes in different
 feature entries. For undirected features, all references to the same
 physical edge are equivalent. For onesided features (`onesided: true` in
 the terrain vocabulary), the choice of referencing hex carries semantic
-meaning (Section 4.7, Edge features).
+meaning (see [Features](#features) in Section 4).

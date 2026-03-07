@@ -1,8 +1,8 @@
 # Appendix A: Conventional Terrain Vocabulary (Non-Normative)
 
-For WWII-era hex wargames, the following terrain type identifiers are
-RECOMMENDED as a starting point for interoperability. Maps are not
-required to use these exact identifiers.
+The following terrain type identifiers are RECOMMENDED for broad interoperability.
+These conventions are drawn from traditional hex-based wargames and board games across various eras and scales.
+Maps are not required to use these exact identifiers, but following these conventions improves data interchange.
 
 ## Hex terrain types
 
@@ -14,14 +14,14 @@ required to use these exact identifiers.
 | `rough` | Rough / Broken | Many |
 | `swamp` | Swamp / Marsh | Many |
 | `mountain` | Mountain | Operational+ |
-| `desert` | Desert | North Africa |
+| `desert` | Desert | North Africa / Sci-Fi |
 | `city` | City / Town | All |
 | `major_city` | Major City | Operational+ |
 | `village` | Village | Tactical |
 | `water` | Water / Lake | Many |
 | `ocean` | Ocean / Sea | Naval, coastal |
 | `farmland` | Farmland / Fields | Tactical |
-| `bocage` | Bocage | Normandy |
+| `bocage` | Bocage | WWII / Tactical |
 | `major_river` | Major River (hex-filling) | Operational+ |
 
 ## Edge terrain types
@@ -35,7 +35,7 @@ required to use these exact identifiers.
 | `slope` | Slope / Elevation Change | **yes** | Tactical |
 | `wall` | Wall (stone, etc.) | no | Tactical |
 | `hedge` | Hedge | no | Tactical |
-| `bocage` | Bocage (edge) | no | Normandy |
+| `bocage` | Bocage (edge) | no | WWII / Tactical |
 | `ford` | Ford | no | Many |
 | `impassable` | Impassable Hexside | no | Various |
 
@@ -47,12 +47,21 @@ required to use these exact identifiers.
 | `ford` | Ford | Many |
 | `crossroads` | Crossroads | Tactical |
 
-## Path terrain types
+## Linear Features (Roads, Rivers, etc.)
 
-| Identifier | Name | Typical games |
-|------------|------|---------------|
-| `road` | Road (primary) | Most |
-| `secondary_road` | Secondary Road / Track | Many |
-| `trail` | Trail | Tactical |
-| `railroad` | Railroad | Operational+ |
-| `river` | River (connected course) | Most |
+Linear features can be represented using either hex or edge geometry. The choice of geometry determines the feature's physical location on the map:
+
+1. **Hex-centered paths**: Features that pass through the center of hexes (e.g., roads, railroads). These are represented as **Hex Collections**.
+2. **Edge-based paths**: Features that follow the boundaries between hexes (e.g., rivers, streams). These are represented as **Edge Collections**.
+
+Recommended identifiers for linear features:
+
+| Identifier | Name | Recommended Geometry |
+|------------|------|----------------------|
+| `road` | Road (primary) | Hex |
+| `secondary_road` | Secondary Road / Track | Hex |
+| `trail` | Trail | Hex or Edge |
+| `railroad` | Railroad | Hex |
+| `river` | River / Stream | Edge |
+| `major_river` | Major River | Hex or Edge |
+| `canal` | Canal | Hex or Edge |

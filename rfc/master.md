@@ -65,4 +65,4 @@ This document describes the HexMap format.
 
 {{sections/appendix-b-clock.md}}
 
-{{sections/appendix-d-open-questions.md}}
+{{sections/appendix-c-open-questions.md}}

@@ -26,7 +26,7 @@ hex_top and stagger.
 Let (col, row) be the parsed column and row indices from the user
 coordinates. 
 
-The `origin` field (Section 4.4) determines the directional orientation of
+The origin configuration (see [User coordinate labeling](#user-coordinate-labeling) in Section 4) determines the directional orientation of
 the axes. For conversions to standard internal coordinates (where columns 
 increase right and rows increase down), the following reflections MUST 
 be applied if the origin is not `"top-left"`:
