@@ -1,0 +1,7 @@
+{
+  "id": "editor-phase-1",
+  "name": "Editor Phase 1: App Shell & Visual Identity",
+  "status": "completed",
+  "owner": "Gemini CLI",
+  "tags": ["web", "react", "editor", "hexmap", "design-tokens"]
+}

@@ -1,7 +1,49 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { vi, beforeEach, afterEach } from 'vitest';
 import { App } from './App';
 
-test('renders without crashing', () => {
+beforeEach(() => {
+  vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mac');
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+test('renders all layout regions', () => {
   render(<App />);
-  expect(screen.getByText(/Omni-Path/i)).toBeInTheDocument();
+  expect(screen.getByRole('banner')).toBeInTheDocument();
+  expect(screen.getByRole('main')).toBeInTheDocument();
+  expect(screen.getByRole('contentinfo')).toBeInTheDocument();
+});
+
+test('Cmd+1 toggles Feature Stack visibility', async () => {
+  const { container } = render(<App />);
+  const panel = container.querySelector('.layout-panel-left');
+  expect(panel).toBeVisible();
+
+  await userEvent.keyboard('{Meta>}1{/Meta}');
+  expect(panel).not.toBeVisible();
+
+  await userEvent.keyboard('{Meta>}1{/Meta}');
+  expect(panel).toBeVisible();
+});
+
+test('Cmd+2 toggles Inspector visibility', async () => {
+  const { container } = render(<App />);
+  const panel = container.querySelector('.layout-panel-right');
+  expect(panel).toBeVisible();
+
+  await userEvent.keyboard('{Meta>}2{/Meta}');
+  expect(panel).not.toBeVisible();
+
+  await userEvent.keyboard('{Meta>}2{/Meta}');
+  expect(panel).toBeVisible();
+});
+
+test('Cmd+K focuses the command bar', async () => {
+  render(<App />);
+  await userEvent.keyboard('{Meta>}k{/Meta}');
+  expect(screen.getByRole('combobox')).toHaveFocus();
 });

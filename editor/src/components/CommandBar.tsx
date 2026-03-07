@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import './CommandBar.css';
 
 interface CommandBarProps {
@@ -10,15 +10,25 @@ interface CommandBarProps {
   onSubmit?: (value: string) => void;
 }
 
-export function CommandBar({
+export interface CommandBarRef {
+  focus: () => void;
+  blur: () => void;
+}
+
+export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(({
   value = '',
   onChange,
   onFocus,
   onBlur,
   onClear,
   onSubmit,
-}: CommandBarProps) {
+}, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+    blur: () => inputRef.current?.blur(),
+  }));
 
   const getMode = (val: string) => {
     if (val.startsWith('>')) return 'command';
@@ -61,4 +71,6 @@ export function CommandBar({
       />
     </div>
   );
-}
+});
+
+CommandBar.displayName = 'CommandBar';
