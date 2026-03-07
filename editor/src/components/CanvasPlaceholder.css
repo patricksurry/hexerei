@@ -1,0 +1,36 @@
+.canvas-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-base);
+  position: relative;
+}
+
+.canvas-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  user-select: none;
+}
+
+.canvas-icon {
+  font-size: 48px;
+  color: var(--text-muted);
+  line-height: 1;
+  opacity: 0.3;
+}
+
+.canvas-text {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.canvas-subtext {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  opacity: 0.7;
+}
