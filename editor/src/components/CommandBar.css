@@ -44,5 +44,6 @@
 }
 
 .command-input:focus {
-  outline: none;
+  outline: 2px solid var(--accent-command);
+  outline-offset: -2px;
 }

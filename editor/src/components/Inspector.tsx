@@ -71,7 +71,7 @@ export function Inspector({
           <h3 className="inspector-heading">GEOMETRY</h3>
           <div className="inspector-row">
             <label>At</label>
-            <span className="font-mono wrap">{feature.at}</span>
+            <span className="font-mono">{feature.at}</span>
           </div>
         </section>
       </div>

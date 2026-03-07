@@ -19,8 +19,8 @@ test('renders all layout regions', () => {
 });
 
 test('Cmd+1 toggles Feature Stack visibility', async () => {
-  const { container } = render(<App />);
-  const panel = container.querySelector('.layout-panel-left');
+  render(<App />);
+  const panel = screen.getByRole('complementary', { name: /features/i });
   expect(panel).toBeVisible();
 
   await userEvent.keyboard('{Meta>}1{/Meta}');
@@ -31,8 +31,8 @@ test('Cmd+1 toggles Feature Stack visibility', async () => {
 });
 
 test('Cmd+2 toggles Inspector visibility', async () => {
-  const { container } = render(<App />);
-  const panel = container.querySelector('.layout-panel-right');
+  render(<App />);
+  const panel = screen.getByRole('complementary', { name: /inspector/i });
   expect(panel).toBeVisible();
 
   await userEvent.keyboard('{Meta>}2{/Meta}');
