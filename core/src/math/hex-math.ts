@@ -101,40 +101,80 @@ export function getCanonicalVertexId(hex: Cube, corner: number): string {
  * "Odd-Q" = Odd columns shoved down. (Stagger Low?)
  * "Even-Q" = Even columns shoved down. (Stagger High? if Odd are up)
  */
-export enum Stagger {
-    Odd = 1, // Odd-Q
-    Even = -1 // Even-Q
+export type Orientation = 'flat-down' | 'flat-up' | 'pointy-right' | 'pointy-left';
+
+export function orientationTop(o: Orientation): HexOrientation {
+    return o.startsWith('flat') ? 'flat' : 'pointy';
 }
 
-export function offsetToCube(col: number, row: number, stagger: Stagger = Stagger.Odd): Cube {
-    const q = col;
-    let r;
-    if (stagger === Stagger.Odd) {
-        // Odd-Q: odd columns shifted down
-        r = row - (col - (col & 1)) / 2;
+enum Stagger {
+    Odd = 1, // Odd-Q or Odd-R
+    Even = -1 // Even-Q or Even-R
+}
+
+export function orientationStagger(o: Orientation): Stagger {
+    return (o === 'flat-down' || o === 'pointy-right') ? Stagger.Odd : Stagger.Even;
+}
+
+export function defaultNudge(o: Orientation): 1 | -1 {
+    return (o === 'flat-down' || o === 'pointy-right') ? 1 : -1;
+}
+
+export function offsetToCube(col: number, row: number, orientation: Orientation = 'flat-down'): Cube {
+    const stagger = orientationStagger(orientation);
+    const top = orientationTop(orientation);
+
+    if (top === 'flat') {
+        const q = col;
+        let r;
+        if (stagger === Stagger.Odd) {
+            r = row - (col - (col & 1)) / 2;
+        } else {
+            r = row - (col + (col & 1)) / 2;
+        }
+        return createHex(q, r, -q - r);
     } else {
-        // Even-Q: even columns shifted down
-        r = row - (col + (col & 1)) / 2;
+        const r = row;
+        let q;
+        if (stagger === Stagger.Odd) {
+            q = col - (row - (row & 1)) / 2;
+        } else {
+            q = col - (row + (row & 1)) / 2;
+        }
+        return createHex(q, r, -q - r);
     }
-    return createHex(q, r, -q - r);
 }
 
-export function cubeToOffset(cube: Cube, stagger: Stagger = Stagger.Odd): Point {
-    const col = cube.q;
-    let row;
-    if (stagger === Stagger.Odd) {
-        row = cube.r + (cube.q - (cube.q & 1)) / 2;
+export function cubeToOffset(cube: Cube, orientation: Orientation = 'flat-down'): Point {
+    const stagger = orientationStagger(orientation);
+    const top = orientationTop(orientation);
+
+    if (top === 'flat') {
+        const col = cube.q;
+        let row;
+        if (stagger === Stagger.Odd) {
+            row = cube.r + (cube.q - (cube.q & 1)) / 2;
+        } else {
+            row = cube.r + (cube.q + (cube.q & 1)) / 2;
+        }
+        return { x: col, y: row };
     } else {
-        row = cube.r + (cube.q + (cube.q & 1)) / 2;
+        const row = cube.r;
+        let col;
+        if (stagger === Stagger.Odd) {
+            col = cube.q + (cube.r - (cube.r & 1)) / 2;
+        } else {
+            col = cube.q + (cube.r + (cube.r & 1)) / 2;
+        }
+        return { x: col, y: row };
     }
-    return { x: col, y: row };
 }
 
-export function createRectangularGrid(cols: number, rows: number, stagger: Stagger = Stagger.Odd, firstCol: number = 0, firstRow: number = 0): Cube[] {
+export function createRectangularGrid(cols: number, rows: number, orientation: Orientation = 'flat-down', firstCol: number = 0, firstRow: number = 0): Cube[] {
     const hexes: Cube[] = [];
     for (let c = firstCol; c < firstCol + cols; c++) {
         for (let r = firstRow; r < firstRow + rows; r++) {
-            hexes.push(offsetToCube(c, r, stagger));
+            hexes.push(offsetToCube(c, r, orientation));
         }
     }
     return hexes;

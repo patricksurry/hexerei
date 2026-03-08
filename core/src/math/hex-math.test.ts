@@ -102,6 +102,32 @@ describe('Hex Math', () => {
         });
     });
 
+    describe('Orientation helpers', () => {
+        it('maps flat-down correctly', () => {
+            expect(Hex.orientationTop('flat-down')).toBe('flat');
+            expect(Hex.orientationStagger('flat-down')).toBe(1);
+            expect(Hex.defaultNudge('flat-down')).toBe(1);
+        });
+
+        it('maps flat-up correctly', () => {
+            expect(Hex.orientationTop('flat-up')).toBe('flat');
+            expect(Hex.orientationStagger('flat-up')).toBe(-1);
+            expect(Hex.defaultNudge('flat-up')).toBe(-1);
+        });
+
+        it('maps pointy-right correctly', () => {
+            expect(Hex.orientationTop('pointy-right')).toBe('pointy');
+            expect(Hex.orientationStagger('pointy-right')).toBe(1);
+            expect(Hex.defaultNudge('pointy-right')).toBe(1);
+        });
+
+        it('maps pointy-left correctly', () => {
+            expect(Hex.orientationTop('pointy-left')).toBe('pointy');
+            expect(Hex.orientationStagger('pointy-left')).toBe(-1);
+            expect(Hex.defaultNudge('pointy-left')).toBe(-1);
+        });
+    });
+
     describe('getCanonicalVertexId', () => {
         it('should be the same for all three hexes sharing the vertex', () => {
             const h1 = { q: 0, r: 0, s: 0 };
@@ -177,9 +203,9 @@ describe('Hex Math', () => {
             const rows = 1;
             const firstCol = 1;
             const firstRow = 1;
-            const stagger = Hex.Stagger.Even; // "high"
+            const orientation: Hex.Orientation = 'flat-up';
             
-            const grid = Hex.createRectangularGrid(cols, rows, stagger, firstCol, firstRow);
+            const grid = Hex.createRectangularGrid(cols, rows, orientation, firstCol, firstRow);
             expect(grid).toHaveLength(2);
             
             // Hex 0101 (col=1, row=1)
@@ -188,8 +214,8 @@ describe('Hex Math', () => {
             const h0101 = grid[0];
             const h0201 = grid[1];
             
-            const p0101 = Hex.cubeToOffset(h0101, stagger);
-            const p0201 = Hex.cubeToOffset(h0201, stagger);
+            const p0101 = Hex.cubeToOffset(h0101, orientation);
+            const p0201 = Hex.cubeToOffset(h0201, orientation);
             
             expect(p0101.x).toBe(1);
             expect(p0101.y).toBe(1);
@@ -198,11 +224,11 @@ describe('Hex Math', () => {
         });
 
         it('round-trip raw offsets', () => {
-            const stagger = Hex.Stagger.Even;
+            const orientation: Hex.Orientation = 'flat-up';
             for (let q = -10; q <= 10; q++) {
                 for (let r = -10; r <= 10; r++) {
-                    const cube = Hex.offsetToCube(q, r, stagger);
-                    const back = Hex.cubeToOffset(cube, stagger);
+                    const cube = Hex.offsetToCube(q, r, orientation);
+                    const back = Hex.cubeToOffset(cube, orientation);
                     expect(back.x).toBe(q);
                     expect(back.y).toBe(r);
                 }
