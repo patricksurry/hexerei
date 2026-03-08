@@ -5,9 +5,9 @@ import { FeatureStack } from './FeatureStack';
 import type { FeatureItem } from '../types';
 
 const mockFeatures: FeatureItem[] = [
-  { index: 0, terrain: 'clear', at: '@all', isBase: true },
-  { index: 1, id: 'moscow', terrain: 'major_city', label: 'Moscow', at: '0507', isBase: false },
-  { index: 2, terrain: 'forest', at: '0302 0303 0402', isBase: false },
+  { index: 0, terrain: 'clear', at: '@all', isBase: true, tags: [], hexIds: [] },
+  { index: 1, id: 'moscow', terrain: 'major_city', label: 'Moscow', at: '0507', isBase: false, tags: [], hexIds: ['5,7,0'] },
+  { index: 2, terrain: 'forest', at: '0302 0303 0402', isBase: false, tags: [], hexIds: ['3,2,0'] },
 ];
 
 test('renders all feature rows', () => {
@@ -31,7 +31,7 @@ test('calls onSelect when a feature row is clicked', async () => {
   const onSelect = vi.fn();
   render(<FeatureStack features={mockFeatures} onSelect={onSelect} />);
   await userEvent.click(screen.getByText('Moscow'));
-  expect(onSelect).toHaveBeenCalledWith([1]);
+  expect(onSelect).toHaveBeenCalledWith([1], 'none');
 });
 
 test('calls onHover when mouse enters a feature row', async () => {

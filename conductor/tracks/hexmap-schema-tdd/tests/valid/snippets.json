@@ -1,0 +1,41 @@
+{
+  "hexmap": "1.0",
+  "metadata": {
+    "id": "full-test",
+    "title": "Full Snippets Test",
+    "version": "1.0.0"
+  },
+  "layout": {
+    "hex_top": "flat",
+    "all": "0101 2201 2215 0115 !",
+    "stagger": "low",
+    "label": "XXYY",
+    "origin": "top-left",
+    "georef": {
+      "scale": 16000,
+      "anchor": { "lat": 54.5, "lng": 35.0 },
+      "bearing": 0,
+      "projection": "mercator"
+    }
+  },
+  "terrain": {
+    "hex": {
+      "clear": { "name": "Clear" },
+      "forest": { "name": "Forest" }
+    }
+  },
+  "features": [
+    {
+      "at": "@all",
+      "terrain": "clear"
+    },
+    {
+      "id": "moscow",
+      "at": "0507",
+      "terrain": "major_city",
+      "label": "Moscow",
+      "elevation": 1,
+      "tags": "victory"
+    }
+  ]
+}

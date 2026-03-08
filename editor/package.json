@@ -14,7 +14,8 @@
   "license": "ISC",
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "@hexmap/core": "*"
   },
   "devDependencies": {
     "@fontsource/jetbrains-mono": "^5.2.8",

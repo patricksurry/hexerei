@@ -46,6 +46,7 @@ __pycache__/
 
 # Project specific
 .serena/cache/
+bugs/
 importer/output/
 importer/diagnostics/
 importer/tiles/

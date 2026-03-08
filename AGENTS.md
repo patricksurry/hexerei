@@ -25,17 +25,15 @@ All agents should use the Serena MCP as a surgical editor and code navigation to
 - **Approval:** No implementation should begin until the plan is reviewed and approved by the user.
 - **Consistency:** After significant changes review and update existing documents
 
+**Always** prefer to save documents in user-visible locations within the project, not in private or agent-specific memory folders.  This project is a multi-agent collaboration so we need to maximize shared context.
+
 ### 2. Test-Driven Development (TDD)
 The project adheres to a strict TDD workflow for all new features and bug fixes:
 1. **Red:** Write a failing test that defines the desired behavior.
 2. **Green:** Implement the minimal code necessary to make the test pass.
 3. **Refactor:** Clean up the implementation while ensuring tests remain green.
 - **Validation:** A change is only considered "complete" once it passes all unit and integration tests.
-
-### 3. Conductor-Led Execution
-- **Tracks:** Large features are broken down into "Tracks" (see `conductor/tracks.md`) or Phases.
-- **Plans:** Each track must have an `index.md` and `plan.md` defining the goal, architecture, tech stack, and step-by-step tasks.
-- **Atomic Commits:** Each task in a plan should ideally result in a single, well-described commit.
+4. **Hygiene:** Do **not** 'fix' tests by suppressing errors or warnings, or by changing the test.  Resolve the underlying issue.  This might require additional planning or effort.
 
 ## Interaction Protocol
 - **Inquiries:** Requests for analysis or advice. Agents should respond with research and a proposed strategy but **must not** modify files.

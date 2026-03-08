@@ -25,9 +25,11 @@
           "properties": {
             "url": { "type": "string", "format": "uri" },
             "notes": { "type": "string" }
-          }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     },
     "layout": {
       "type": "object",
@@ -51,14 +53,17 @@
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
               },
-              "required": ["lat", "lng"]
+              "required": ["lat", "lng"],
+              "additionalProperties": false
             },
             "anchor_hex": { "type": "string" },
             "bearing": { "type": "number", "minimum": 0, "exclusiveMaximum": 360 },
             "projection": { "type": "string", "default": "mercator" }
-          }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     },
     "terrain": {
       "type": "object",
@@ -66,7 +71,8 @@
         "hex": { "$ref": "#/$defs/TerrainVocabulary" },
         "edge": { "$ref": "#/$defs/TerrainVocabulary" },
         "vertex": { "$ref": "#/$defs/TerrainVocabulary" }
-      }
+      },
+      "additionalProperties": false
     },
     "features": {
       "type": "array",
@@ -77,6 +83,7 @@
       "additionalProperties": true
     }
   },
+  "additionalProperties": false,
 
   "$defs": {
     "TerrainVocabulary": {
@@ -99,10 +106,12 @@
             "pattern": { "type": "string" },
             "stroke": { "type": "string" },
             "stroke_width": { "type": "number" }
-          }
+          },
+          "additionalProperties": false
         },
         "properties": { "type": "object", "additionalProperties": true }
-      }
+      },
+      "additionalProperties": false
     },
     "FeatureAttributes": {
       "type": "object",
@@ -123,7 +132,8 @@
       "allOf": [
         { "$ref": "#/$defs/FeatureAttributes" },
         { "$ref": "#/$defs/GeometrySelector" }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "GeometrySelector": {
       "type": "object",

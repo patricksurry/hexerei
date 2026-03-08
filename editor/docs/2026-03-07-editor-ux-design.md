@@ -146,6 +146,18 @@ Build:
 
 **Validates:** Stack/canvas/inspector triangle is intuitive. Accent colors distinguish geometry types. Computed hex view is useful vs. wanting direct editing.
 
+**Architecture notes (from Phase 2):** Phase 2 establishes a three-layer architecture that Phase 3 builds on directly:
+
+- **`editor/src/model/`** — headless, testable, no React. Contains `MapModel` (document access), `Viewport` (camera transform), `hitTest` (screen → hex), and `buildScene` (model + viewport → render list).
+- **`editor/src/canvas/`** — thin UX layer. `drawScene` paints a `Scene` object onto Canvas 2D; `CanvasHost` is the only React component, forwarding DOM events to pure viewport functions.
+
+For Phase 3, selection and highlighting flow through the same pipeline:
+- Canvas click → `hexAtScreen()` → selection state update → scene rebuild with highlight items
+- Feature Stack click → model query → scene rebuild with feature geometry highlighted
+- Inspector reads from `MapModel` by hex ID or feature index
+- All selection logic stays in the headless model layer; the canvas just draws what `Scene` contains
+- The `Scene` type extends to include `highlights: { corners, color }[]` for selection rendering
+
 ### Phase 4 — HexPath Entry & Live Preview
 
 **Goal:** Validate the "Spatial IDE" premise.
@@ -185,6 +197,20 @@ Build:
 | 3 — Select | Click → highlight → inspect | Is the stack/canvas/inspector intuitive? |
 | 4 — HexPath | Type → preview → create | Is the DSL learnable via visual feedback? |
 | 5 — Author | Full read-write loop | Can you actually make maps with this? |
+
+## Open Design Questions
+
+### Keyboard focus: auto-capture vs explicit focus
+
+Currently the command bar requires a click or `Cmd+K` to focus before accepting text input. Should bare keystrokes auto-focus it instead? Three options:
+
+| Approach | Feel | Trade-off |
+|----------|------|-----------|
+| **Always capture printable keys → command bar** | VS Code file finder — just start typing | Canvas can only use modified shortcuts (`Cmd+arrows`); no single-letter hotkeys |
+| **Focus follows context** (current) | Click canvas → canvas has focus; `Cmd+K` → command bar | Explicit, but requires deliberate action to start typing a HexPath |
+| **Hybrid: printable chars → command bar, nav keys → canvas** | Spreadsheet-like — type a letter and you're editing, arrows navigate | Natural for path entry, but slightly magic; harder to explain |
+
+The hybrid approach fits the "Spatial IDE" metaphor well: the command bar is the editor, the canvas is the viewport. Needs to be resolved before Phase 3 (canvas arrow-key navigation) and Phase 4 (HexPath live entry).
 
 ## Technology
 

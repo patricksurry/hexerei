@@ -39,7 +39,7 @@ describe('HexRenderer (Headless)', () => {
 
         // Check hex count
         const paths = grid?.querySelectorAll('path');
-        expect(paths?.length).toBe(154);
+        expect(paths?.length).toBe(147);
     });
 
     it('should render labels with Offset coordinates', () => {
@@ -55,7 +55,7 @@ describe('HexRenderer (Headless)', () => {
         });
 
         const labels = container.querySelectorAll('#labels text');
-        expect(labels.length).toBe(154);
+        expect(labels.length).toBe(147);
 
         // Check content of first label (Should be "0101" or similar offset)
         const content = Array.from(labels).map(l => l.textContent);
@@ -83,7 +83,7 @@ describe('HexRenderer (Headless)', () => {
     });
 
     it('should support highlights', () => {
-        const mesh = HexMapLoader.load('hexmap: "1.0"\nlayout:\n  columns: 2\n  rows: 2');
+        const mesh = HexMapLoader.load('hexmap: "1.0"\nlayout:\n  all: "0101 0202 !"');
         const renderer = new HexRenderer(mesh, {
             element: container,
             width: 800,
@@ -103,7 +103,7 @@ describe('HexRenderer (Headless)', () => {
     });
 
     it('should update reactively', () => {
-        const mapSource = 'hexmap: "1.0"\nlayout:\n  columns: 1\n  rows: 1';
+        const mapSource = 'hexmap: "1.0"\nlayout:\n  all: "0101"';
         const mesh = HexMapLoader.load(mapSource);
         const renderer = new HexRenderer(mesh, {
             element: container,
@@ -118,7 +118,7 @@ describe('HexRenderer (Headless)', () => {
 
         // Update mesh
         const areaId = '0,0,0'; // offset(0,0) in 1x1 starting at (1,1) with Stagger.Odd
-        mesh.updateArea(areaId, { terrain: 'forest' });
+        mesh.updateHex(areaId, { terrain: 'forest' });
         renderer.update(mesh);
 
         const updatedFill = grid?.querySelector('path')?.getAttribute('fill');

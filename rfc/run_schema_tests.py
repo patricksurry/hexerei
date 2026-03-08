@@ -1,38 +1,46 @@
 import json
-import yaml
 import sys
-import jsonschema
+import os
 from pathlib import Path
+import jsonschema
 
 def run_tests():
-    print("Running negative schema tests...")
+    # Paths relative to the script location
+    script_dir = Path(__file__).parent
+    schema_path = script_dir / "hexmap.schema.json"
     
-    schema_path = Path("hexmap.schema.json")
     with open(schema_path, 'r') as f:
         schema = json.load(f)
 
-    test_dir = Path("tests/schema_tests")
-    passed = 0
-    failed = 0
+    base_dir = script_dir / "tests" / "samples"
+    valid_dir = base_dir / "valid"
+    invalid_dir = base_dir / "invalid"
 
-    for test_file in test_dir.glob("*.yaml"):
-        print(f"Testing {test_file.name} (Expect Failure)... ", end="")
-        with open(test_file, 'r') as f:
-            data = yaml.safe_load(f)
-        
+    failed = False
+
+    print("--- Running VALID tests (should pass) ---")
+    for fpath in valid_dir.glob("*.json"):
+        with open(fpath, 'r') as f:
+            instance = json.load(f)
         try:
-            jsonschema.validate(instance=data, schema=schema)
-            print("FAIL (Unexpectedly Valid)")
-            failed += 1
-        except jsonschema.ValidationError:
-            print("PASS (Caught Invalid Input)")
-            passed += 1
-        except Exception as e:
-            print(f"ERROR ({e})")
-            failed += 1
+            jsonschema.validate(instance=instance, schema=schema)
+            print(f"✓ {fpath.name}")
+        except jsonschema.ValidationError as e:
+            print(f"✗ {fpath.name}: {e.message}")
+            failed = True
 
-    print(f"\nResults: {passed} PASSED, {failed} FAILED")
-    if failed > 0:
+    print("\n--- Running INVALID tests (should fail) ---")
+    for fpath in invalid_dir.glob("*.json"):
+        with open(fpath, 'r') as f:
+            instance = json.load(f)
+        try:
+            jsonschema.validate(instance=instance, schema=schema)
+            print(f"✗ {fpath.name}: FAILED to reject invalid document")
+            failed = True
+        except jsonschema.ValidationError:
+            print(f"✓ {fpath.name} (correctly rejected)")
+
+    if failed:
         sys.exit(1)
 
 if __name__ == "__main__":

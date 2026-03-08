@@ -11,8 +11,12 @@
     "declaration": true,
     "isolatedModules": true,
     "skipLibCheck": true,
+    "types": ["vitest/globals"],
     "outDir": "./dist",
-    "rootDir": "./src"
+    "baseUrl": ".",
+    "paths": {
+      "@hexmap/core": ["../core/src/index.ts"]
+    }
   },
   "include": ["src"]
 }

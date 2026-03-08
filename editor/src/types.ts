@@ -1,23 +1,26 @@
 /** A feature as the editor UI sees it */
 export interface FeatureItem {
-  /** Index in the features array (used as key and for reorder operations) */
   index: number;
-  /** Feature id from the hexmap, if present */
-  id?: string;
-  /** Primary terrain type (first base type) */
-  terrain?: string;
-  /** Display label */
+  terrain: string;
   label?: string;
-  /** Raw HexPath string from the `at` field */
+  id?: string;
+  tags: string[];
   at: string;
-  /** Whether this feature targets @all */
   isBase: boolean;
+  hexIds: string[];
+  raw?: any;
 }
 
 /** What is currently selected in the editor */
 export type Selection =
   | { type: 'none' }
-  | { type: 'feature'; indices: number[] }
-  | { type: 'hex'; id: string }
-  | { type: 'edge'; id: string }
-  | { type: 'vertex'; id: string };
+  | { type: 'hex'; hexId: string; label: string }
+  | { type: 'edge'; boundaryId: string; hexLabels: [string, string | null] }
+  | { type: 'vertex'; vertexId: string }
+  | { type: 'feature'; indices: number[] };
+
+export type HitResult =
+  | { type: 'hex'; hexId: string; label: string }
+  | { type: 'edge'; boundaryId: string; hexLabels: [string, string | null] }
+  | { type: 'vertex'; vertexId: string }
+  | null;

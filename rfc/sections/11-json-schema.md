@@ -7,7 +7,7 @@ The normative JSON Schema for the HexMap format is defined below.
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hexerei.io/schemas/hexmap-1.0.schema.json",
   "title": "HexMap 1.0",
-  "description": "A format for hexagonal layout maps.",
+  "description": "A format for hexagonal grid maps.",
   "type": "object",
   "required": ["hexmap", "layout"],
   "properties": {
@@ -30,23 +30,25 @@ The normative JSON Schema for the HexMap format is defined below.
           "properties": {
             "url": { "type": "string", "format": "uri" },
             "notes": { "type": "string" }
-          }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     },
     "layout": {
       "type": "object",
-      "required": ["hex_top", "hexes"],
+      "required": ["hex_top", "all"],
       "properties": {
         "hex_top": { "enum": ["flat", "pointy"] },
-        "hexes": { "type": "string" },
+        "all": { "type": "string" },
         "stagger": { "enum": ["low", "high"], "default": "low" },
         "label": { "type": "string", "default": "auto" },
         "origin": {
           "enum": ["top-left", "bottom-left", "top-right", "bottom-right"],
           "default": "top-left"
         },
-        "geo": {
+        "georef": {
           "type": "object",
           "properties": {
             "scale": { "type": "number", "exclusiveMinimum": 0 },
@@ -56,14 +58,17 @@ The normative JSON Schema for the HexMap format is defined below.
                 "lat": { "type": "number" },
                 "lng": { "type": "number" }
               },
-              "required": ["lat", "lng"]
+              "required": ["lat", "lng"],
+              "additionalProperties": false
             },
             "anchor_hex": { "type": "string" },
             "bearing": { "type": "number", "minimum": 0, "exclusiveMaximum": 360 },
             "projection": { "type": "string", "default": "mercator" }
-          }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     },
     "terrain": {
       "type": "object",
@@ -71,7 +76,8 @@ The normative JSON Schema for the HexMap format is defined below.
         "hex": { "$ref": "#/$defs/TerrainVocabulary" },
         "edge": { "$ref": "#/$defs/TerrainVocabulary" },
         "vertex": { "$ref": "#/$defs/TerrainVocabulary" }
-      }
+      },
+      "additionalProperties": false
     },
     "features": {
       "type": "array",
@@ -82,6 +88,7 @@ The normative JSON Schema for the HexMap format is defined below.
       "additionalProperties": true
     }
   },
+  "additionalProperties": false,
 
   "$defs": {
     "TerrainVocabulary": {
@@ -104,10 +111,12 @@ The normative JSON Schema for the HexMap format is defined below.
             "pattern": { "type": "string" },
             "stroke": { "type": "string" },
             "stroke_width": { "type": "number" }
-          }
+          },
+          "additionalProperties": false
         },
         "properties": { "type": "object", "additionalProperties": true }
-      }
+      },
+      "additionalProperties": false
     },
     "FeatureAttributes": {
       "type": "object",
@@ -128,33 +137,16 @@ The normative JSON Schema for the HexMap format is defined below.
       "allOf": [
         { "$ref": "#/$defs/FeatureAttributes" },
         { "$ref": "#/$defs/GeometrySelector" }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "GeometrySelector": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": { 
-            "hexes": { "type": "string" }
-          },
-          "required": ["hexes"]
-        },
-        {
-          "type": "object",
-          "properties": { 
-            "edges": { "type": "string" }
-          },
-          "required": ["edges"]
-        },
-        {
-          "type": "object",
-          "properties": { 
-            "vertices": { "type": "string" }
-          },
-          "required": ["vertices"]
-        }
-      ]
+      "type": "object",
+      "properties": {
+        "at": { "type": "string" }
+      },
+      "required": ["at"]
     }
   }
 }
-]]></sourcecode>
+]]>

@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { MeshMap, Area, Boundary, HexMesh, Hex } from '@hexmap/core';
+import { MeshMap, HexArea, Edge, HexMesh, Hex } from '@hexmap/core';
 
 export interface RendererConfig {
     element: HTMLElement;
@@ -102,12 +102,13 @@ export class HexRenderer {
 
     private render() {
         const size = this.config.hexSize;
-        const areas = Array.from(this.mesh.getAllAreas());
+        const hexes = Array.from(this.mesh.getAllHexes());
 
-        // Determine stagger from mesh if available
+        // Determine stagger from mesh layout if available
+        const layout = this.mesh.layout || {};
         let stagger = Hex.Stagger.Odd;
-        if ('stagger' in this.mesh) {
-            stagger = (this.mesh as unknown as HexMesh).stagger;
+        if (layout.stagger === 'high') {
+            stagger = Hex.Stagger.Even;
         }
 
         const hexPoints = [0, 60, 120, 180, 240, 300].map(a => {
@@ -125,15 +126,19 @@ export class HexRenderer {
 
         // Render Hexes
         gGrid.selectAll('path')
-            .data(areas, (d: any) => d.id)
+            .data(hexes, (d: any) => d.id)
             .join('path')
             .attr('d', () => pathGen(hexPoints as [number, number][]))
-            .attr('transform', (d: Area) => {
+            .attr('transform', (d: HexArea) => {
                 const hex = Hex.hexFromId(d.id);
                 const p = Hex.hexToPixel(hex, size);
                 return `translate(${p.x + originX}, ${p.y + originY})`;
             })
-            .attr('fill', (d: Area) => TERRAIN_COLORS[d.terrain] || '#fff')
+            .attr('fill', (d: HexArea) => {
+                const parts = d.terrain.split(/\s+/);
+                const terrain = parts[parts.length - 1];
+                return TERRAIN_COLORS[terrain] || '#fff';
+            })
             .attr('stroke', '#ccc')
             .attr('stroke-width', 1)
             .on('mouseover', function () {
@@ -145,9 +150,9 @@ export class HexRenderer {
 
         // Render Labels
         gLabels.selectAll('text')
-            .data(areas, (d: any) => d.id)
+            .data(hexes, (d: any) => d.id)
             .join('text')
-            .attr('transform', (d: Area) => {
+            .attr('transform', (d: HexArea) => {
                 const hex = Hex.hexFromId(d.id);
                 const p = Hex.hexToPixel(hex, size);
                 return `translate(${p.x + originX}, ${p.y + originY})`;
@@ -156,14 +161,18 @@ export class HexRenderer {
             .attr('dy', '0.35em')
             .attr('font-size', size * 0.4)
             .attr('fill', '#000') // Darker text for visibility
-            .text((d: Area) => {
+            .text((d: HexArea) => {
+                // TODO: Use core/CoordinateSystem for label resolution
                 const hex = Hex.hexFromId(d.id);
                 const offset = Hex.cubeToOffset(hex, stagger);
-                const firstCol = (this.mesh as any).firstCol || 1;
-                const firstRow = (this.mesh as any).firstRow || 1;
+                
+                // For now keep the fallback logic but use layout info if possible
+                const firstCol = layout.coordinates?.first?.[0] ?? 1;
+                const firstRow = layout.coordinates?.first?.[1] ?? 1;
                 const c = (offset.x + firstCol).toString().padStart(2, '0');
                 const r = (offset.y + firstRow).toString().padStart(2, '0');
                 return `${c}${r}`;
             });
     }
+
 }

@@ -1,29 +1,24 @@
-import React from 'react';
 import { FeatureItem } from '../types';
 import './FeatureStack.css';
 
 interface FeatureStackProps {
   features: FeatureItem[];
   selectedIndices?: number[];
-  onSelect?: (indices: number[]) => void;
+  terrainColor?: (terrain: string) => string;
+  onSelect?: (indices: number[], modifier: 'none' | 'shift' | 'cmd') => void;
   onHover?: (index: number | null) => void;
 }
 
 export function FeatureStack({
   features,
   selectedIndices = [],
+  terrainColor,
   onSelect,
   onHover,
 }: FeatureStackProps) {
-  const getTerrainColor = (terrain?: string) => {
-    if (!terrain) return 'var(--text-muted)';
-    // Simple hash to hue
-    let hash = 0;
-    for (let i = 0; i < terrain.length; i++) {
-      hash = terrain.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = Math.abs(hash % 360);
-    return `hsl(${hue}, 60%, 50%)`;
+  const getTerrainColor = (terrain: string) => {
+    if (terrainColor) return terrainColor(terrain);
+    return 'var(--text-muted)';
   };
 
   return (
@@ -43,7 +38,7 @@ export function FeatureStack({
               aria-selected={isSelected}
               data-base={feature.isBase}
               className={`feature-item ${isSelected ? 'selected' : ''}`}
-              onClick={() => onSelect?.([feature.index])}
+              onClick={(e) => onSelect?.([feature.index], e.shiftKey ? 'shift' : e.metaKey || e.ctrlKey ? 'cmd' : 'none')}
               onMouseEnter={() => onHover?.(feature.index)}
               onMouseLeave={() => onHover?.(null)}
             >

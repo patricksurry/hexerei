@@ -1,14 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import { Inspector } from './Inspector';
-import type { FeatureItem, Selection } from '../types';
+import type { FeatureItem } from '../types';
+import { MapModel } from '../model/map-model';
 
 const mockFeature: FeatureItem = {
   index: 1, id: 'moscow', terrain: 'major_city',
-  label: 'Moscow', at: '0507', isBase: false,
+  label: 'Moscow', at: '0507', isBase: false, tags: [], hexIds: ['5,7,0']
 };
 
+const mockModel = {
+  metadata: { title: 'Battle for Moscow' },
+  grid: { hexTop: 'flat', stagger: 1, labelFormat: 'CCRR' },
+  features: [mockFeature],
+  computedHex: (_id: string) => null,
+  terrainColor: (_t: string) => '#ffffff',
+} as unknown as MapModel;
+
 test('shows map metadata when nothing is selected', () => {
-  render(<Inspector selection={{ type: 'none' }} mapTitle="Battle for Moscow" />);
+  render(<Inspector selection={{ type: 'none' }} model={mockModel} />);
   expect(screen.getByText('Battle for Moscow')).toBeInTheDocument();
   expect(screen.getByText(/map/i)).toBeInTheDocument();
 });
@@ -17,7 +26,7 @@ test('shows feature properties when a feature is selected', () => {
   render(
     <Inspector
       selection={{ type: 'feature', indices: [1] }}
-      features={[mockFeature]}
+      model={mockModel}
     />
   );
   expect(screen.getByText('moscow')).toBeInTheDocument();
@@ -29,7 +38,7 @@ test('shows section headings for feature fields', () => {
   render(
     <Inspector
       selection={{ type: 'feature', indices: [1] }}
-      features={[mockFeature]}
+      model={mockModel}
     />
   );
   expect(screen.getByText(/terrain/i)).toBeInTheDocument();
