@@ -29,7 +29,8 @@ export function FeatureStack({
       <ul className="feature-list" role="listbox">
         {features.map((feature) => {
           const isSelected = selectedIndices.includes(feature.index);
-          const label = feature.label || feature.terrain || feature.id || `Feature ${feature.index}`;
+          const label = feature.label || 
+            (feature.isBase ? "Base Layer" : (feature.terrain || feature.id || `Feature ${feature.index}`));
           
           return (
             <li
@@ -49,7 +50,9 @@ export function FeatureStack({
               />
               <div className="feature-info">
                 <div className="feature-label truncate">{label}</div>
-                <div className="feature-at font-mono truncate">{feature.at}</div>
+                <div className="feature-at font-mono truncate">
+                  {feature.at}{feature.isBase ? ' (base)' : ''}
+                </div>
               </div>
             </li>
           );

@@ -6,7 +6,7 @@
 
 .inspector-header {
   padding: var(--space-md);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
   letter-spacing: 0.05em;
@@ -29,7 +29,7 @@
 }
 
 .inspector-heading {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
   margin-bottom: var(--space-xs);
@@ -63,4 +63,37 @@
   font-size: var(--font-size-sm);
   color: var(--text-muted);
   font-style: italic;
+}
+
+.text-xs {
+  font-size: 10px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+.clickable:hover {
+  color: var(--accent-hex);
+}
+
+.inspector-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.inspector-list-item {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  padding: var(--space-xs) 0;
+}
+
+.neighbor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
 }

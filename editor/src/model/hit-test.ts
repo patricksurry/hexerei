@@ -22,6 +22,8 @@ export function hitTest(
   const corners = Hex.hexCorners(center, HEX_SIZE, model.grid.hexTop);
   const midpoints = Hex.hexEdgeMidpoints(center, HEX_SIZE, model.grid.hexTop);
 
+  const isCenterOnMap = !!model.mesh.getHex(id);
+
   let minCornerDist = Infinity;
   let minCornerIdx = -1;
   corners.forEach((p, i) => {
@@ -44,25 +46,37 @@ export function hitTest(
 
   // Thresholds as fraction of HEX_SIZE
   if (minCornerDist < HEX_SIZE * 0.25) {
-    return {
-      type: 'vertex',
-      vertexId: Hex.getCanonicalVertexId(cube, minCornerIdx)
-    };
+    const n1Dir = minCornerIdx;
+    const n2Dir = (minCornerIdx + 1) % 6;
+    const n1Id = Hex.hexId(Hex.hexNeighbor(cube, n1Dir));
+    const n2Id = Hex.hexId(Hex.hexNeighbor(cube, n2Dir));
+    
+    // Only return vertex hit if at least one participating hex is on the map
+    if (isCenterOnMap || model.mesh.getHex(n1Id) || model.mesh.getHex(n2Id)) {
+      return {
+        type: 'vertex',
+        vertexId: Hex.getCanonicalVertexId(cube, minCornerIdx)
+      };
+    }
   }
 
   if (minEdgeDist < HEX_SIZE * 0.30) {
-    const neighbor = Hex.hexNeighbor(cube, minEdgeIdx);
+    const neighborDir = (minEdgeIdx + 1) % 6;
+    const neighbor = Hex.hexNeighbor(cube, neighborDir);
     const nId = Hex.hexId(neighbor);
     const hasNeighbor = !!model.mesh.getHex(nId);
-    return {
-      type: 'edge',
-      boundaryId: Hex.getCanonicalBoundaryId(cube, hasNeighbor ? neighbor : null, minEdgeIdx),
-      hexLabels: [model.hexIdToLabel(id), hasNeighbor ? model.hexIdToLabel(nId) : null]
-    };
+    
+    // Only return edge hit if at least one participating hex is on the map
+    if (isCenterOnMap || hasNeighbor) {
+      return {
+        type: 'edge',
+        boundaryId: Hex.getCanonicalBoundaryId(cube, hasNeighbor ? neighbor : null, neighborDir),
+        hexLabels: [model.hexIdToLabel(id), hasNeighbor ? model.hexIdToLabel(nId) : null]
+      };
+    }
   }
 
-  const area = model.mesh.getHex(id);
-  if (area) {
+  if (isCenterOnMap) {
     return {
       type: 'hex',
       hexId: id,

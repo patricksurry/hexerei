@@ -39,7 +39,9 @@ describe('Canvas Drawing', () => {
         label: '0101'
       }
     ],
-    highlights: []
+    highlights: [],
+    edgeHighlights: [],
+    vertexHighlights: []
   };
 
   it('should call fillRect with background', () => {

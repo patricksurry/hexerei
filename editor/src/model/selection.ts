@@ -2,9 +2,12 @@ import { Selection } from '../types';
 import { MapModel } from './map-model';
 
 export interface SceneHighlight {
+  type: 'hex' | 'edge' | 'vertex';
   hexIds: string[];
+  boundaryId?: string;
+  vertexId?: string;
   color: string;
-  style: 'select' | 'hover';
+  style: 'select' | 'hover' | 'ghost';
 }
 
 export function clearSelection(): Selection {
@@ -68,20 +71,25 @@ export function highlightsForSelection(
     case 'none':
       return [];
     case 'hex':
-      return [{ hexIds: [selection.hexId], color: '#00D4FF', style: 'select' }];
+      return [{ type: 'hex', hexIds: [selection.hexId], color: '#00D4FF', style: 'select' }];
     case 'edge':
-      // Highlight the two adjacent hexes
       const [id1, id2] = selection.boundaryId.split('|');
       const hexIds = [id1];
-      if (id2 && id2 !== 'VOID') hexIds.push(id2);
-      return [{ hexIds, color: '#FF3DFF', style: 'select' }];
+      if (id2 && id2 !== 'VOID' && !id2.startsWith('dir')) hexIds.push(id2);
+      
+      return [
+        { type: 'edge', boundaryId: selection.boundaryId, hexIds: [], color: '#FF3DFF', style: 'select' },
+        { type: 'hex', hexIds, color: '#FF3DFF', style: 'hover' } // Subtle background
+      ];
     case 'vertex':
-      // Highlight the meeting hexes
       const ids = selection.vertexId.split('^');
-      return [{ hexIds: ids, color: '#FFD600', style: 'select' }];
+      return [
+        { type: 'vertex', vertexId: selection.vertexId, hexIds: [], color: '#FFD600', style: 'select' },
+        { type: 'hex', hexIds: ids, color: '#FFD600', style: 'hover' } // Subtle background
+      ];
     case 'feature':
       const featureHexIds = selection.indices.flatMap(idx => model.hexIdsForFeature(idx));
-      return [{ hexIds: Array.from(new Set(featureHexIds)), color: '#00D4FF', style: 'select' }];
+      return [{ type: 'hex', hexIds: Array.from(new Set(featureHexIds)), color: '#00D4FF', style: 'select' }];
   }
 }
 
@@ -91,5 +99,5 @@ export function highlightsForHover(
 ): SceneHighlight[] {
   if (hoverIndex === null) return [];
   const hexIds = model.hexIdsForFeature(hoverIndex);
-  return [{ hexIds, color: '#00D4FF', style: 'hover' }];
+  return [{ type: 'hex', hexIds, color: '#00D4FF', style: 'hover' }];
 }

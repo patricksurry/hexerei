@@ -8,16 +8,18 @@ import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { Selection, HitResult } from './types';
 import { MapModel } from './model/map-model';
-import { Hex } from '@hexmap/core';
-import { 
-  clearSelection, 
-  selectHex, 
-  selectFeature, 
-  selectEdge, 
-  selectVertex, 
-  highlightsForSelection, 
-  highlightsForHover, 
-  topmostFeatureAtHex 
+import { Hex, HexMapDocument } from '@hexmap/core';
+import { parseHexPathInput, HexPathPreview } from './model/hex-path-preview';
+import {
+  SceneHighlight,
+  clearSelection,
+  selectHex,
+  selectFeature,
+  selectEdge,
+  selectVertex,
+  highlightsForSelection,
+  highlightsForHover,
+  topmostFeatureAtHex
 } from './model/selection';
 
 export function App() {
@@ -29,6 +31,7 @@ export function App() {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [cursorHex, setCursorHex] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0);
+  const [preview, setPreview] = useState<HexPathPreview | null>(null);
 
   const commandBarRef = useRef<CommandBarRef>(null);
   const canvasHostRef = useRef<CanvasHostRef>(null);
@@ -39,6 +42,14 @@ export function App() {
       .then(yaml => setModel(MapModel.load(yaml)))
       .catch(err => console.error('Failed to load map:', err));
   }, []);
+
+  useEffect(() => {
+    if (model && commandValue && !commandValue.startsWith('>') && !commandValue.startsWith('/')) {
+      setPreview(parseHexPathInput(commandValue, model));
+    } else {
+      setPreview(null);
+    }
+  }, [commandValue, model]);
 
   const shortcuts = useMemo(() => ({
     'mod+1': () => setLeftPanelVisible(v => !v),
@@ -52,11 +63,17 @@ export function App() {
 
   const highlights = useMemo(() => {
     if (!model) return [];
+    
+    const previewHighlights: SceneHighlight[] = (preview && preview.hexIds.length > 0) 
+      ? [{ type: 'hex', hexIds: preview.hexIds, color: '#00D4FF', style: 'ghost' }]
+      : [];
+
     return [
       ...highlightsForSelection(selection, model),
       ...highlightsForHover(hoverIndex, model),
+      ...previewHighlights
     ];
-  }, [selection, hoverIndex, model]);
+  }, [selection, hoverIndex, model, preview]);
 
   const stackSelectedIndices = useMemo(() => {
     if (!model) return [];
@@ -73,16 +90,47 @@ export function App() {
       setSelection(clearSelection());
       return;
     }
-    
-    if (result.type === 'hex' && result.hexId === 'NAV') {
-      const direction = parseInt(result.label);
-      handleNavigate(direction);
+
+    if (result.type === 'hex') {
+      setSelection(selectHex(result.hexId, result.label));
+      setCommandValue(result.label);
+    }
+    if (result.type === 'edge') {
+      setSelection(selectEdge(result.boundaryId, result.hexLabels));
+      // TODO: formatting for edge labels in command bar
+    }
+    if (result.type === 'vertex') {
+      setSelection(selectVertex(result.vertexId));
+      // TODO: formatting for vertex labels in command bar
+    }
+  };
+
+  const handleCommandSubmit = (value: string) => {
+    if (!model || !value.trim()) return;
+
+    if (value.startsWith('>')) {
+      const cmd = value.substring(1).trim().toLowerCase();
+      if (cmd === 'zoom fit') {
+        canvasHostRef.current?.resetZoom();
+      } else if (cmd === 'clear') {
+        setSelection(clearSelection());
+      }
+      setCommandValue('');
       return;
     }
 
-    if (result.type === 'hex') setSelection(selectHex(result.hexId, result.label));
-    if (result.type === 'edge') setSelection(selectEdge(result.boundaryId, result.hexLabels));
-    if (result.type === 'vertex') setSelection(selectVertex(result.vertexId));
+    if (value.startsWith('/')) return;
+
+    const doc = new HexMapDocument(model.toYAML());
+    doc.addFeature({
+      at: value.trim(),
+      terrain: 'clear', // Default
+      label: 'New Feature'
+    });
+
+    const newYaml = doc.toString();
+    setModel(MapModel.load(newYaml));
+    setCommandValue('');
   };
 
   const handleNavigate = (direction: number) => {
@@ -112,6 +160,8 @@ export function App() {
           value={commandValue}
           onChange={setCommandValue}
           onClear={() => setCommandValue('')}
+          onSubmit={handleCommandSubmit}
+          error={preview?.error?.message}
         />
       }
       leftPanel={
@@ -130,6 +180,7 @@ export function App() {
           onCursorHex={setCursorHex} 
           onZoomChange={setZoom} 
           onHitTest={handleHit}
+          onNavigate={handleNavigate}
           highlights={highlights}
         />
       }

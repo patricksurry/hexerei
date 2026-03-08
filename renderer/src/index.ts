@@ -162,15 +162,11 @@ export class HexRenderer {
             .attr('font-size', size * 0.4)
             .attr('fill', '#000') // Darker text for visibility
             .text((d: HexArea) => {
-                // TODO: Use core/CoordinateSystem for label resolution
+                // cubeToOffset returns raw col/row (matching firstCol/firstRow convention)
                 const hex = Hex.hexFromId(d.id);
                 const offset = Hex.cubeToOffset(hex, stagger);
-                
-                // For now keep the fallback logic but use layout info if possible
-                const firstCol = layout.coordinates?.first?.[0] ?? 1;
-                const firstRow = layout.coordinates?.first?.[1] ?? 1;
-                const c = (offset.x + firstCol).toString().padStart(2, '0');
-                const r = (offset.y + firstRow).toString().padStart(2, '0');
+                const c = offset.x.toString().padStart(2, '0');
+                const r = offset.y.toString().padStart(2, '0');
                 return `${c}${r}`;
             });
     }

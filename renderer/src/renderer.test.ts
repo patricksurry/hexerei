@@ -91,14 +91,15 @@ describe('HexRenderer (Headless)', () => {
             hexSize: 30
         });
 
-        renderer.highlight(['0,0,0', '1,-1,0']);
+        const allIds = Array.from(mesh.getAllHexes()).map(h => h.id);
+        renderer.highlight([allIds[0], allIds[1]]);
 
         const highlights = container.querySelectorAll('#highlights path');
         expect(highlights.length).toBe(2);
         expect(highlights[0].getAttribute('fill')).toBe('rgba(255, 255, 0, 0.4)');
 
         // Replace highlights
-        renderer.highlight(['0,0,0']);
+        renderer.highlight([allIds[0]]);
         expect(container.querySelectorAll('#highlights path').length).toBe(1);
     });
 
@@ -116,8 +117,8 @@ describe('HexRenderer (Headless)', () => {
         const initialFill = grid?.querySelector('path')?.getAttribute('fill');
         expect(initialFill).toBe('#fff'); // unknown maps to #ffffff, but D3 might return #fff
 
-        // Update mesh
-        const areaId = '0,0,0'; // offset(0,0) in 1x1 starting at (1,1) with Stagger.Odd
+        // Update mesh — get actual hex ID from the mesh
+        const areaId = Array.from(mesh.getAllHexes())[0].id;
         mesh.updateHex(areaId, { terrain: 'forest' });
         renderer.update(mesh);
 

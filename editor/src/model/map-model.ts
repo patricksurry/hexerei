@@ -1,4 +1,4 @@
-import { Hex, HexMapDocument, HexMesh, HexMapLoader, HexArea } from '@hexmap/core';
+import { Hex, HexMapDocument, HexMesh, HexMapLoader, HexPath } from '@hexmap/core';
 import { FeatureItem } from '../types';
 
 export interface GridConfig {
@@ -34,24 +34,27 @@ export class MapModel {
   private _terrainDefs: Map<string, TerrainDef>;
   private _features: FeatureItem[];
   private _mesh: HexMesh;
+  private _hexToFeatures: Map<string, FeatureItem[]>;
+  private _yaml: string = '';
 
-  constructor(doc: any) {
-    this._metadata = doc.metadata ?? {};
-    const layout = doc.layout ?? doc.grid ?? {};
+  constructor(doc: any, mesh?: HexMesh) {
+    this._metadata = doc.metadata || {};
+    const layout = doc.layout || doc.grid || {};
     
-    let stagger = Hex.Stagger.Odd;
-    if (layout.stagger === 'high') {
-      stagger = Hex.Stagger.Even;
-    }
-    
+    const stagger = layout.stagger === 'high' ? Hex.Stagger.Even : Hex.Stagger.Odd;
+    const hexTop = layout.hex_top === 'pointy' ? 'pointy' : 'flat';
+    const firstCol = layout.coordinates?.first?.[0] ?? layout.firstCol ?? layout.first?.[0] ?? 1;
+    const firstRow = layout.coordinates?.first?.[1] ?? layout.firstRow ?? layout.first?.[1] ?? 1;
+    const labelFormat = layout.label || layout.coordinates?.label || "XXYY";
+
     this._grid = {
-      hexTop: layout.hex_top === 'pointy' ? 'pointy' : 'flat',
+      hexTop,
       columns: layout.columns ?? 0,
       rows: layout.rows ?? 0,
-      stagger: stagger,
-      firstCol: layout.coordinates?.first?.[0] ?? 1,
-      firstRow: layout.coordinates?.first?.[1] ?? 1,
-      labelFormat: layout.coordinates?.label ?? 'CCRR'
+      stagger,
+      firstCol,
+      firstRow,
+      labelFormat
     };
 
     // Terrain definitions
@@ -67,33 +70,65 @@ export class MapModel {
       });
     }
 
-    // Use HexMapLoader to build the mesh
-    // Note: We need to pass the raw source or re-serialize doc if we want to use Loader.load
-    // For now, let's assume we might need a Loader.fromJS(obj) or just use the logic
-    // actually, MapModel.load(source) uses HexMapLoader.load(source) now.
-    this._mesh = HexMapLoader.load(JSON.stringify(doc)); // Hacky, but ensures consistency
+    // Use provided mesh or load it from doc
+    this._mesh = mesh || HexMapLoader.load(JSON.stringify(doc));
 
-    // Features for UI/Inspector
-    this._features = (doc.features || []).map((f: any, idx: number) => ({
-        index: idx,
-        terrain: f.terrain,
-        label: f.label,
-        id: f.id,
-        tags: f.tags ? f.tags.split(/\s+/) : [],
-        at: typeof f.at === 'string' ? f.at : 'complex',
-        isBase: false,
-        hexIds: [], // We could populate this using HexPath if needed
-        raw: f
-    }));
+    // Resolve features and build reverse index
+    const meshHexPath = new HexPath(this._mesh, { 
+        labelFormat, 
+        stagger, 
+        firstCol, 
+        firstRow,
+        hexTop 
+    });
+
+    this._hexToFeatures = new Map<string, FeatureItem[]>();
+    this._features = (doc.features || []).map((f: any, idx: number) => {
+        let hexIds: string[] = [];
+        if (f.at) {
+            try {
+                const result = meshHexPath.resolve(f.at);
+                if (result.type === 'hex') {
+                    hexIds = result.items;
+                }
+            } catch (e) {
+                console.warn(`MapModel: Failed to resolve feature at index ${idx}`, e);
+            }
+        }
+
+        const featureItem: FeatureItem = {
+            index: idx,
+            terrain: f.terrain,
+            label: f.label,
+            id: f.id,
+            tags: Array.isArray(f.tags) ? f.tags : (f.tags ? f.tags.split(/\s+/) : []),
+            at: typeof f.at === 'string' ? f.at : 'complex',
+            isBase: f.at === '@all',
+            hexIds,
+            raw: f
+        };
+
+        // Populate reverse index
+        for (const hid of hexIds) {
+            if (!this._hexToFeatures.has(hid)) {
+                this._hexToFeatures.set(hid, []);
+            }
+            this._hexToFeatures.get(hid)!.push(featureItem);
+        }
+
+        return featureItem;
+    });
   }
 
   static load(yamlSource: string): MapModel {
     const mesh = HexMapLoader.load(yamlSource);
-    const doc = new HexMapDocument(yamlSource).toJS();
-    const model = new MapModel(doc);
-    model._mesh = mesh; // Use the properly loaded mesh
+    const doc = new HexMapDocument(yamlSource);
+    const model = new MapModel(doc.toJS(), mesh);
+    model._yaml = yamlSource;
     return model;
   }
+
+  toYAML(): string { return this._yaml; }
 
   get metadata(): Record<string, any> { return this._metadata; }
   get grid(): GridConfig { return this._grid; }
@@ -117,7 +152,7 @@ export class MapModel {
       terrain,
       terrainColor: this.terrainColor(terrain),
       elevation: hex.elevation,
-      contributingFeatures: [], // TODO: Restore feature mapping
+      contributingFeatures: this.featuresAtHex(hexId),
       neighborLabels
     };
   }
@@ -126,17 +161,22 @@ export class MapModel {
     const cube = Hex.hexFromId(id);
     const offset = Hex.cubeToOffset(cube, this._grid.stagger);
     
-    if (this._grid.labelFormat === 'CCRR') {
-      const col = offset.x + this._grid.firstCol;
-      const row = offset.y + this._grid.firstRow;
-      return `${col.toString().padStart(2, '0')}${row.toString().padStart(2, '0')}`;
+    if (this._grid.labelFormat === 'CCRR' || this._grid.labelFormat === 'XXYY') {
+      return `${offset.x.toString().padStart(2, '0')}${offset.y.toString().padStart(2, '0')}`;
     }
     return id;
   }
 
+  hexIdsForFeature(index: number): string[] {
+    return this._features[index]?.hexIds ?? [];
+  }
+
+  featuresAtHex(hexId: string): FeatureItem[] {
+    return this._hexToFeatures.get(hexId) ?? [];
+  }
+
   terrainColor(terrainString: string): string {
     if (!terrainString) return '#555555';
-    // Get the last terrain type if it's a layered string
     const parts = terrainString.split(/\s+/);
     const terrain = parts[parts.length - 1];
 

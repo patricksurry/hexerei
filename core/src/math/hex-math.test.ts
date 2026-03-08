@@ -105,8 +105,8 @@ describe('Hex Math', () => {
     describe('getCanonicalVertexId', () => {
         it('should be the same for all three hexes sharing the vertex', () => {
             const h1 = { q: 0, r: 0, s: 0 };
-            const h2 = Hex.hexNeighbor(h1, 0); // corner 0 is between neighbors 0 and 5
-            const h3 = Hex.hexNeighbor(h1, 5);
+            const h2 = Hex.hexNeighbor(h1, 0); // corner 0 is between neighbors 0 and 1
+            const h3 = Hex.hexNeighbor(h1, 1);
 
             // corner 0 of h1
             const id1 = Hex.getCanonicalVertexId(h1, 0);
@@ -128,6 +128,85 @@ describe('Hex Math', () => {
             
             // Sort order check
             expect(parts).toEqual([...parts].sort());
+        });
+
+        it('should be stable across all 3 sharing hexes for flat-top corner 0', () => {
+            const h1 = { q: 0, r: 0, s: 0 };
+            const h2 = Hex.hexNeighbor(h1, 0); // NE neighbor (1, -1, 0)
+            const h3 = Hex.hexNeighbor(h1, 1); // SE neighbor (1, 0, -1)
+            
+            // For flat-top corner 0 (East), the sharing hexes are:
+            // h1 (0,0,0)
+            // h2 (1,-1,0) -- neighbor at direction 0
+            // h3 (1,0,-1) -- neighbor at direction 1
+            
+            const id1 = Hex.getCanonicalVertexId(h1, 0);
+            
+            // Find which corner of h2 and h3 this vertex is
+            // h1 is neighbor 3 of h2. Vertex is corner 2 or 4 of h2? 
+            // Manual check:
+            // h1 (0,0,0) corner 0 is shared with h2 (dir 0) and h3 (dir 1).
+            // Let's just check stability by trying all corners of neighbors.
+            let id2, id3;
+            for(let i=0; i<6; i++) {
+                const id = Hex.getCanonicalVertexId(h2, i);
+                if (id.includes(Hex.hexId(h1)) && id.includes(Hex.hexId(h3))) {
+                    id2 = id;
+                }
+            }
+            for(let i=0; i<6; i++) {
+                const id = Hex.getCanonicalVertexId(h3, i);
+                if (id.includes(Hex.hexId(h1)) && id.includes(Hex.hexId(h2))) {
+                    id3 = id;
+                }
+            }
+            
+            expect(id1).toBe(id2);
+            expect(id1).toBe(id3);
+        });
+    });
+
+    describe('createRectangularGrid stagger parity', () => {
+        it('should respect actual column values for stagger when firstCol is odd', () => {
+            // Battle for Moscow uses: stagger: high (Even-Q), firstCol: 1
+            // Even-Q rule: even columns are shifted down (r_offset = r + q/2)
+            // If col=1 (odd), it should NOT be shifted down.
+            // If col=2 (even), it SHOULD be shifted down.
+            
+            const cols = 2;
+            const rows = 1;
+            const firstCol = 1;
+            const firstRow = 1;
+            const stagger = Hex.Stagger.Even; // "high"
+            
+            const grid = Hex.createRectangularGrid(cols, rows, stagger, firstCol, firstRow);
+            expect(grid).toHaveLength(2);
+            
+            // Hex 0101 (col=1, row=1)
+            // RFC/Standard: col 1 is odd. 
+            // In Even-Q, col 1 is high, col 2 is low.
+            const h0101 = grid[0];
+            const h0201 = grid[1];
+            
+            const p0101 = Hex.cubeToOffset(h0101, stagger);
+            const p0201 = Hex.cubeToOffset(h0201, stagger);
+            
+            expect(p0101.x).toBe(1);
+            expect(p0101.y).toBe(1);
+            expect(p0201.x).toBe(2);
+            expect(p0201.y).toBe(1);
+        });
+
+        it('round-trip raw offsets', () => {
+            const stagger = Hex.Stagger.Even;
+            for (let q = -10; q <= 10; q++) {
+                for (let r = -10; r <= 10; r++) {
+                    const cube = Hex.offsetToCube(q, r, stagger);
+                    const back = Hex.cubeToOffset(cube, stagger);
+                    expect(back.x).toBe(q);
+                    expect(back.y).toBe(r);
+                }
+            }
         });
     });
 });

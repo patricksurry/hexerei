@@ -8,5 +8,6 @@
 | `hexmap-renderer-editor-support` | HexMap Renderer: Editor Support & Build | [./tracks/renderer-editor-support/](./tracks/renderer-editor-support/index.md) | `completed` |
 | `editor-phase-3` | Editor Phase 3: Selection & Inspection | [./tracks/editor-phase-3/](./tracks/editor-phase-3/index.md) | `completed` |
 | `hexpath-rfc` | Robust HexPath RFC Implementation | [./tracks/hexpath-rfc/](./tracks/hexpath-rfc/index.md) | `completed` |
-| `editor-phase-4` | Editor Phase 4: Bug Fixes, UX Polish & HexPath Entry | [./tracks/editor-phase-4/](./tracks/editor-phase-4/index.md) | `active` |
+| `editor-phase-4` | Editor Phase 4: Bug Fixes, UX Polish & HexPath Entry | [./tracks/editor-phase-4/](./tracks/editor-phase-4/index.md) | `completed` |
 | `hexmap-schema-tdd` | HexMap Schema Verification & TDD | [./tracks/hexmap-schema-tdd/index.md](./tracks/hexmap-schema-tdd/index.md) | `completed` |
+| `orientation-unification` | Orientation Unification & Nudge Refactoring | [./tracks/orientation-unification/](./tracks/orientation-unification/index.md) | `todo` |

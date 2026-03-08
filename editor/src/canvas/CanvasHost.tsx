@@ -20,6 +20,7 @@ interface CanvasHostProps {
   onCursorHex?: (label: string | null) => void;
   onZoomChange?: (zoom: number) => void;
   onHitTest?: (result: HitResult) => void;
+  onNavigate?: (direction: number) => void;
   highlights?: SceneHighlight[];
 }
 
@@ -32,6 +33,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
   onCursorHex, 
   onZoomChange,
   onHitTest,
+  onNavigate,
   highlights = []
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,23 +44,24 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
   const lastMousePos = useRef<{ x: number, y: number } | null>(null);
   const mouseDownPos = useRef<{ x: number, y: number } | null>(null);
 
-  const performFit = useCallback((width: number, height: number): ViewportState | null => {
+  const computeFit = useCallback((width: number, height: number): ViewportState | null => {
     if (!model) return null;
-    const hexCenters = Array.from(model.mesh.getAllHexes()).map(a => 
+    const hexCenters = Array.from(model.mesh.getAllHexes()).map(a =>
       Hex.hexToPixel(Hex.hexFromId(a.id), HEX_SIZE, model.grid.hexTop)
     );
     const bounds = computeWorldBounds(hexCenters, HEX_SIZE, model.grid.hexTop);
-    const initialVp = fitExtent(bounds, width, height);
-    setFitZoom(initialVp.zoom);
-    onZoomChange?.(100); // 100%
-    return initialVp;
-  }, [model, onZoomChange]);
+    return fitExtent(bounds, width, height);
+  }, [model]);
 
   useImperativeHandle(ref, () => ({
     resetZoom: () => {
       if (containerRef.current) {
-        const newVp = performFit(containerRef.current.clientWidth, containerRef.current.clientHeight);
-        if (newVp) setViewport(newVp);
+        const newVp = computeFit(containerRef.current.clientWidth, containerRef.current.clientHeight);
+        if (newVp) {
+          setViewport(newVp);
+          setFitZoom(newVp.zoom);
+          onZoomChange?.(100);
+        }
       }
     }
   }));
@@ -73,7 +76,15 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
 
       setViewport(vp => {
         if (!vp && model) {
-          return performFit(width, height);
+          const fitted = computeFit(width, height);
+          if (fitted) {
+            // Schedule side effects outside the state updater
+            queueMicrotask(() => {
+              setFitZoom(fitted.zoom);
+              onZoomChange?.(100);
+            });
+          }
+          return fitted;
         }
         return vp ? { ...vp, width, height } : null;
       });
@@ -81,7 +92,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [model, performFit]);
+  }, [model, computeFit, onZoomChange]);
 
   // Draw: rebuild scene and paint
   useEffect(() => {
@@ -90,17 +101,17 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
-    // Use devicePixelRatio for sharp rendering if possible, 
-    // but for now keeping it simple.
-    canvasRef.current.width = viewport.width;
-    canvasRef.current.height = viewport.height;
+    const dpr = window.devicePixelRatio || 1;
+    canvasRef.current.width = viewport.width * dpr;
+    canvasRef.current.height = viewport.height * dpr;
+    ctx.scale(dpr, dpr);
     
     const bg = getComputedStyle(containerRef.current!).getPropertyValue('--bg-base').trim() || '#141414';
     const scene = buildScene(model, viewport, bg, highlights);
 
     drawScene(ctx, scene, { 
-        labelMinZoom: 20, 
-        labelColor: getComputedStyle(containerRef.current!).getPropertyValue('--text-muted') || '#555555' 
+        labelMinZoom: 12, 
+        labelColor: getComputedStyle(containerRef.current!).getPropertyValue('--text-secondary') || '#888888' 
     });
   }, [model, viewport, highlights]);
 
@@ -151,13 +162,13 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
   }, [isDragging, model, viewport, onHitTest]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    // Arrow keys: 0=NE, 1=E, 2=SE, 3=SW, 4=W, 5=NW
-    // For flat-top: Right=E(1), Left=W(4), Up=NW(5) or NE(0), Down=SE(2) or SW(3)
-    if (e.key === 'ArrowRight') onHitTest?.({ type: 'hex', hexId: 'NAV', label: '1' });
-    if (e.key === 'ArrowLeft') onHitTest?.({ type: 'hex', hexId: 'NAV', label: '4' });
-    if (e.key === 'ArrowUp') onHitTest?.({ type: 'hex', hexId: 'NAV', label: '5' });
-    if (e.key === 'ArrowDown') onHitTest?.({ type: 'hex', hexId: 'NAV', label: '2' });
-  }, [onHitTest]);
+    if (!onNavigate) return;
+    // Directions: 0=NE, 1=SE, 2=S, 3=SW, 4=NW, 5=N
+    if (e.key === 'ArrowRight') onNavigate(1); // SE (approx East)
+    if (e.key === 'ArrowLeft') onNavigate(4);  // NW (approx West)
+    if (e.key === 'ArrowUp') onNavigate(5);    // N
+    if (e.key === 'ArrowDown') onNavigate(2);  // S
+  }, [onNavigate]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (!viewport) return;
@@ -168,10 +179,23 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
         y: e.clientY - rect.top
     };
     
-    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    // Normalize delta across input devices
+    let delta = e.deltaY;
+    if (e.deltaMode === 1) delta *= 40;  // line mode
+    if (e.deltaMode === 2) delta *= 800; // page mode
+
+    // Smooth zoom factor
+    const factor = Math.pow(0.998, delta);
+
     setViewport(vp => {
         if (!vp) return null;
         const newVp = zoomAt(vp, pt, factor);
+        
+        // Clamp zoom between 10% and 2000% of fit zoom
+        const minZoom = fitZoom * 0.1;
+        const maxZoom = fitZoom * 20;
+        if (newVp.zoom < minZoom || newVp.zoom > maxZoom) return vp;
+
         onZoomChange?.(Math.round((newVp.zoom / fitZoom) * 100));
         return newVp;
     });

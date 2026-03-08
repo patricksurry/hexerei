@@ -13,8 +13,8 @@ export function drawScene(
 ): void {
   const { 
     showLabels = true, 
-    labelMinZoom = 20, 
-    labelColor = '#555555' 
+    labelMinZoom = 12, 
+    labelColor = '#888888' 
   } = options;
 
   // Clear canvas
@@ -54,38 +54,63 @@ export function drawScene(
     ctx.closePath();
 
     if (hl.style === 'select') {
-      ctx.fillStyle = `${hl.color}33`; // 20% alpha (0x33)
+      ctx.fillStyle = `${hl.color}33`; 
       ctx.fill();
       ctx.strokeStyle = hl.color;
       ctx.lineWidth = 2;
+      ctx.setLineDash([]);
       ctx.stroke();
+    } else if (hl.style === 'ghost') {
+      ctx.strokeStyle = hl.color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
     } else {
-      ctx.fillStyle = `${hl.color}1A`; // 10% alpha (0x1A)
+      ctx.fillStyle = `${hl.color}1A`; 
       ctx.fill();
     }
   }
 
+  // Draw edge highlights
+  for (const edge of scene.edgeHighlights) {
+    ctx.beginPath();
+    ctx.moveTo(edge.p1.x, edge.p1.y);
+    ctx.lineTo(edge.p2.x, edge.p2.y);
+    ctx.strokeStyle = edge.color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  // Draw vertex highlights
+  for (const vtx of scene.vertexHighlights) {
+    ctx.beginPath();
+    ctx.arc(vtx.point.x, vtx.point.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = vtx.color;
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
   // Draw labels
-  if (showLabels) {
-    // We need a way to check zoom. We can infer it from the first hex size if needed,
-    // or pass it in options. Let's assume we want to draw if they are big enough.
-    // Calculate distance between two corners as a proxy for zoom
-    if (scene.hexagons.length > 0) {
-      const h0 = scene.hexagons[0];
-      const dist = Math.sqrt(
-        Math.pow(h0.corners[0].x - h0.center.x, 2) + 
-        Math.pow(h0.corners[0].y - h0.center.y, 2)
-      );
+  if (showLabels && scene.hexagons.length > 0) {
+    const h0 = scene.hexagons[0];
+    const hexScreenRadius = Math.sqrt(
+      Math.pow(h0.corners[0].x - h0.center.x, 2) + 
+      Math.pow(h0.corners[0].y - h0.center.y, 2)
+    );
+    
+    if (hexScreenRadius > labelMinZoom) {
+      const fontSize = Math.max(8, Math.min(16, hexScreenRadius * 0.45));
+      ctx.fillStyle = labelColor;
+      ctx.font = `${fontSize}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       
-      if (dist > labelMinZoom) {
-        ctx.fillStyle = labelColor;
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        for (const hex of scene.hexagons) {
-          ctx.fillText(hex.label, hex.center.x, hex.center.y);
-        }
+      for (const hex of scene.hexagons) {
+        ctx.fillText(hex.label, hex.center.x, hex.center.y);
       }
     }
   }

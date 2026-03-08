@@ -3,7 +3,7 @@
  * Based on Red Blob Games algorithms.
  */
 
-// Directions: 0=NE, 1=E, 2=SE, 3=SW, 4=W, 5=NW (Flat-top reference)
+// Directions: 0=NE, 1=SE, 2=S, 3=SW, 4=NW, 5=N (Flat-top, clockwise from NE)
 // NOTE: RFC might imply different winding, checking standard consistent winding is key.
 // Let's assume standard CCW or CW? Reference implementation usually picks one.
 // Let's use the vectors from standard cube coord systems (q+r+s=0).
@@ -82,7 +82,7 @@ export function getCanonicalBoundaryId(a: Cube, b: Cube | null, dirFromA?: numbe
  */
 export function getCanonicalVertexId(hex: Cube, corner: number): string {
     const n1 = hexNeighbor(hex, corner);
-    const n2 = hexNeighbor(hex, (corner + 5) % 6);
+    const n2 = hexNeighbor(hex, (corner + 1) % 6);
     const ids = [hexId(hex), hexId(n1), hexId(n2)].sort();
     return ids.join('^');
 }
@@ -130,11 +130,11 @@ export function cubeToOffset(cube: Cube, stagger: Stagger = Stagger.Odd): Point 
     return { x: col, y: row };
 }
 
-export function createRectangularGrid(cols: number, rows: number, stagger: Stagger = Stagger.Odd, firstCol: number = 1, firstRow: number = 1): Cube[] {
+export function createRectangularGrid(cols: number, rows: number, stagger: Stagger = Stagger.Odd, firstCol: number = 0, firstRow: number = 0): Cube[] {
     const hexes: Cube[] = [];
     for (let c = firstCol; c < firstCol + cols; c++) {
         for (let r = firstRow; r < firstRow + rows; r++) {
-            hexes.push(offsetToCube(c - firstCol, r - firstRow, stagger));
+            hexes.push(offsetToCube(c, r, stagger));
         }
     }
     return hexes;

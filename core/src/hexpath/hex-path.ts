@@ -1,7 +1,6 @@
-import { HexMesh } from '../mesh/hex-mesh.js';
 import * as Hex from '../math/hex-math.js';
 import { MeshMap } from '../mesh/types.js';
-import { HexPathResult, PathItem, GeometryType } from './types.js';
+import { HexPathResult, GeometryType } from './types.js';
 
 enum ParseMode {
     ADD = '+',
@@ -23,6 +22,7 @@ export interface HexPathOptions {
     stagger?: Hex.Stagger;
     firstCol?: number;
     firstRow?: number;
+    hexTop?: Hex.HexOrientation;
     context?: Map<string, string[]>;
 }
 
@@ -32,12 +32,14 @@ export class HexPath {
 
     constructor(mesh: MeshMap, options?: HexPathOptions) {
         this.mesh = mesh;
+        const layout = mesh.layout || {};
         this.options = {
-            labelFormat: options?.labelFormat || "XXYY",
-            stagger: options?.stagger ?? Hex.Stagger.Odd,
-            firstCol: options?.firstCol ?? 1,
-            firstRow: options?.firstRow ?? 1,
-            ...options
+            labelFormat: options?.labelFormat || layout.label || layout.coordinates?.label || "XXYY",
+            stagger: options?.stagger ?? (layout.stagger === 'high' ? Hex.Stagger.Even : Hex.Stagger.Odd),
+            firstCol: options?.firstCol ?? layout.coordinates?.first?.[0] ?? 1,
+            firstRow: options?.firstRow ?? layout.coordinates?.first?.[1] ?? 1,
+            hexTop: options?.hexTop ?? layout.hex_top ?? 'flat',
+            context: options?.context,
         };
     }
 
@@ -233,7 +235,8 @@ export class HexPath {
             for (let i = 0; i < colStr.length; i++) {
                 col = col * 26 + (colStr.charCodeAt(i) - 'a'.charCodeAt(0) + 1);
             }
-            const cube = Hex.offsetToCube(col - 1, row - 1, this.options.stagger);
+            // Use raw col/row directly - offsetToCube handles stagger parity correctly for Alpha1
+            const cube = Hex.offsetToCube(col, row, this.options.stagger);
             const hexId = Hex.hexId(cube);
             
             const suffix = alphaMatch[3];
@@ -263,7 +266,8 @@ export class HexPath {
                 col = parseInt(coords.substring(0, 2));
                 row = parseInt(coords.substring(2, 4));
             }
-            const cube = Hex.offsetToCube(col - (this.options.firstCol || 1), row - (this.options.firstRow || 1), this.options.stagger);
+            // Use raw col/row directly - offsetToCube handles stagger parity
+            const cube = Hex.offsetToCube(col, row, this.options.stagger);
             const hexId = Hex.hexId(cube);
 
             const suffix = numericMatch[2];
@@ -303,7 +307,7 @@ export class HexPath {
         return Hex.hexFromId(id);
     }
 
-    private formatId(cube: Hex.Cube, type: GeometryType | null): string {
+    private formatId(cube: Hex.Cube, _type: GeometryType | null): string {
         return Hex.hexId(cube);
     }
 
@@ -349,14 +353,14 @@ export class HexPath {
 
     private isPointInPolygon(p: Hex.Cube, polygon: Hex.Cube[]): boolean {
         let inside = false;
-        const stagger = this.options.stagger ?? Hex.Stagger.Odd;
+        const orientation = this.options.hexTop || 'flat';
         for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
             const vi = polygon[i];
             const vj = polygon[j];
 
-            const pixI = Hex.hexToPixel(vi, 10, stagger);
-            const pixJ = Hex.hexToPixel(vj, 10, stagger);
-            const pixP = Hex.hexToPixel(p, 10, stagger);
+            const pixI = Hex.hexToPixel(vi, 10, orientation);
+            const pixJ = Hex.hexToPixel(vj, 10, orientation);
+            const pixP = Hex.hexToPixel(p, 10, orientation);
 
             if (((pixI.y > pixP.y) !== (pixJ.y > pixP.y)) &&
                 (pixP.x < (pixJ.x - pixI.x) * (pixP.y - pixI.y) / (pixJ.y - pixI.y) + pixI.x)) {
@@ -368,8 +372,10 @@ export class HexPath {
 
     private parseDirection(dir: string): number {
         const mapping: Record<string, number> = {
-            'ne': 0, 'e': 1, 'se': 2, 'sw': 3, 'w': 4, 'nw': 5,
-            'n': 5, 's': 2,
+            'ne': 0, 'se': 1, 's': 2, 'sw': 3, 'nw': 4, 'n': 5,
+            // Aliases for flat-top
+            'e': 1, 'w': 4,
+            // Clock hours (approx for flat top)
             '1': 0, '2': 1, '4': 2, '5': 3, '7': 3, '8': 4, '10': 5, '11': 0,
             '12': 5, '6': 2
         };
