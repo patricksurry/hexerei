@@ -275,11 +275,19 @@ export function hexRound(cube: Cube): Cube {
     };
 }
 
-export function hexLine(a: Cube, b: Cube): Cube[] {
+export function hexLine(a: Cube, b: Cube, nudge: 1 | -1 = 1): Cube[] {
     const dist = hexDistance(a, b);
     const results: Cube[] = [];
+    const eps = 1e-6;
     for (let i = 0; i <= dist; i++) {
-        results.push(hexRound(hexLerp(a, b, dist === 0 ? 0 : i / dist)));
+        const t = dist === 0 ? 0 : i / dist;
+        const frac = hexLerp(a, b, t);
+        const biased = { 
+            q: frac.q + eps * nudge, 
+            r: frac.r - eps * nudge, 
+            s: frac.s 
+        };
+        results.push(hexRound(biased));
     }
     return results;
 }

@@ -128,6 +128,35 @@ describe('Hex Math', () => {
         });
     });
 
+    describe('hexLine with nudge', () => {
+        it('exhibits reversal symmetry', () => {
+            const a = { q: 0, r: 0, s: 0 };
+            const b = { q: 1, r: -2, s: 1 };
+            // hexLine(a, b, 1) should be same as hexLine(b, a, 1).reverse()
+            const pathAB = Hex.hexLine(a, b, 1);
+            const pathBA = Hex.hexLine(b, a, 1);
+            expect(pathAB).toEqual([...pathBA].reverse());
+        });
+
+        it('produces different results for flipped nudge on ambiguous path', () => {
+            const a = { q: 0, r: 0, s: 0 };
+            const b = { q: 1, r: -2, s: 1 }; // Ambiguous point at t=0.5: (0.5, -1, 0.5)
+            const path1 = Hex.hexLine(a, b, 1);
+            const path2 = Hex.hexLine(a, b, -1);
+            expect(path1).not.toEqual(path2);
+            expect(path1).toHaveLength(3);
+            expect(path2).toHaveLength(3);
+        });
+
+        it('produces same results regardless of nudge for non-ambiguous path', () => {
+            const a = { q: 0, r: 0, s: 0 };
+            const b = { q: 2, r: 0, s: -2 }; 
+            const path1 = Hex.hexLine(a, b, 1);
+            const path2 = Hex.hexLine(a, b, -1);
+            expect(path1).toEqual(path2);
+        });
+    });
+
     describe('getCanonicalVertexId', () => {
         it('should be the same for all three hexes sharing the vertex', () => {
             const h1 = { q: 0, r: 0, s: 0 };
