@@ -104,6 +104,8 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
     const dpr = window.devicePixelRatio || 1;
     canvasRef.current.width = viewport.width * dpr;
     canvasRef.current.height = viewport.height * dpr;
+    canvasRef.current.style.width = viewport.width + 'px';
+    canvasRef.current.style.height = viewport.height + 'px';
     ctx.scale(dpr, dpr);
     
     const bg = getComputedStyle(containerRef.current!).getPropertyValue('--bg-base').trim() || '#141414';
