@@ -6,8 +6,7 @@ hexmap: "1.0"
 metadata:
   title: "Test Map"
 layout:
-  hex_top: flat
-  stagger: low
+  orientation: flat-down
   label: XXYY
   all: "0101 0201"
 terrain:

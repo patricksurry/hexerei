@@ -10,8 +10,7 @@ hexmap: "1.0"
 metadata:
   title: "Test Map"
 layout:
-  hex_top: flat
-  stagger: low
+  orientation: flat-down
   label: XXYY
   all: "0101 0201"
 terrain:
@@ -33,15 +32,15 @@ describe('HitTest & Scene', () => {
   };
 
   it('hexAtScreen should return correct label at center of hex', () => {
-    // col 1, row 1 (CCRR 0101) in Odd-Q
-    const cube = Hex.offsetToCube(1, 1, Hex.Stagger.Odd);
+    // col 1, row 1 (CCRR 0101) in flat-down
+    const cube = Hex.offsetToCube(1, 1, 'flat-down');
     const worldCenter = Hex.hexToPixel(cube, 1); // HEX_SIZE=1
     const screen = worldToScreen(worldCenter, vp);
     const label = hexAtScreen(screen, vp, model);
     expect(label).toBe('0101');
     
-    // col 2, row 1 (CCRR 0201) in Odd-Q
-    const cube2 = Hex.offsetToCube(2, 1, Hex.Stagger.Odd);
+    // col 2, row 1 (CCRR 0201) in flat-down
+    const cube2 = Hex.offsetToCube(2, 1, 'flat-down');
     const worldCenter2 = Hex.hexToPixel(cube2, 1);
     const screen2 = worldToScreen(worldCenter2, vp);
     const label2 = hexAtScreen(screen2, vp, model);

@@ -1,6 +1,4 @@
 hexmap: "1.0"
 layout:
-  hex_top: pointy
-  columns: 10
-  rows: 10
-  stagger: middle # Invalid: must be low or high
+  orientation: sideways # Invalid enum
+  all: "0101"

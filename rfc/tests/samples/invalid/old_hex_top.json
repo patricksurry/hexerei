@@ -1,7 +1,7 @@
 {
   "hexmap": "1.0",
   "layout": {
-    "orientation": "flat-down",
+    "hex_top": "flat",
     "all": "0101"
   }
 }

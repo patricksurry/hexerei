@@ -7,8 +7,7 @@ import { Hex } from '@hexmap/core';
 const MOCK_YAML = `
 hexmap: "1.0"
 layout:
-  hex_top: flat
-  stagger: low
+  orientation: flat-down
   all: "0000 0202 !"
 `;
 

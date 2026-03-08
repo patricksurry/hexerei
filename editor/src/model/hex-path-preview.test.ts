@@ -5,8 +5,7 @@ import { MapModel } from './map-model.js';
 const MOCK_YAML = `
 hexmap: "1.0"
 layout:
-  hex_top: flat
-  stagger: low
+  orientation: flat-down
   label: XXYY
   all: "0101 0303 !"
 `;

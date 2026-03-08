@@ -13,8 +13,7 @@ metadata:
     notes: "Based on the original GDW map and rules. Grid size 14x11."
 
 layout:
-  hex_top: flat
-  stagger: high # Odd columns (01, 03...) are shifted UP
+  orientation: flat-up
   label: XXYY
   origin: top-left
   # Simple rectangle 14x11, then subtract specific phantom hexes

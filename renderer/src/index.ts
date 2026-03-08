@@ -70,10 +70,10 @@ export class HexRenderer {
         const originX = this.config.origin?.x ?? 0;
         const originY = this.config.origin?.y ?? 0;
 
-        const hexPoints = [0, 60, 120, 180, 240, 300].map(a => {
-            const rad = a * Math.PI / 180;
-            return [Math.cos(rad) * size, Math.sin(rad) * size] as [number, number];
-        });
+        const orientation = this.mesh.layout?.orientation ?? 'flat-down';
+        const top = Hex.orientationTop(orientation);
+        const corners = Hex.hexCorners({ x: 0, y: 0 }, size, top);
+        const hexPoints = corners.map(p => [p.x, p.y] as [number, number]);
 
         const pathGen = d3.line<[number, number]>().curve(d3.curveLinearClosed);
 
@@ -83,7 +83,7 @@ export class HexRenderer {
             .attr('d', () => pathGen(hexPoints as [number, number][]))
             .attr('transform', (id: string) => {
                 const hex = Hex.hexFromId(id);
-                const p = Hex.hexToPixel(hex, size);
+                const p = Hex.hexToPixel(hex, size, top);
                 return `translate(${p.x + originX}, ${p.y + originY})`;
             })
             .attr('fill', 'rgba(255, 255, 0, 0.4)') // Yellow semi-transparent
@@ -104,17 +104,12 @@ export class HexRenderer {
         const size = this.config.hexSize;
         const hexes = Array.from(this.mesh.getAllHexes());
 
-        // Determine stagger from mesh layout if available
         const layout = this.mesh.layout || {};
-        let stagger = Hex.Stagger.Odd;
-        if (layout.stagger === 'high') {
-            stagger = Hex.Stagger.Even;
-        }
+        const orientation = layout.orientation || 'flat-down';
+        const top = Hex.orientationTop(orientation);
 
-        const hexPoints = [0, 60, 120, 180, 240, 300].map(a => {
-            const rad = a * Math.PI / 180;
-            return [Math.cos(rad) * size, Math.sin(rad) * size] as [number, number];
-        });
+        const corners = Hex.hexCorners({ x: 0, y: 0 }, size, top);
+        const hexPoints = corners.map(p => [p.x, p.y] as [number, number]);
 
         const pathGen = d3.line<[number, number]>().curve(d3.curveLinearClosed);
 
@@ -131,7 +126,7 @@ export class HexRenderer {
             .attr('d', () => pathGen(hexPoints as [number, number][]))
             .attr('transform', (d: HexArea) => {
                 const hex = Hex.hexFromId(d.id);
-                const p = Hex.hexToPixel(hex, size);
+                const p = Hex.hexToPixel(hex, size, top);
                 return `translate(${p.x + originX}, ${p.y + originY})`;
             })
             .attr('fill', (d: HexArea) => {
@@ -154,7 +149,7 @@ export class HexRenderer {
             .join('text')
             .attr('transform', (d: HexArea) => {
                 const hex = Hex.hexFromId(d.id);
-                const p = Hex.hexToPixel(hex, size);
+                const p = Hex.hexToPixel(hex, size, top);
                 return `translate(${p.x + originX}, ${p.y + originY})`;
             })
             .attr('text-anchor', 'middle')
@@ -164,7 +159,7 @@ export class HexRenderer {
             .text((d: HexArea) => {
                 // cubeToOffset returns raw col/row (matching firstCol/firstRow convention)
                 const hex = Hex.hexFromId(d.id);
-                const offset = Hex.cubeToOffset(hex, stagger);
+                const offset = Hex.cubeToOffset(hex, orientation);
                 const c = offset.x.toString().padStart(2, '0');
                 const r = offset.y.toString().padStart(2, '0');
                 return `${c}${r}`;

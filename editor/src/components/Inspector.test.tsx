@@ -10,7 +10,7 @@ const mockFeature: FeatureItem = {
 
 const mockModel = {
   metadata: { title: 'Battle for Moscow' },
-  grid: { hexTop: 'flat', stagger: 1, labelFormat: 'CCRR' },
+  grid: { orientation: 'flat-down', labelFormat: 'CCRR' },
   features: [mockFeature],
   computedHex: (_id: string) => null,
   terrainColor: (_t: string) => '#ffffff',

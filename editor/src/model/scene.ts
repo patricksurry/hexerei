@@ -47,7 +47,7 @@ export function buildScene(
   highlights: SceneHighlight[] = []
 ): Scene {
   const hexagons: HexRenderItem[] = [];
-  const orientation = model.grid.hexTop;
+  const orientation = Hex.orientationTop(model.grid.orientation);
   
   // Padding for culling: 1.5x size to be safe
   const cullPadding = HEX_SIZE * 1.5 * viewport.zoom;

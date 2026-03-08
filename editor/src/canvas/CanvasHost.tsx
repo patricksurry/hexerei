@@ -47,9 +47,9 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
   const computeFit = useCallback((width: number, height: number): ViewportState | null => {
     if (!model) return null;
     const hexCenters = Array.from(model.mesh.getAllHexes()).map(a =>
-      Hex.hexToPixel(Hex.hexFromId(a.id), HEX_SIZE, model.grid.hexTop)
+      Hex.hexToPixel(Hex.hexFromId(a.id), HEX_SIZE, Hex.orientationTop(model.grid.orientation))
     );
-    const bounds = computeWorldBounds(hexCenters, HEX_SIZE, model.grid.hexTop);
+    const bounds = computeWorldBounds(hexCenters, HEX_SIZE, Hex.orientationTop(model.grid.orientation));
     return fitExtent(bounds, width, height);
   }, [model]);
 

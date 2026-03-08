@@ -16,12 +16,12 @@
 export type Cube = { q: number, r: number, s: number };
 
 export const DIRECTIONS: Cube[] = [
-    { q: 1, r: -1, s: 0 },  // 0
-    { q: 1, r: 0, s: -1 },  // 1
-    { q: 0, r: 1, s: -1 },  // 2
-    { q: -1, r: 1, s: 0 },  // 3
-    { q: -1, r: 0, s: 1 },  // 4
-    { q: 0, r: -1, s: 1 },  // 5
+    { q: 1, r: -1, s: 0 },  // 0: NE (Flat), E (Pointy)
+    { q: 1, r: 0, s: -1 },  // 1: SE (Flat), NE (Pointy)
+    { q: 0, r: 1, s: -1 },  // 2: S (Flat), NW (Pointy)
+    { q: -1, r: 1, s: 0 },  // 3: SW (Flat), W (Pointy)
+    { q: -1, r: 0, s: 1 },  // 4: NW (Flat), SW (Pointy)
+    { q: 0, r: -1, s: 1 },  // 5: N (Flat), SE (Pointy)
 ];
 
 export function createHex(q: number, r: number, s?: number): Cube {
@@ -284,8 +284,8 @@ export function hexLine(a: Cube, b: Cube, nudge: 1 | -1 = 1): Cube[] {
         const frac = hexLerp(a, b, t);
         const biased = { 
             q: frac.q + eps * nudge, 
-            r: frac.r - eps * nudge, 
-            s: frac.s 
+            r: frac.r + 2 * eps * nudge, 
+            s: frac.s - 3 * eps * nudge 
         };
         results.push(hexRound(biased));
     }

@@ -5,13 +5,13 @@ export class HexMesh implements MeshMap {
     private _hexes = new Map<string, HexArea>();
     private _edges = new Map<string, Edge>();
 
-    private _stagger: Hex.Stagger;
+    private _orientation: Hex.Orientation;
     private _firstCol: number;
     private _firstRow: number;
     private _layout: any;
 
-    constructor(validHexes: Hex.Cube[], config: { stagger?: Hex.Stagger, firstCol?: number, firstRow?: number, terrain?: Map<string, string>, layout?: any } = {}) {
-        this._stagger = config.stagger ?? Hex.Stagger.Odd;
+    constructor(validHexes: Hex.Cube[], config: { orientation?: Hex.Orientation, firstCol?: number, firstRow?: number, terrain?: Map<string, string>, layout?: any } = {}) {
+        this._orientation = config.orientation ?? config.layout?.orientation ?? 'flat-down';
         this._firstCol = config.firstCol ?? 1;
         this._firstRow = config.firstRow ?? 1;
         this._layout = config.layout || {};
@@ -26,7 +26,8 @@ export class HexMesh implements MeshMap {
         }
     }
 
-    public get stagger(): Hex.Stagger { return this._stagger; }
+    public get orientation(): Hex.Orientation { return this._orientation; }
+    public get stagger(): number { return Hex.orientationStagger(this._orientation); }
     public get firstCol(): number { return this._firstCol; }
     public get firstRow(): number { return this._firstRow; }
     public get layout(): any { return this._layout; }

@@ -20,10 +20,9 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
 
   const hexPath = new HexPath(model.mesh, {
     labelFormat: model.grid.labelFormat,
-    stagger: model.grid.stagger,
+    orientation: model.grid.orientation,
     firstCol: model.grid.firstCol,
-    firstRow: model.grid.firstRow,
-    hexTop: model.grid.hexTop
+    firstRow: model.grid.firstRow
   });
 
   try {

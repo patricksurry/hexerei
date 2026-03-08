@@ -12,11 +12,9 @@ metadata:
     url: "https://grognard.com/bfm/game.html"
     notes: "Based on the original GDW map and rules. Grid size 14x11."
 
-grid:
-  hex_top: flat
-  columns: 14
-  rows: 11
-  stagger: high # Odd columns (01, 03...) are shifted UP
+layout:
+  orientation: flat-up
+  all: "0101 1401 1411 0111 ! - 0211, 0411, 0611, 0811, 1011, 1211, 1411"
   coordinates:
     label: CCRR
     origin: top-left

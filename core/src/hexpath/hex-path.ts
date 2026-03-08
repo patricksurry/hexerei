@@ -15,14 +15,14 @@ interface Cursor {
     floatingSteps: { dir: number, count: number }[];
     currentSegment: string[];
     isContinuation: boolean;
+    flipNudge: boolean;
 }
 
 export interface HexPathOptions {
     labelFormat?: string; // "CCRR", "RRCC", "Axx", etc.
-    stagger?: Hex.Stagger;
+    orientation: Hex.Orientation;
     firstCol?: number;
     firstRow?: number;
-    hexTop?: Hex.HexOrientation;
     context?: Map<string, string[]>;
 }
 
@@ -30,15 +30,14 @@ export class HexPath {
     private mesh: MeshMap;
     private options: HexPathOptions;
 
-    constructor(mesh: MeshMap, options?: HexPathOptions) {
+    constructor(mesh: MeshMap, options?: Partial<HexPathOptions>) {
         this.mesh = mesh;
         const layout = mesh.layout || {};
         this.options = {
             labelFormat: options?.labelFormat || layout.label || layout.coordinates?.label || "XXYY",
-            stagger: options?.stagger ?? (layout.stagger === 'high' ? Hex.Stagger.Even : Hex.Stagger.Odd),
+            orientation: options?.orientation ?? layout.orientation ?? 'flat-down',
             firstCol: options?.firstCol ?? layout.coordinates?.first?.[0] ?? 1,
             firstRow: options?.firstRow ?? layout.coordinates?.first?.[1] ?? 1,
-            hexTop: options?.hexTop ?? layout.hex_top ?? 'flat',
             context: options?.context,
         };
     }
@@ -62,7 +61,8 @@ export class HexPath {
             mode: ParseMode.ADD,
             floatingSteps: [],
             currentSegment: [],
-            isContinuation: false
+            isContinuation: false,
+            flipNudge: false
         };
 
         const tokens = this.tokenize(path);
@@ -89,6 +89,12 @@ export class HexPath {
                 continue;
             }
 
+            // Handle Flip Nudge
+            if (token === '~') {
+                cursor.flipNudge = true;
+                continue;
+            }
+
             // Handle Jump
             if (token === ',') {
                 cursor.lastHex = null;
@@ -101,8 +107,9 @@ export class HexPath {
             // Handle Close (;) and Close & Fill (!)
             if (token === ';' || token === '!') {
                 if (cursor.segmentStart && cursor.lastHex) {
-                    const pathBack = this.resolveShortestPath(cursor.lastHex, cursor.segmentStart);
+                    const pathBack = this.resolveShortestPath(cursor.lastHex, cursor.segmentStart, cursor.flipNudge);
                     const ids = pathBack.slice(1).map(c => this.formatId(c, cursor.type));
+                    cursor.flipNudge = false;
                     applyIds(ids);
                     
                     if (token === '!') {
@@ -121,11 +128,14 @@ export class HexPath {
                 continue;
             }
 
-            // Handle Relative Steps: e.g. 3ne, 1sw
-            const stepMatch = token.match(/^(\d*)(n|ne|se|s|sw|nw)$/i);
+            // Handle Relative Steps: e.g. 3ne, 1sw, 3*s
+            const stepMatch = token.match(/^(\d*)\*?(n|ne|se|s|sw|nw|e|w)$/i);
             if (stepMatch) {
                 const count = parseInt(stepMatch[1] || '1');
                 const dir = this.parseDirection(stepMatch[2]);
+                cursor.flipNudge = false; // Reset if leading ~ followed by step? 
+                // Plan doesn't specify ~ on steps, but let's reset just in case.
+
 
                 if (cursor.lastHex) {
                     for (let i = 0; i < count; i++) {
@@ -177,7 +187,7 @@ export class HexPath {
                 }
 
                 if (cursor.lastHex && cursor.isContinuation) {
-                    const pathBetween = this.resolveShortestPath(cursor.lastHex, cube);
+                    const pathBetween = this.resolveShortestPath(cursor.lastHex, cube, cursor.flipNudge);
                     applyIds(pathBetween.slice(1).map(c => this.formatId(c, cursor.type)));
                 } else {
                     applyIds([id]);
@@ -186,6 +196,7 @@ export class HexPath {
 
                 cursor.lastHex = cube;
                 cursor.isContinuation = true;
+                cursor.flipNudge = false; // Reset after atom
             }
         }
 
@@ -203,7 +214,7 @@ export class HexPath {
             if (/\s/.test(char)) {
                 if (current) tokens.push(current);
                 current = '';
-            } else if (char === ',' || char === ';' || char === '!' || char === '+' || char === '-') {
+            } else if (char === ',' || char === ';' || char === '!' || char === '+' || char === '-' || char === '~') {
                 if (current) tokens.push(current);
                 tokens.push(char);
                 current = '';
@@ -236,7 +247,7 @@ export class HexPath {
                 col = col * 26 + (colStr.charCodeAt(i) - 'a'.charCodeAt(0) + 1);
             }
             // Use raw col/row directly - offsetToCube handles stagger parity correctly for Alpha1
-            const cube = Hex.offsetToCube(col, row, this.options.stagger);
+            const cube = Hex.offsetToCube(col, row, this.options.orientation);
             const hexId = Hex.hexId(cube);
             
             const suffix = alphaMatch[3];
@@ -267,7 +278,7 @@ export class HexPath {
                 row = parseInt(coords.substring(2, 4));
             }
             // Use raw col/row directly - offsetToCube handles stagger parity
-            const cube = Hex.offsetToCube(col, row, this.options.stagger);
+            const cube = Hex.offsetToCube(col, row, this.options.orientation);
             const hexId = Hex.hexId(cube);
 
             const suffix = numericMatch[2];
@@ -318,8 +329,10 @@ export class HexPath {
         return 'hex';
     }
 
-    private resolveShortestPath(start: Hex.Cube, end: Hex.Cube): Hex.Cube[] {
-        return Hex.hexLine(start, end);
+    private resolveShortestPath(start: Hex.Cube, end: Hex.Cube, flip: boolean = false): Hex.Cube[] {
+        let nudge = Hex.defaultNudge(this.options.orientation);
+        if (flip) nudge = (nudge === 1 ? -1 : 1);
+        return Hex.hexLine(start, end, nudge);
     }
 
     private fill(boundaryIds: string[]): string[] {
@@ -353,7 +366,7 @@ export class HexPath {
 
     private isPointInPolygon(p: Hex.Cube, polygon: Hex.Cube[]): boolean {
         let inside = false;
-        const orientation = this.options.hexTop || 'flat';
+        const orientation = Hex.orientationTop(this.options.orientation);
         for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
             const vi = polygon[i];
             const vj = polygon[j];
@@ -373,14 +386,85 @@ export class HexPath {
     private parseDirection(dir: string): number {
         const mapping: Record<string, number> = {
             'ne': 0, 'se': 1, 's': 2, 'sw': 3, 'nw': 4, 'n': 5,
-            // Aliases for flat-top
-            'e': 1, 'w': 4,
-            // Clock hours (approx for flat top)
-            '1': 0, '2': 1, '4': 2, '5': 3, '7': 3, '8': 4, '10': 5, '11': 0,
-            '12': 5, '6': 2
         };
-        const val = mapping[dir.toLowerCase()];
+        const top = Hex.orientationTop(this.options.orientation);
+        
+        const d = dir.toLowerCase();
+
+        // Cardinal validation
+        if (d === 'e' || d === 'w') {
+            if (top === 'flat') throw new Error(`Invalid direction: ${d} is not valid for flat-top grids`);
+            // Pointy-top mapping: E=1 (SE?), W=4 (NW?) 
+            // Neighbors for Pointy-top from Section 7:
+            // NE: (1,0,-1) index 0
+            // E: (1,-1,0) index 1 -- WAIT, need to check DIRECTIONS in hex-math
+            // Oh, my new DIRECTIONS:
+            // 0: (1,-1,0)
+            // 1: (1,0,-1)
+            // 2: (0,1,-1)
+            // 3: (-1,1,0)
+            // 4: (-1,0,1)
+            // 5: (0,-1,1)
+            // Red Blob Games Pointy-top:
+            // 0: (1,0,-1) -> index 1
+            // 1: (1,-1,0) -> index 0
+            // 2: (0,-1,1) -> index 5
+            // 3: (-1,0,1) -> index 4
+            // 4: (-1,1,0) -> index 3
+            // 5: (0,1,-1) -> index 2
+            
+            // This is getting confusing because Red Blob uses index 0 for E in pointy.
+            // I'll stick to indices that make SE=1 and NE=0 in flat.
+            // Pointy-top (Red Blob): E=(1,0,-1)? No, E=(1,-1,0)
+            // Let's re-verify Red Blob Pointy-top neighbors:
+            // E: (+1, -1, 0)
+            // NE: (+1, 0, -1)
+            // NW: (0, +1, -1)
+            // W: (-1, +1, 0)
+            // SW: (-1, 0, +1)
+            // SE: (0, -1, +1)
+            
+            // Map to my new DIRECTIONS:
+            // E: index 0
+            // NE: index 1
+            // NW: index 5  -- wait, (0,1,-1)? My index 5 is (0,-1,1) which is SE.
+            // NW is (0,1,-1) which is index 2?
+            // NW: index 2
+            // W: index 3
+            // SW: index 4
+            // SE: index 5
+            
+            // So for Pointy-top:
+            // E: 0, NE: 1, NW: 2, W: 3, SW: 4, SE: 5? 
+            // Wait, CW from NE for Pointy: NE, E, SE, SW, W, NW.
+            // NE: index 1
+            // E: index 0
+            // SE: index 5
+            // SW: index 4
+            // W: index 3
+            // NW: index 2
+            
+            return d === 'e' ? 0 : 3;
+        }
+        if (d === 'n' || d === 's') {
+            if (top === 'pointy') throw new Error(`Invalid direction: ${d} is not valid for pointy-top grids`);
+            return d === 'n' ? 5 : 2;
+        }
+
+        const val = mapping[d];
         if (val !== undefined) return val;
+
+        // Clock validation
+        const clockMappingFlat: Record<string, number> = {
+            '12': 5, '2': 0, '4': 1, '6': 2, '8': 3, '10': 4
+        };
+        const clockMappingPointy: Record<string, number> = {
+            '1': 0, '3': 1, '5': 2, '7': 3, '9': 4, '11': 5
+        };
+
+        if (top === 'flat' && clockMappingFlat[d] !== undefined) return clockMappingFlat[d];
+        if (top === 'pointy' && clockMappingPointy[d] !== undefined) return clockMappingPointy[d];
+
         const numeric = parseInt(dir);
         if (!isNaN(numeric)) return (numeric % 6 + 6) % 6;
         return 0;

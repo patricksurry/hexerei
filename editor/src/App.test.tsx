@@ -14,8 +14,7 @@ hexmap: "1.0"
 metadata:
   title: "Mock Map"
 layout:
-  hex_top: flat
-  stagger: low
+  orientation: flat-down
   label: XXYY
   all: "0101 0501 0505 0105 !"
 terrain:

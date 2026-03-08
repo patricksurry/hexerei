@@ -19,15 +19,15 @@ describe('HexMapLoader - Battle for Moscow', () => {
     it('should include valid corner hexes', () => {
         const allIds = new Set(Array.from(mesh.getAllHexes()).map(h => h.id));
         
-        // 0101 (Top Left) in Battle for Moscow (Stagger High, firstCol: 1, firstRow: 1)
-        const tl = Hex.hexId(Hex.offsetToCube(1, 1, Hex.Stagger.Even));
+        // 0101 (Top Left) in Battle for Moscow (Orientation: flat-up, firstCol: 1, firstRow: 1)
+        const tl = Hex.hexId(Hex.offsetToCube(1, 1, 'flat-up'));
         expect(allIds).toContain(tl);
     });
 
     it('should exclude phantom hexes', () => {
-        // 0211 is phantom in BfM (even column in 14x11 stagger high)
+        // 0211 is phantom in BfM (even column in 14x11 flat-up)
         // 0211 => col 2 (even), row 11. 
-        const phantom = Hex.hexId(Hex.offsetToCube(2, 11, Hex.Stagger.Even));
+        const phantom = Hex.hexId(Hex.offsetToCube(2, 11, 'flat-up'));
         expect(mesh.getHex(phantom)).toBeUndefined();
     });
 });
@@ -37,25 +37,15 @@ describe('HexMapLoader - Format Compatibility', () => {
         const source = `
 hexmap: "1.0"
 layout:
+  orientation: flat-down
   all: "0101 0301 0303 0103 !"
 `;
         const mesh = HexMapLoader.load(source);
         expect(Array.from(mesh.getAllHexes())).toHaveLength(9);
     });
 
-    it('should load grid: with columns/rows successfully (legacy fallback)', () => {
-        const source = `
-hexmap: "1.0"
-grid:
-  columns: 3
-  rows: 2
-`;
-        const mesh = HexMapLoader.load(source);
-        expect(Array.from(mesh.getAllHexes())).toHaveLength(6);
-    });
-
-    it('should throw error if neither layout nor grid is present', () => {
+    it('should throw error if layout is not present', () => {
         const source = 'hexmap: "1.0"\nmetadata: { title: "nothing" }';
-        expect(() => HexMapLoader.load(source)).toThrow(/Missing mandatory 'layout' or 'grid' section/);
+        expect(() => HexMapLoader.load(source)).toThrow(/Missing mandatory 'layout' section/);
     });
 });

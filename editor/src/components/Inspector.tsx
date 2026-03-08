@@ -26,12 +26,8 @@ export function Inspector({
       <section className="inspector-section">
         <h3 className="inspector-heading">LAYOUT</h3>
         <div className="inspector-row">
-          <label>Hex Top</label>
-          <span>{model.grid.hexTop}</span>
-        </div>
-        <div className="inspector-row">
-          <label>Stagger</label>
-          <span>{model.grid.stagger === 1 ? 'odd' : 'even'}</span>
+          <label>Orientation</label>
+          <span>{model.grid.orientation}</span>
         </div>
         <div className="inspector-row">
           <label>Label</label>

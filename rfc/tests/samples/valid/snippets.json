@@ -6,9 +6,8 @@
     "version": "1.0.0"
   },
   "layout": {
-    "hex_top": "flat",
+    "orientation": "flat-down",
     "all": "0101 2201 2215 0115 !",
-    "stagger": "low",
     "label": "XXYY",
     "origin": "top-left",
     "georef": {

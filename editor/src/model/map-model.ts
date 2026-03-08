@@ -2,10 +2,9 @@ import { Hex, HexMapDocument, HexMesh, HexMapLoader, HexPath } from '@hexmap/cor
 import { FeatureItem } from '../types';
 
 export interface GridConfig {
-  hexTop: 'flat' | 'pointy';
+  orientation: Hex.Orientation;
   columns: number;
   rows: number;
-  stagger: Hex.Stagger;
   firstCol: number;
   firstRow: number;
   labelFormat: string;
@@ -39,19 +38,17 @@ export class MapModel {
 
   constructor(doc: any, mesh?: HexMesh) {
     this._metadata = doc.metadata || {};
-    const layout = doc.layout || doc.grid || {};
+    const layout = doc.layout || {};
     
-    const stagger = layout.stagger === 'high' ? Hex.Stagger.Even : Hex.Stagger.Odd;
-    const hexTop = layout.hex_top === 'pointy' ? 'pointy' : 'flat';
+    const orientation = layout.orientation || 'flat-down';
     const firstCol = layout.coordinates?.first?.[0] ?? layout.firstCol ?? layout.first?.[0] ?? 1;
     const firstRow = layout.coordinates?.first?.[1] ?? layout.firstRow ?? layout.first?.[1] ?? 1;
     const labelFormat = layout.label || layout.coordinates?.label || "XXYY";
 
     this._grid = {
-      hexTop,
+      orientation,
       columns: layout.columns ?? 0,
       rows: layout.rows ?? 0,
-      stagger,
       firstCol,
       firstRow,
       labelFormat
@@ -76,10 +73,9 @@ export class MapModel {
     // Resolve features and build reverse index
     const meshHexPath = new HexPath(this._mesh, { 
         labelFormat, 
-        stagger, 
+        orientation, 
         firstCol, 
-        firstRow,
-        hexTop 
+        firstRow
     });
 
     this._hexToFeatures = new Map<string, FeatureItem[]>();
@@ -159,7 +155,7 @@ export class MapModel {
 
   hexIdToLabel(id: string): string {
     const cube = Hex.hexFromId(id);
-    const offset = Hex.cubeToOffset(cube, this._grid.stagger);
+    const offset = Hex.cubeToOffset(cube, this._grid.orientation);
     
     if (this._grid.labelFormat === 'CCRR' || this._grid.labelFormat === 'XXYY') {
       return `${offset.x.toString().padStart(2, '0')}${offset.y.toString().padStart(2, '0')}`;
