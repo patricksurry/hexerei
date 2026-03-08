@@ -89,7 +89,7 @@ features:
 
 2. **`Stagger` and `HexOrientation` stay as internal types** — the math functions (`hexToPixel`, `offsetToCube`) still need to branch on flat/pointy and odd/even. The helper functions `orientationTop()` and `orientationStagger()` bridge the gap.
 
-3. **Backward compatibility in loader** — the loader accepts old `hex_top` + `stagger` and converts to `Orientation` internally. This lets existing map files work during migration.
+3. **Hard cutover in loader** — the loader requires the new `orientation` key. Old `hex_top` + `stagger` keys are no longer accepted. Map files must be migrated.
 
 4. **Nudge epsilon on interpolated points** — not on endpoints. This ensures `hexLine(a, b) == hexLine(b, a)` (reversal symmetry). The epsilon is `1e-6` biasing `q` positive and `r` negative (or opposite), determined by orientation.
 

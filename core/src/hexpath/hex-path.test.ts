@@ -157,6 +157,51 @@ describe('HexPath RFC Compliance', () => {
         });
     });
 
+    describe('compound directions on pointy-top', () => {
+        let pointyPath: HexPath;
+        beforeEach(() => {
+            const pointyMesh = new HexMesh(
+                Hex.createRectangularGrid(10, 10, 'pointy-right', 0, 0),
+                { layout: { orientation: 'pointy-right', coordinates: { first: [0, 0] } } }
+            );
+            pointyPath = new HexPath(pointyMesh);
+        });
+
+        it('ne step should move to DIRECTIONS[1] on pointy-top', () => {
+            // From 0,0,0: NE on pointy = DIRECTIONS[1] = (1,0,-1)
+            const result = pointyPath.resolve('0000 1ne');
+            expect(result.items).toContain(Hex.hexId({ q: 1, r: 0, s: -1 }));
+        });
+
+        it('se step should move to DIRECTIONS[5] on pointy-top', () => {
+            // From 0,0,0: SE on pointy = DIRECTIONS[5] = (0,-1,1)
+            const result = pointyPath.resolve('0000 1se');
+            expect(result.items).toContain(Hex.hexId({ q: 0, r: -1, s: 1 }));
+        });
+
+        it('sw step should move to DIRECTIONS[4] on pointy-top', () => {
+            // From 0,0,0: SW on pointy = DIRECTIONS[4] = (-1,0,1)
+            const result = pointyPath.resolve('0000 1sw');
+            expect(result.items).toContain(Hex.hexId({ q: -1, r: 0, s: 1 }));
+        });
+
+        it('nw step should move to DIRECTIONS[2] on pointy-top', () => {
+            // From 0,0,0: NW on pointy = DIRECTIONS[2] = (0,1,-1)
+            const result = pointyPath.resolve('0000 1nw');
+            expect(result.items).toContain(Hex.hexId({ q: 0, r: 1, s: -1 }));
+        });
+
+        it('e step should move to DIRECTIONS[0] on pointy-top', () => {
+            const result = pointyPath.resolve('0000 1e');
+            expect(result.items).toContain(Hex.hexId({ q: 1, r: -1, s: 0 }));
+        });
+
+        it('w step should move to DIRECTIONS[3] on pointy-top', () => {
+            const result = pointyPath.resolve('0000 1w');
+            expect(result.items).toContain(Hex.hexId({ q: -1, r: 1, s: 0 }));
+        });
+    });
+
     describe('* step disambiguation', () => {
         it('should parse 3*s as 3 steps south', () => {
             const result = hexPath.resolve('0000 3*s');

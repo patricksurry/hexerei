@@ -2,6 +2,6 @@
   "hexmap": "1.0",
   "layout": {
     "orientation": "flat-down",
-    "all": []
+    "all": "0101"
   }
 }

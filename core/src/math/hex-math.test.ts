@@ -252,8 +252,9 @@ describe('Hex Math', () => {
             expect(p0201.y).toBe(1);
         });
 
-        it('round-trip raw offsets', () => {
-            const orientation: Hex.Orientation = 'flat-up';
+        it.each([
+            'flat-down', 'flat-up', 'pointy-right', 'pointy-left'
+        ] as Hex.Orientation[])('round-trip raw offsets for %s', (orientation) => {
             for (let q = -10; q <= 10; q++) {
                 for (let r = -10; r <= 10; r++) {
                     const cube = Hex.offsetToCube(q, r, orientation);

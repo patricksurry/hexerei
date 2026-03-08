@@ -384,82 +384,44 @@ export class HexPath {
     }
 
     private parseDirection(dir: string): number {
-        const mapping: Record<string, number> = {
-            'ne': 0, 'se': 1, 's': 2, 'sw': 3, 'nw': 4, 'n': 5,
-        };
+        // DIRECTIONS index → vector → flat-top name → pointy-top name
+        //   0: (1,-1, 0)  NE   E
+        //   1: (1, 0,-1)  SE   NE
+        //   2: (0, 1,-1)  S    NW
+        //   3: (-1,1, 0)  SW   W
+        //   4: (-1,0, 1)  NW   SW
+        //   5: (0,-1, 1)  N    SE
         const top = Hex.orientationTop(this.options.orientation);
-        
         const d = dir.toLowerCase();
 
-        // Cardinal validation
-        if (d === 'e' || d === 'w') {
-            if (top === 'flat') throw new Error(`Invalid direction: ${d} is not valid for flat-top grids`);
-            // Pointy-top mapping: E=1 (SE?), W=4 (NW?) 
-            // Neighbors for Pointy-top from Section 7:
-            // NE: (1,0,-1) index 0
-            // E: (1,-1,0) index 1 -- WAIT, need to check DIRECTIONS in hex-math
-            // Oh, my new DIRECTIONS:
-            // 0: (1,-1,0)
-            // 1: (1,0,-1)
-            // 2: (0,1,-1)
-            // 3: (-1,1,0)
-            // 4: (-1,0,1)
-            // 5: (0,-1,1)
-            // Red Blob Games Pointy-top:
-            // 0: (1,0,-1) -> index 1
-            // 1: (1,-1,0) -> index 0
-            // 2: (0,-1,1) -> index 5
-            // 3: (-1,0,1) -> index 4
-            // 4: (-1,1,0) -> index 3
-            // 5: (0,1,-1) -> index 2
-            
-            // This is getting confusing because Red Blob uses index 0 for E in pointy.
-            // I'll stick to indices that make SE=1 and NE=0 in flat.
-            // Pointy-top (Red Blob): E=(1,0,-1)? No, E=(1,-1,0)
-            // Let's re-verify Red Blob Pointy-top neighbors:
-            // E: (+1, -1, 0)
-            // NE: (+1, 0, -1)
-            // NW: (0, +1, -1)
-            // W: (-1, +1, 0)
-            // SW: (-1, 0, +1)
-            // SE: (0, -1, +1)
-            
-            // Map to my new DIRECTIONS:
-            // E: index 0
-            // NE: index 1
-            // NW: index 5  -- wait, (0,1,-1)? My index 5 is (0,-1,1) which is SE.
-            // NW is (0,1,-1) which is index 2?
-            // NW: index 2
-            // W: index 3
-            // SW: index 4
-            // SE: index 5
-            
-            // So for Pointy-top:
-            // E: 0, NE: 1, NW: 2, W: 3, SW: 4, SE: 5? 
-            // Wait, CW from NE for Pointy: NE, E, SE, SW, W, NW.
-            // NE: index 1
-            // E: index 0
-            // SE: index 5
-            // SW: index 4
-            // W: index 3
-            // NW: index 2
-            
-            return d === 'e' ? 0 : 3;
+        // Compass → DIRECTIONS index, orientation-dependent
+        const flatMapping: Record<string, number> = {
+            'ne': 0, 'se': 1, 's': 2, 'sw': 3, 'nw': 4, 'n': 5,
+        };
+        const pointyMapping: Record<string, number> = {
+            'e': 0, 'ne': 1, 'nw': 2, 'w': 3, 'sw': 4, 'se': 5,
+        };
+
+        // Validate orientation-specific cardinals
+        if ((d === 'e' || d === 'w') && top === 'flat') {
+            throw new Error(`Invalid direction: ${d} is not valid for flat-top grids`);
         }
-        if (d === 'n' || d === 's') {
-            if (top === 'pointy') throw new Error(`Invalid direction: ${d} is not valid for pointy-top grids`);
-            return d === 'n' ? 5 : 2;
+        if ((d === 'n' || d === 's') && top === 'pointy') {
+            throw new Error(`Invalid direction: ${d} is not valid for pointy-top grids`);
         }
 
+        const mapping = top === 'flat' ? flatMapping : pointyMapping;
         const val = mapping[d];
         if (val !== undefined) return val;
 
-        // Clock validation
+        // Clock hours → DIRECTIONS index
+        // Flat-top: edges at even hours (CW from 12=N)
+        // Pointy-top: edges at odd hours (CW from 1=NE)
         const clockMappingFlat: Record<string, number> = {
             '12': 5, '2': 0, '4': 1, '6': 2, '8': 3, '10': 4
         };
         const clockMappingPointy: Record<string, number> = {
-            '1': 0, '3': 1, '5': 2, '7': 3, '9': 4, '11': 5
+            '1': 1, '3': 0, '5': 5, '7': 4, '9': 3, '11': 2
         };
 
         if (top === 'flat' && clockMappingFlat[d] !== undefined) return clockMappingFlat[d];

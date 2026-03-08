@@ -60,9 +60,13 @@ The `hexLine` algorithm calculates the shortest path between two hexes using lin
 
 ```
 biased_u = lerp_u + (eps * nudge)
-biased_v = lerp_v - (eps * nudge)
-biased_w = lerp_w
+biased_v = lerp_v + (2 * eps * nudge)
+biased_w = lerp_w - (3 * eps * nudge)
 ```
+
+Where `eps = 1e-6`. The multipliers (1, 2, -3) sum to zero, preserving the
+cube constraint `u + v + w = 0`. Using different magnitudes on each axis
+ensures unambiguous rounding in all tie-breaking cases.
 
 *   **Default Nudge**: Derived from the orientation. For `flat-down` and `pointy-right`, the default nudge is `+1`. For `flat-up` and `pointy-left`, it is `-1`.
 *   **Flip Operator (`~`)**: Flips the sign of the nudge for a specific path segment.

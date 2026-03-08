@@ -40,23 +40,21 @@ atom acts as the "Type Anchor" for the entire expression.
 *   **Space (` `)**: **Shortest Path.** Connects the previous cursor to the next
     atom using the geometric shortest path.
 
-*   **Nudge (`>[dir]`)**: Breaks ties in shortest paths or forces a specific
-    directional bias. Nudges can use either cardinal compass directions (e.g., `>NE`) 
-    or integer hours (e.g., `>1`).
-    *   Example: `a1 >ne c3`. Prefer the shortest path that "leans" toward the
-        North-East (approx 1:30 position).
-
-    Note that there is an implicit nudge towards equal coordinates (e.g., `A1 A10` 
-    implies the straight column `A1, A2, ..., A10`) even in staggered layouts.
+*   **Flip Nudge (`~`)**: A prefix on a destination coordinate that flips the
+    default tie-breaking nudge for the arriving path segment. The default nudge
+    is derived from the grid's orientation (see Section 7). `~` only affects the
+    single segment arriving at the prefixed coordinate — it is not a modal switch.
+    *   Example: `0101 ~0303` connects with flipped nudge; `0101 0303` uses default.
+    *   `~` on the first coordinate in an expression has no effect (no incoming segment).
+    *   `~` on a non-ambiguous path has no effect (no tie to break).
 
 *   **Comma (`,`)**: **Jump.** Ends the current segment. The next atom adds to
     the collection without a connecting path from the previous cursor.
 
 *   **Semicolon (`;`)**: **Close.** Connects the current cursor back to the
     start of the current segment and ends the segment.
-    The path is closed along a straight line between the two points, with explicit 
-    or implicit nudge applied. An error occurs if there are geometric ties 
-    that cannot be resolved by the current nudge.
+    The path is closed along a straight line between the two points, using the
+    default nudge (or flipped nudge if `~` was applied).
 
 *   **Exclamation (`!`)**: **Close & Fill.** Closes the segment (like `;`) and
     then adds all items contained within the resulting boundary to the collection.
@@ -73,6 +71,30 @@ atom acts as the "Type Anchor" for the entire expression.
 
 The `+` and `-` operators are **modal switches**. They affect all following
 segments until the mode is changed again.
+
+### Relative Steps and Direction Validation
+
+A relative step moves the cursor by one or more hexes in a compass direction:
+
+*   Single step: `ne`, `sw`, `n` (direction only, count = 1)
+*   Counted step: `3ne`, `2s` (count + direction)
+*   Disambiguated step: `3*s` (count + `*` + direction)
+
+The `*` form is used when a count+direction could be confused with a
+coordinate label (e.g., `3s` might look like an alpha coordinate).
+
+**Direction validity depends on orientation:**
+
+*   **Flat-top** (`flat-down`, `flat-up`): Valid directions are `n`, `ne`,
+    `se`, `s`, `sw`, `nw`. Using `e` or `w` is a **parse error** — flat-top
+    hexes have no neighbor in the pure east/west direction.
+
+*   **Pointy-top** (`pointy-right`, `pointy-left`): Valid directions are
+    `e`, `ne`, `nw`, `w`, `sw`, `se`. Using `n` or `s` is a **parse error** —
+    pointy-top hexes have no neighbor in the pure north/south direction.
+
+Compound directions (`ne`, `se`, `sw`, `nw`) are always valid for both
+orientations but map to different neighbor vectors depending on orientation.
 
 ### Example: A Forested Ridge with a Clearing
 ```yaml
