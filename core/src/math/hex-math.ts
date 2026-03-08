@@ -75,10 +75,19 @@ export function getCanonicalBoundaryId(a: Cube, b: Cube | null, dirFromA?: numbe
  * "Hex + VertexIndex(0..5)".
  * Canonicalize by finding the neighbor hexes and sorting?
  */
-export function getVertexId(hex: Cube, corner: number): string {
-    // TODO: Implement robust Vertex canonicalization.
-    return `${hexId(hex)}@${corner}`; // Placeholder
+/**
+ * Returns a canonical ID for a Vertex (Junction).
+ * A vertex touches 3 hexes (in infinite grid).
+ * Identified by the 3 hex IDs sorted.
+ */
+export function getCanonicalVertexId(hex: Cube, corner: number): string {
+    const n1 = hexNeighbor(hex, corner);
+    const n2 = hexNeighbor(hex, (corner + 5) % 6);
+    const ids = [hexId(hex), hexId(n1), hexId(n2)].sort();
+    return ids.join('^');
 }
+
+
 
 /**
  * Convert Offset coordinates (col, row) to Cube coordinates (q, r, s).
@@ -99,19 +108,25 @@ export enum Stagger {
 
 export function offsetToCube(col: number, row: number, stagger: Stagger = Stagger.Odd): Cube {
     const q = col;
-    // Odd-Q: r = row - (col - (col&1)) / 2
-    // Even-Q: r = row - (col + (col&1)) / 2
-    const offset = stagger === Stagger.Odd ? (col - (col & 1)) : (col + (col & 1));
-    const r = row - (offset) / 2;
+    let r;
+    if (stagger === Stagger.Odd) {
+        // Odd-Q: odd columns shifted down
+        r = row - (col - (col & 1)) / 2;
+    } else {
+        // Even-Q: even columns shifted down
+        r = row - (col + (col & 1)) / 2;
+    }
     return createHex(q, r, -q - r);
 }
 
-export function cubeToOffset(hex: Cube, stagger: Stagger = Stagger.Odd): Point {
-    const col = hex.q;
-    // Odd-Q: row = r + (col - (col&1)) / 2
-    // Even-Q: row = r + (col + (col&1)) / 2
-    const offset = stagger === Stagger.Odd ? (col - (col & 1)) : (col + (col & 1));
-    const row = hex.r + (offset) / 2;
+export function cubeToOffset(cube: Cube, stagger: Stagger = Stagger.Odd): Point {
+    const col = cube.q;
+    let row;
+    if (stagger === Stagger.Odd) {
+        row = cube.r + (cube.q - (cube.q & 1)) / 2;
+    } else {
+        row = cube.r + (cube.q + (cube.q & 1)) / 2;
+    }
     return { x: col, y: row };
 }
 
@@ -127,11 +142,57 @@ export function createRectangularGrid(cols: number, rows: number, stagger: Stagg
 
 export interface Point { x: number, y: number }
 
-export function hexToPixel(hex: Cube, size: number): Point {
-    // Flat-top conversion
-    const x = size * (3 / 2 * hex.q);
-    const y = size * (Math.sqrt(3) / 2 * hex.q + Math.sqrt(3) * hex.r);
-    return { x, y };
+export type HexOrientation = 'flat' | 'pointy';
+
+export function hexToPixel(hex: Cube, size: number, orientation: HexOrientation = 'flat'): Point {
+    if (orientation === 'flat') {
+        const x = size * (3 / 2 * hex.q);
+        const y = size * (Math.sqrt(3) / 2 * hex.q + Math.sqrt(3) * hex.r);
+        return { x, y };
+    } else {
+        const x = size * (Math.sqrt(3) * hex.q + Math.sqrt(3) / 2 * hex.r);
+        const y = size * (3 / 2 * hex.r);
+        return { x, y };
+    }
+}
+
+export function pixelToHex(point: Point, size: number, orientation: HexOrientation = 'flat'): Cube {
+    let q: number, r: number;
+    if (orientation === 'flat') {
+        q = (2 / 3 * point.x) / size;
+        r = (-1 / 3 * point.x + Math.sqrt(3) / 3 * point.y) / size;
+    } else {
+        q = (Math.sqrt(3) / 3 * point.x - 1 / 3 * point.y) / size;
+        r = (2 / 3 * point.y) / size;
+    }
+    return hexRound({ q, r, s: -q - r });
+}
+
+export function hexCorners(center: Point, size: number, orientation: HexOrientation = 'flat'): Point[] {
+    const corners: Point[] = [];
+    for (let i = 0; i < 6; i++) {
+        const angle_deg = orientation === 'flat' ? 60 * i : 60 * i + 30;
+        const angle_rad = Math.PI / 180 * angle_deg;
+        corners.push({
+            x: center.x + size * Math.cos(angle_rad),
+            y: center.y + size * Math.sin(angle_rad)
+        });
+    }
+    return corners;
+}
+
+export function hexEdgeMidpoints(center: Point, size: number, orientation: HexOrientation = 'flat'): Point[] {
+    const corners = hexCorners(center, size, orientation);
+    const midpoints: Point[] = [];
+    for (let i = 0; i < 6; i++) {
+        const c1 = corners[i];
+        const c2 = corners[(i + 1) % 6];
+        midpoints.push({
+            x: (c1.x + c2.x) / 2,
+            y: (c1.y + c2.y) / 2
+        });
+    }
+    return midpoints;
 }
 
 export function hexDistance(a: Cube, b: Cube): number {
@@ -167,7 +228,11 @@ export function hexRound(cube: Cube): Cube {
         s = -q - r;
     }
 
-    return { q, r, s };
+    return {
+        q: q === 0 ? 0 : q,
+        r: r === 0 ? 0 : r,
+        s: s === 0 ? 0 : s
+    };
 }
 
 export function hexLine(a: Cube, b: Cube): Cube[] {

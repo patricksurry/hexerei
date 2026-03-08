@@ -7,12 +7,10 @@ export interface Point {
     y: number;
 }
 
-
-
 /**
- * Represents a discrete area (hex) in the mesh with its attributes.
+ * Represents a discrete hex in the mesh with its attributes.
  */
-export interface Area {
+export interface HexArea {
     id: string;
     terrain: string;
     props: Record<string, any>;
@@ -21,28 +19,38 @@ export interface Area {
 }
 
 /**
- * Minimal Mesh interface for HexPath resolution.
+ * Represents the edge between two hexes.
  */
-export interface Boundary {
+export interface Edge {
     id: string;
-    areas: [Area, Area | null];
+    hexes: [HexArea, HexArea | null];
+}
+
+/**
+ * Represents a vertex where hexes meet.
+ */
+export interface Vertex {
+    id: string;
+    hexes: HexArea[];
 }
 
 export interface Connection {
-    boundary: Boundary;
-    from: Area;
-    to: Area;
+    edge: Edge;
+    from: HexArea;
+    to: HexArea;
 }
 
 /**
  * Minimal Mesh interface for HexPath resolution.
  */
 export interface MeshMap {
-    // Lookups return Area objects or undefined
-    getArea(id: string): Area | undefined;
-    getAllAreas(): Iterable<Area>;
+    getHex(id: string): HexArea | undefined;
+    getAllHexes(): Iterable<HexArea>;
     
     // Topology helpers
-    getNeighbors(idOrArea: string | Area): Area[];
-    getBoundaryLoop(idOrArea: string | Area): Boundary[];
+    getNeighbors(idOrHex: string | HexArea): HexArea[];
+    getEdgeLoop(idOrHex: string | HexArea): Edge[];
+
+    // Metadata
+    layout: any;
 }

@@ -1,22 +1,24 @@
-import { MeshMap, Point, Area, Connection, Boundary } from './types.js';
+import { MeshMap, HexArea, Connection, Edge } from './types.js';
 import * as Hex from '../math/hex-math.js';
 
 export class HexMesh implements MeshMap {
-    private _areas = new Map<string, Area>();
-    private _boundaries = new Map<string, Boundary>();
+    private _hexes = new Map<string, HexArea>();
+    private _edges = new Map<string, Edge>();
 
     private _stagger: Hex.Stagger;
     private _firstCol: number;
     private _firstRow: number;
+    private _layout: any;
 
-    constructor(validHexes: Hex.Cube[], config: { stagger?: Hex.Stagger, firstCol?: number, firstRow?: number, terrain?: Map<string, string> } = {}) {
+    constructor(validHexes: Hex.Cube[], config: { stagger?: Hex.Stagger, firstCol?: number, firstRow?: number, terrain?: Map<string, string>, layout?: any } = {}) {
         this._stagger = config.stagger ?? Hex.Stagger.Odd;
         this._firstCol = config.firstCol ?? 1;
         this._firstRow = config.firstRow ?? 1;
+        this._layout = config.layout || {};
 
         for (const cube of validHexes) {
             const id = Hex.hexId(cube);
-            this._areas.set(id, {
+            this._hexes.set(id, {
                 id,
                 terrain: config.terrain?.get(id) ?? 'unknown',
                 props: {}
@@ -27,85 +29,86 @@ export class HexMesh implements MeshMap {
     public get stagger(): Hex.Stagger { return this._stagger; }
     public get firstCol(): number { return this._firstCol; }
     public get firstRow(): number { return this._firstRow; }
+    public get layout(): any { return this._layout; }
 
-    getArea(id: string): Area | undefined {
-        return this._areas.get(id);
+    getHex(id: string): HexArea | undefined {
+        return this._hexes.get(id);
     }
 
-    getAllAreas(): Iterable<Area> {
-        return this._areas.values();
+    getAllHexes(): Iterable<HexArea> {
+        return this._hexes.values();
     }
 
     /**
-     * Partially update attributes for an existing area.
+     * Partially update attributes for an existing hex.
      */
-    updateArea(id: string, attrs: Partial<Area>): void {
-        const area = this._areas.get(id);
-        if (area) {
-            Object.assign(area, attrs);
+    updateHex(id: string, attrs: Partial<HexArea>): void {
+        const hex = this._hexes.get(id);
+        if (hex) {
+            Object.assign(hex, attrs);
         }
     }
 
-    getNeighbors(idOrArea: string | Area): Area[] {
-        const id = typeof idOrArea === 'string' ? idOrArea : idOrArea.id;
+    getNeighbors(idOrHex: string | HexArea): HexArea[] {
+        const id = typeof idOrHex === 'string' ? idOrHex : idOrHex.id;
         const cube = Hex.hexFromId(id);
-        const neighbors: Area[] = [];
+        const neighbors: HexArea[] = [];
         for (let i = 0; i < 6; i++) {
             const nCube = Hex.hexNeighbor(cube, i);
             const nId = Hex.hexId(nCube);
-            const neighbor = this._areas.get(nId);
+            const neighbor = this._hexes.get(nId);
             if (neighbor) neighbors.push(neighbor);
         }
         return neighbors;
     }
 
-    getConnection(fromOrId: string | Area, toOrId: string | Area): Connection | undefined {
-        const fromArea = typeof fromOrId === 'string' ? this.getArea(fromOrId) : fromOrId;
-        const toArea = typeof toOrId === 'string' ? this.getArea(toOrId) : toOrId;
+    getConnection(fromOrId: string | HexArea, toOrId: string | HexArea): Connection | undefined {
+        const fromHex = typeof fromOrId === 'string' ? this.getHex(fromOrId) : fromOrId;
+        const toHex = typeof toOrId === 'string' ? this.getHex(toOrId) : toOrId;
 
-        if (!fromArea || !toArea) return undefined;
+        if (!fromHex || !toHex) return undefined;
 
-        const fromCube = Hex.hexFromId(fromArea.id);
-        const toCube = Hex.hexFromId(toArea.id);
+        const fromCube = Hex.hexFromId(fromHex.id);
+        const toCube = Hex.hexFromId(toHex.id);
 
         if (!Hex.isAdjacent(fromCube, toCube)) return undefined;
 
-        const boundaryId = Hex.getCanonicalBoundaryId(fromCube, toCube);
-        let boundary = this._boundaries.get(boundaryId);
-        if (!boundary) {
-            const areas: [Area, Area] = fromArea.id < toArea.id ? [fromArea, toArea] : [toArea, fromArea];
-            boundary = { id: boundaryId, areas };
-            this._boundaries.set(boundaryId, boundary);
+        const edgeId = Hex.getCanonicalBoundaryId(fromCube, toCube);
+        let edge = this._edges.get(edgeId);
+        if (!edge) {
+            const hexes: [HexArea, HexArea] = fromHex.id < toHex.id ? [fromHex, toHex] : [toHex, fromHex];
+            edge = { id: edgeId, hexes };
+            this._edges.set(edgeId, edge);
         }
 
-        return { from: fromArea, to: toArea, boundary };
+        return { from: fromHex, to: toHex, edge };
     }
 
-    getBoundaryLoop(idOrArea: string | Area): Boundary[] {
-        const id = typeof idOrArea === 'string' ? idOrArea : idOrArea.id;
-        const fromArea = this._areas.get(id);
-        if (!fromArea) return [];
+    getEdgeLoop(idOrHex: string | HexArea): Edge[] {
+        const id = typeof idOrHex === 'string' ? idOrHex : idOrHex.id;
+        const fromHex = this._hexes.get(id);
+        if (!fromHex) return [];
 
         const cube = Hex.hexFromId(id);
-        const boundaries: Boundary[] = [];
+        const edges: Edge[] = [];
         for (let dir = 0; dir < 6; dir++) {
             const neighborCube = Hex.hexNeighbor(cube, dir);
             const neighborId = Hex.hexId(neighborCube);
-            const neighborArea = this._areas.get(neighborId);
+            const neighborHex = this._hexes.get(neighborId);
 
-            const boundaryId = Hex.getCanonicalBoundaryId(cube, neighborCube, dir);
-            let boundary = this._boundaries.get(boundaryId);
-            if (!boundary) {
-                if (!neighborArea) {
-                    boundary = { id: boundaryId, areas: [fromArea, null] };
+            const edgeId = Hex.getCanonicalBoundaryId(cube, neighborCube, dir);
+            let edge = this._edges.get(edgeId);
+            if (!edge) {
+                if (!neighborHex) {
+                    edge = { id: edgeId, hexes: [fromHex, null] };
                 } else {
-                    const areas: [Area, Area] = fromArea.id < neighborId ? [fromArea, neighborArea] : [neighborArea, fromArea];
-                    boundary = { id: boundaryId, areas };
+                    const hexes: [HexArea, HexArea] = fromHex.id < neighborId ? [fromHex, neighborHex] : [neighborHex, fromHex];
+                    edge = { id: edgeId, hexes };
                 }
-                this._boundaries.set(boundaryId, boundary);
+                this._edges.set(edgeId, edge);
             }
-            boundaries.push(boundary);
+            edges.push(edge);
         }
-        return boundaries;
+        return edges;
     }
 }

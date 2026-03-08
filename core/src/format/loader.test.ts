@@ -11,22 +11,22 @@ describe('HexMapLoader - Battle for Moscow', () => {
 
     const mesh = HexMapLoader.load(mapSource);
 
-    it('should have some areas', () => {
-        const allAreas = Array.from(mesh.getAllAreas());
-        expect(allAreas.length).toBeGreaterThan(0);
+    it('should have some hexes', () => {
+        const allHexes = Array.from(mesh.getAllHexes());
+        expect(allHexes.length).toBeGreaterThan(0);
     });
 
     it('should include valid corner hexes', () => {
-        // Let's just find them in allAreas to be sure what loader produced
-        const allIds = new Set(Array.from(mesh.getAllAreas()).map(a => a.id));
+        const allIds = new Set(Array.from(mesh.getAllHexes()).map(h => h.id));
         
-        // 0101 (Top Left)
-        const tl = Hex.hexId(Hex.offsetToCube(1 - 1, 1 - 1, Hex.Stagger.Even));
+        // 0101 (Top Left) in Battle for Moscow (Stagger High)
+        const tl = Hex.hexId(Hex.offsetToCube(0, 0, Hex.Stagger.Even));
         expect(allIds).toContain(tl);
     });
 
     it('should exclude phantom hexes', () => {
-        // q=2, r=10, s=-12
-        expect(mesh.getArea("2,10,-12")).toBeUndefined();
+        // 0211 is phantom in BfM (even column in 14x11 stagger high)
+        const phantom = Hex.hexId(Hex.offsetToCube(1, 10, Hex.Stagger.Even));
+        expect(mesh.getHex(phantom)).toBeUndefined();
     });
 });

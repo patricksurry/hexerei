@@ -12,53 +12,53 @@ describe('HexMesh Topology', () => {
     // Grid with 3 hexes
     const mesh = new HexMesh([center, neighbor, far]);
 
-    const areaCenter = mesh.getArea(Hex.hexId(center))!;
-    const areaNeighbor = mesh.getArea(Hex.hexId(neighbor))!;
-    const areaFar = mesh.getArea(Hex.hexId(far))!;
+    const hexCenter = mesh.getHex(Hex.hexId(center))!;
+    const hexNeighbor = mesh.getHex(Hex.hexId(neighbor))!;
+    const hexFar = mesh.getHex(Hex.hexId(far))!;
 
-    it('should identify areas correctly', () => {
-        expect(areaCenter).toBeDefined();
-        expect(areaNeighbor).toBeDefined();
-        expect(areaFar).toBeDefined();
-        expect(mesh.getArea("100,100,-200")).toBeUndefined();
+    it('should identify hexes correctly', () => {
+        expect(hexCenter).toBeDefined();
+        expect(hexNeighbor).toBeDefined();
+        expect(hexFar).toBeDefined();
+        expect(mesh.getHex("100,100,-200")).toBeUndefined();
     });
 
     it('should find correct neighbors', () => {
-        const neighbors = mesh.getNeighbors(areaCenter);
+        const neighbors = mesh.getNeighbors(hexCenter);
         expect(neighbors).toHaveLength(1);
-        expect(neighbors[0].id).toBe(areaNeighbor.id);
+        expect(neighbors[0].id).toBe(hexNeighbor.id);
 
-        const farNeighbors = mesh.getNeighbors(areaFar);
+        const farNeighbors = mesh.getNeighbors(hexFar);
         expect(farNeighbors).toHaveLength(0);
     });
 
-    it('should share a canonical boundary between neighbors', () => {
-        const conn1 = mesh.getConnection(areaCenter, areaNeighbor);
-        const conn2 = mesh.getConnection(areaNeighbor, areaCenter);
+    it('should share a canonical edge between neighbors', () => {
+        const conn1 = mesh.getConnection(hexCenter, hexNeighbor);
+        const conn2 = mesh.getConnection(hexNeighbor, hexCenter);
 
         expect(conn1).toBeDefined();
         expect(conn2).toBeDefined();
         // Check identity
-        expect(conn1!.boundary).toBe(conn2!.boundary);
-        expect(conn1!.boundary.id).toBe(conn2!.boundary.id);
+        expect(conn1!.edge).toBe(conn2!.edge);
+        expect(conn1!.edge.id).toBe(conn2!.edge.id);
     });
 
-    it('should generate boundary loops including void edges', () => {
-        const loop = mesh.getBoundaryLoop(areaCenter);
+    it('should generate edge loops including void edges', () => {
+        const loop = mesh.getEdgeLoop(hexCenter);
         expect(loop).toHaveLength(6);
 
-        // One boundary should be the shared one with neighbor
-        const shared = mesh.getConnection(areaCenter, areaNeighbor)!.boundary;
+        // One edge should be the shared one with neighbor
+        const shared = mesh.getConnection(hexCenter, hexNeighbor)!.edge;
         expect(loop).toContain(shared);
 
-        // The other 5 should be VOID boundaries
-        const voids = loop.filter(b => b.areas[1] === null);
+        // The other 5 should be VOID edges
+        const voids = loop.filter(e => e.hexes[1] === null);
         expect(voids).toHaveLength(5);
     });
 
-    it('should ensure void boundaries are unique per direction', () => {
-        const loop = mesh.getBoundaryLoop(areaCenter);
-        const ids = new Set(loop.map(b => b.id));
+    it('should ensure void edges are unique per direction', () => {
+        const loop = mesh.getEdgeLoop(hexCenter);
+        const ids = new Set(loop.map(e => e.id));
         expect(ids.size).toBe(6);
     });
 });

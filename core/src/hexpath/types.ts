@@ -1,21 +1,19 @@
+export type GeometryType = 'hex' | 'edge' | 'vertex';
+
 /**
  * Result of a HexPath resolution.
- * A flat list of items that maintains path connectivity via links.
+ * A collection of unique identifiers for hexes, edges, or vertices.
  */
 export interface HexPathResult {
-    type: 'hex' | 'edge' | 'vertex';
-    items: PathItem[];
+    type: GeometryType;
+    items: string[];
 }
 
+/**
+ * Metadata for a path item (internal use).
+ */
 export interface PathItem {
     id: string;
-    /**
-     * The ID of the next element in the path segment.
-     * If undefined, this is the end of a segment or a singleton (filled item).
-     */
     next?: string;
-    /**
-     * The ID of the previous element in the path segment.
-     */
     prev?: string;
 }
