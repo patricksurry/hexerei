@@ -21,47 +21,52 @@ v = -q - r
 
 User coordinates are parsed into (col, row) integers via the label
 pattern, then converted to cube coordinates. The conversion depends on
-hex_top and stagger.
+the grid's **orientation**.
 
 Let (col, row) be the parsed column and row indices from the user
-coordinates. 
+coordinates.
 
-The origin configuration (see [User coordinate labeling](#user-coordinate-labeling) in Section 4) determines the directional orientation of
-the axes. For conversions to standard internal coordinates (where columns 
-increase right and rows increase down), the following reflections MUST 
-be applied if the origin is not `"top-left"`:
-*   If origin is `"bottom-left"` or `"bottom-right"`, negate the row axis.
-*   If origin is `"top-right"` or `"bottom-right"`, negate the column axis.
-
-**Flat-top, stagger: low (odd columns sit lower):**
+**Orientation: flat-down (Odd-Q):**
 ```
 u = col
 w = row - floor(col / 2)
 v = -u - w
 ```
 
-**Flat-top, stagger: high (odd columns sit higher):**
+**Orientation: flat-up (Even-Q):**
 ```
 u = col
 w = row - ceil(col / 2)
 v = -u - w
 ```
 
-**Pointy-top, stagger: low (odd rows sit further right):**
+**Orientation: pointy-right (Odd-R):**
 ```
 u = col - floor(row / 2)
 w = row
 v = -u - w
 ```
 
-**Pointy-top, stagger: high (odd rows sit further left):**
+**Orientation: pointy-left (Even-R):**
 ```
 u = col - ceil(row / 2)
 w = row
 v = -u - w
 ```
 
+### Shortest Paths and Nudging
 
+The `hexLine` algorithm calculates the shortest path between two hexes using linear interpolation in cube coordinates. To ensure deterministic results and enable tie-breaking, an epsilon bias (nudge) is applied to each interpolated point before rounding to the nearest hex.
+
+```
+biased_u = lerp_u + (eps * nudge)
+biased_v = lerp_v - (eps * nudge)
+biased_w = lerp_w
+```
+
+*   **Default Nudge**: Derived from the orientation. For `flat-down` and `pointy-right`, the default nudge is `+1`. For `flat-up` and `pointy-left`, it is `-1`.
+*   **Flip Operator (`~`)**: Flips the sign of the nudge for a specific path segment.
+*   **Reversal Symmetry**: The algorithm ensures that `hexLine(A, B, nudge) == reverse(hexLine(B, A, nudge))`.
 
 ### Neighbor directions in cube coordinates
 

@@ -8,9 +8,9 @@ This system is integrated into the primary addressing notation (see [Addressing 
 using the `hex@hour` syntax.
 
 Edges and vertices alternate around the hex. Which positions are edges
-and which are vertices depends on `hex_top`:
+and which are vertices depends on orientation:
 
-## Flat-top (edges at even hours, vertices at odd hours)
+## Flat-top (flat-down, flat-up) - Edges at even hours, vertices at odd hours
 
 ```
                   11       12        1
@@ -45,7 +45,7 @@ and which are vertices depends on `hex_top`:
 | 10 | edge | NW |
 | 11 | vertex | NW |
 
-## Pointy-top (vertices at even hours, edges at odd hours)
+## Pointy-top (pointy-right, pointy-left) - Vertices at even hours, edges at odd hours
 
 | Clock | Feature | Compass |
 |-------|---------|---------|

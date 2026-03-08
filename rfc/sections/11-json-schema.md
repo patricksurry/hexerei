@@ -38,11 +38,13 @@ The normative JSON Schema for the HexMap format is defined below.
     },
     "layout": {
       "type": "object",
-      "required": ["hex_top", "all"],
+      "required": ["orientation", "all"],
       "properties": {
-        "hex_top": { "enum": ["flat", "pointy"] },
+        "orientation": {
+          "type": "string",
+          "enum": ["flat-down", "flat-up", "pointy-right", "pointy-left"]
+        },
         "all": { "type": "string" },
-        "stagger": { "enum": ["low", "high"], "default": "low" },
         "label": { "type": "string", "default": "auto" },
         "origin": {
           "enum": ["top-left", "bottom-left", "top-right", "bottom-right"],

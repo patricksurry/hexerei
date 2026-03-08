@@ -47,9 +47,8 @@ It is REQUIRED.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `hex_top` | string | YES | `"flat"` or `"pointy"`. |
+| `orientation` | string | YES | The grid orientation and stagger parity. |
 | `all` | string | YES | HexPath defining the valid hexes in the map. |
-| `stagger` | string | no | `"low"` or `"high"`. Default: `"low"`. See below. |
 | `label` | string | no | Label pattern (e.g., `"XXYY"`). Default: `"auto"`. |
 | `origin` | string | no | Visual corner where numbers start. Default: `"top-left"`. |
 | `georef` | object | no | Geographic scale and anchoring. See below. |
@@ -74,24 +73,18 @@ For irregular maps (e.g., staggering offsets on the bottom edge), a
 directional nudge can be used to control the inclusion of specific hexes:
 *   `"A1 A10 >N K10 K1 !"` (Staggered bottom edge)
 
-#### hex_top
+#### orientation
 
-Two values: `"flat"` (flat edge at 12 o'clock) or `"pointy"` (vertex at
-12 o'clock).
+The `orientation` field defines both the axial alignment (flat-top vs pointy-top) and the stagger parity.
 
-#### stagger
+| Orientation | Top geometry | Stagger description |
+|-------------|--------------|---------------------|
+| `flat-down` | Flat-top | Odd columns shifted down (Odd-Q). |
+| `flat-up` | Flat-top | Odd columns shifted up (Even-Q). |
+| `pointy-right` | Pointy-top | Odd rows shifted right (Odd-R). |
+| `pointy-left` | Pointy-top | Odd rows shifted left (Even-R). |
 
-When hex columns (flat-top) or rows (pointy-top) are arranged in a
-rectangular layout, alternating columns/rows must be offset.
-
-| Value | Flat-top meaning | Pointy-top meaning |
-|-------|------------------|--------------------|
-| `"low"` (default) | Odd columns sit lower | Odd rows sit further right |
-| `"high"` | Odd columns sit higher | Odd rows sit further left |
-
-"Odd" columns/rows are those whose index (after applying `first`) is odd.
-`"low"` corresponds to Red Blob Games' "odd-q" (flat-top) or "odd-r"
-(pointy-top).
+"Odd" columns/rows are those whose numeric index is odd. The orientation also determines the **default nudge** (tie-breaking bias) for HexPath shortest paths.
 
 #### georef (geographic anchoring and scale)
 
@@ -124,7 +117,7 @@ The HexMap format uses two coordinate representations:
    drawing). Cube coordinates do not appear in the file.
 
 The mapping between user coordinates and cube coordinates is determined
-by the layout geometry (`hex_top`, `stagger`, `label`, `origin`).
+by the layout geometry (`orientation`, `label`, `origin`).
 
 #### User coordinate labeling
 

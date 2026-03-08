@@ -1,7 +1,6 @@
 layout:
-  hex_top: flat
+  orientation: flat-down
   all: "0101 2201 2215 0115 !" # 22x15 rectangle
-  stagger: low
   label: XXYY
   origin: top-left
   georef:

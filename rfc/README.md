@@ -19,9 +19,8 @@ metadata:
   title: "My Map"
   id: "my-map"
 layout:
-  hex_top: flat
+  orientation: flat-down
   all: "0101 0505 !"
-  stagger: low
 terrain:
   hex:
     forest:

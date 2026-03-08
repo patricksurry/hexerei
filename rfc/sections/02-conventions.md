@@ -16,12 +16,13 @@ the half-edge implicitly belongs to hex A13.
 **face**: Synonym for hex, used when emphasizing the graph-duality
 relationship between faces, edges, and vertices.
 
-**flat-top**: A hex orientation where the top and bottom sides are
-horizontal (flat edges at 12 o'clock and 6 o'clock). The hex is wider
-than it is tall.
+**orientation**: Defines the grid's axial alignment and stagger parity. There are four valid orientations:
+*   `flat-down`: Flat-top, odd columns shifted down (most common wargame layout).
+*   `flat-up`: Flat-top, odd columns shifted up.
+*   `pointy-right`: Pointy-top, odd rows shifted right.
+*   `pointy-left`: Pointy-top, odd rows shifted left.
 
-**pointy-top**: A hex orientation where vertices point up and down
-(vertices at 12 o'clock and 6 o'clock). The hex is taller than it is wide.
+The orientation determines both the visual layout and the default path tie-breaking (nudge) behavior.
 
 **cube coordinates**: A three-integer coordinate system (u, v, w) for hex
 grids where u + v + w = 0. This is the canonical mathematical
@@ -44,6 +45,10 @@ selection (hexes, edges, vertices, or a path) with terrain and properties.
 
 **path**: An ordered sequence of connected hexes or edges representing a
 linear feature such as a road, railroad, or river.
+
+**nudge**: A deterministic tie-breaking bias used when a shortest path between two points is ambiguous. The default nudge is derived from the grid's **orientation**.
+
+**~ (flip operator)**: A prefix on a HexPath coordinate that flips the default nudge for the arriving path segment.
 
 **directed edge type**: An edge terrain type where the effect is
 asymmetric — different depending on which side you approach from (e.g.,
