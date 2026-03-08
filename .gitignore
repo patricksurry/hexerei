@@ -51,3 +51,4 @@ importer/output/
 importer/diagnostics/
 importer/tiles/
 maps/images/
+.worktrees/
