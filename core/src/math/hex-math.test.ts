@@ -150,10 +150,109 @@ describe('Hex Math', () => {
 
         it('produces same results regardless of nudge for non-ambiguous path', () => {
             const a = { q: 0, r: 0, s: 0 };
-            const b = { q: 2, r: 0, s: -2 }; 
+            const b = { q: 2, r: 0, s: -2 };
             const path1 = Hex.hexLine(a, b, 1);
             const path2 = Hex.hexLine(a, b, -1);
             expect(path1).toEqual(path2);
+        });
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Bias formula correctness: s gets coefficient +2, r gets coefficient −3
+    //
+    // Each test passes the nudge value that equals the correct effective_sign
+    // for that path (base_sign × parity_sign), so the test is purely sensitive
+    // to the formula coefficients — not to parity-correction logic in HexPath.
+    //
+    // Mnemonic for the correct assignments:
+    //   biased_q = lerp_q + (1 · eps · sign)   ← q is the column-like axis
+    //   biased_s = lerp_s + (2 · eps · sign)   ← s is the diagonal axis
+    //   biased_r = lerp_r − (3 · eps · sign)   ← r is the row-like axis
+    // ─────────────────────────────────────────────────────────────────────────
+    describe('hexLine bias formula: s gets +2 coefficient, r gets −3', () => {
+        // Flat-up (base=−1).  Odd start col → parity=+1 → effective=−1.
+        it('flat-up, nudge=−1: col 5→11 row 2 stays at row 2 (odd-start col)', () => {
+            const a = Hex.offsetToCube(5, 2, 'flat-up');
+            const b = Hex.offsetToCube(11, 2, 'flat-up');
+            for (const hex of Hex.hexLine(a, b, -1)) {
+                expect(Hex.cubeToOffset(hex, 'flat-up').y).toBe(2);
+            }
+        });
+
+        // Flat-up (base=−1).  Even start col → parity=−1 → effective=+1.
+        it('flat-up, nudge=+1: col 8→16 row 3 stays at row 3 (even-start col)', () => {
+            const a = Hex.offsetToCube(8, 3, 'flat-up');
+            const b = Hex.offsetToCube(16, 3, 'flat-up');
+            for (const hex of Hex.hexLine(a, b, 1)) {
+                expect(Hex.cubeToOffset(hex, 'flat-up').y).toBe(3);
+            }
+        });
+
+        // Flat-down (base=+1).  Odd start col → parity=+1 → effective=+1.
+        it('flat-down, nudge=+1: col 5→11 row 2 stays at row 2 (odd-start col)', () => {
+            const a = Hex.offsetToCube(5, 2, 'flat-down');
+            const b = Hex.offsetToCube(11, 2, 'flat-down');
+            for (const hex of Hex.hexLine(a, b, 1)) {
+                expect(Hex.cubeToOffset(hex, 'flat-down').y).toBe(2);
+            }
+        });
+
+        // Flat-down (base=+1).  Even start col → parity=−1 → effective=−1.
+        it('flat-down, nudge=−1: col 8→14 row 2 stays at row 2 (even-start col)', () => {
+            const a = Hex.offsetToCube(8, 2, 'flat-down');
+            const b = Hex.offsetToCube(14, 2, 'flat-down');
+            for (const hex of Hex.hexLine(a, b, -1)) {
+                expect(Hex.cubeToOffset(hex, 'flat-down').y).toBe(2);
+            }
+        });
+
+        // Pointy-right (base=+1).  Odd start row → parity=+1 → effective=+1.
+        it('pointy-right, nudge=+1: rows 5→11 col 2 stays at col 2 (odd-start row)', () => {
+            const a = Hex.offsetToCube(2, 5, 'pointy-right');
+            const b = Hex.offsetToCube(2, 11, 'pointy-right');
+            for (const hex of Hex.hexLine(a, b, 1)) {
+                expect(Hex.cubeToOffset(hex, 'pointy-right').x).toBe(2);
+            }
+        });
+
+        // Pointy-right (base=+1).  Even start row → parity=−1 → effective=−1.
+        it('pointy-right, nudge=−1: rows 6→12 col 4 stays at col 4 (even-start row)', () => {
+            const a = Hex.offsetToCube(4, 6, 'pointy-right');
+            const b = Hex.offsetToCube(4, 12, 'pointy-right');
+            for (const hex of Hex.hexLine(a, b, -1)) {
+                expect(Hex.cubeToOffset(hex, 'pointy-right').x).toBe(4);
+            }
+        });
+
+        // Pointy-left (base=−1).  Odd start row → parity=+1 → effective=−1.
+        it('pointy-left, nudge=−1: rows 5→11 col 2 stays at col 2 (odd-start row)', () => {
+            const a = Hex.offsetToCube(2, 5, 'pointy-left');
+            const b = Hex.offsetToCube(2, 11, 'pointy-left');
+            for (const hex of Hex.hexLine(a, b, -1)) {
+                expect(Hex.cubeToOffset(hex, 'pointy-left').x).toBe(2);
+            }
+        });
+
+        // Pointy-left (base=−1).  Even start row → parity=−1 → effective=+1.
+        it('pointy-left, nudge=+1: rows 6→12 col 4 stays at col 4 (even-start row)', () => {
+            const a = Hex.offsetToCube(4, 6, 'pointy-left');
+            const b = Hex.offsetToCube(4, 12, 'pointy-left');
+            for (const hex of Hex.hexLine(a, b, 1)) {
+                expect(Hex.cubeToOffset(hex, 'pointy-left').x).toBe(4);
+            }
+        });
+
+        // Reversal symmetry holds for the corrected formula.
+        it('reversal symmetry: flat-up nudge=−1', () => {
+            const a = Hex.offsetToCube(5, 2, 'flat-up');
+            const b = Hex.offsetToCube(11, 2, 'flat-up');
+            expect(Hex.hexLine(a, b, -1)).toEqual([...Hex.hexLine(b, a, -1)].reverse());
+        });
+
+        it('reversal symmetry: pointy-right nudge=+1', () => {
+            const a = Hex.offsetToCube(2, 5, 'pointy-right');
+            const b = Hex.offsetToCube(2, 11, 'pointy-right');
+            expect(Hex.hexLine(a, b, 1)).toEqual([...Hex.hexLine(b, a, 1)].reverse());
         });
     });
 

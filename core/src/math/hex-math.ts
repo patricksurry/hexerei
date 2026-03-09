@@ -282,10 +282,10 @@ export function hexLine(a: Cube, b: Cube, nudge: 1 | -1 = 1): Cube[] {
     for (let i = 0; i <= dist; i++) {
         const t = dist === 0 ? 0 : i / dist;
         const frac = hexLerp(a, b, t);
-        const biased = { 
-            q: frac.q + eps * nudge, 
-            r: frac.r + 2 * eps * nudge, 
-            s: frac.s - 3 * eps * nudge 
+        const biased = {
+            q: frac.q +     eps * nudge,   // coefficient +1
+            s: frac.s + 2 * eps * nudge,   // coefficient +2  (s = v = diagonal axis)
+            r: frac.r - 3 * eps * nudge,   // coefficient −3  (r = w = row-like axis)
         };
         results.push(hexRound(biased));
     }

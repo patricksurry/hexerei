@@ -210,4 +210,209 @@ describe('HexPath RFC Compliance', () => {
             expect(result.items).toContain(Hex.hexId({q:0, r:3, s:-3}));
         });
     });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Path bias: default bias preserves the user-coordinate axis
+    //
+    // For any path along a constant row (flat-top) or constant column
+    // (pointy-top), every hex in the resolved path must lie on that same
+    // row / column.  Two parity cases are required per orientation:
+    //   • odd-parity start  (min(a.q, b.q) odd for flat; min(a.r, b.r) odd for pointy)
+    //   • even-parity start (min coordinate even)
+    //
+    // Forward and reverse must produce the same set of hexes in reverse order.
+    // The ~ operator must produce a path that LEAVES the axis.
+    // ─────────────────────────────────────────────────────────────────────────
+    describe('Path bias: default bias preserves user-coordinate axis', () => {
+        // helpers ─────────────────────────────────────────────────────────────
+        function rowOf(id: string, o: Hex.Orientation): number {
+            return Hex.cubeToOffset(Hex.hexFromId(id), o).y;
+        }
+        function colOf(id: string, o: Hex.Orientation): number {
+            return Hex.cubeToOffset(Hex.hexFromId(id), o).x;
+        }
+
+        // 20-col × 12-row grid, 1-indexed — covers all test coordinates
+        function makeHP(orientation: Hex.Orientation): HexPath {
+            const grid = Hex.createRectangularGrid(20, 12, orientation, 1, 1);
+            const m = new HexMesh(grid, {
+                layout: { orientation, coordinates: { first: [1, 1] } }
+            });
+            return new HexPath(m);
+        }
+
+        // ─── flat-up ─────────────────────────────────────────────────────────
+        describe('flat-up: constant-row paths stay on the same row', () => {
+            let hp: HexPath;
+            beforeEach(() => { hp = makeHP('flat-up'); });
+
+            it('0502→1102: row 2, odd-start col (min.q=5) — BFM failing case', () => {
+                // parity_sign(min.q=5 odd)=+1, base=−1, effective=−1
+                const r = hp.resolve('0502 1102');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(rowOf(id, 'flat-up')).toBe(2);
+            });
+
+            it('0803→1603: row 3, even-start col (min.q=8)', () => {
+                // parity_sign(min.q=8 even)=−1, base=−1, effective=+1
+                const r = hp.resolve('0803 1603');
+                expect(r.items).toHaveLength(9);
+                for (const id of r.items) expect(rowOf(id, 'flat-up')).toBe(3);
+            });
+
+            it('0301→0901: row 1, odd-start col (min.q=3)', () => {
+                const r = hp.resolve('0301 0901');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(rowOf(id, 'flat-up')).toBe(1);
+            });
+
+            it('0602→1002: row 2, even-start col (min.q=6)', () => {
+                const r = hp.resolve('0602 1002');
+                expect(r.items).toHaveLength(5);
+                for (const id of r.items) expect(rowOf(id, 'flat-up')).toBe(2);
+            });
+
+            it('1102→0502: reverse of 0502→1102 is same path reversed', () => {
+                const fwd = hp.resolve('0502 1102');
+                const rev = hp.resolve('1102 0502');
+                expect(fwd.items).toEqual([...rev.items].reverse());
+                for (const id of rev.items) expect(rowOf(id, 'flat-up')).toBe(2);
+            });
+
+            it('1603→0803: reverse of 0803→1603 is same path reversed', () => {
+                const fwd = hp.resolve('0803 1603');
+                const rev = hp.resolve('1603 0803');
+                expect(fwd.items).toEqual([...rev.items].reverse());
+            });
+
+            it('0502 ~1102: flipped bias leaves row 2', () => {
+                const r = hp.resolve('0502 ~1102');
+                const rows = r.items.map(id => rowOf(id, 'flat-up'));
+                expect(rows.some(row => row !== 2)).toBe(true);
+            });
+        });
+
+        // ─── flat-down ───────────────────────────────────────────────────────
+        describe('flat-down: constant-row paths stay on the same row', () => {
+            let hp: HexPath;
+            beforeEach(() => { hp = makeHP('flat-down'); });
+
+            it('0502→1102: row 2, odd-start col (min.q=5)', () => {
+                const r = hp.resolve('0502 1102');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(rowOf(id, 'flat-down')).toBe(2);
+            });
+
+            it('0802→1402: row 2, even-start col (min.q=8)', () => {
+                const r = hp.resolve('0802 1402');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(rowOf(id, 'flat-down')).toBe(2);
+            });
+
+            it('0902→1502: row 2, odd-start col (min.q=9)', () => {
+                const r = hp.resolve('0902 1502');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(rowOf(id, 'flat-down')).toBe(2);
+            });
+
+            it('1102→0502: reverse is same path reversed', () => {
+                const fwd = hp.resolve('0502 1102');
+                const rev = hp.resolve('1102 0502');
+                expect(fwd.items).toEqual([...rev.items].reverse());
+                for (const id of rev.items) expect(rowOf(id, 'flat-down')).toBe(2);
+            });
+
+            it('0502 ~1102: flipped bias leaves row 2', () => {
+                const r = hp.resolve('0502 ~1102');
+                const rows = r.items.map(id => rowOf(id, 'flat-down'));
+                expect(rows.some(row => row !== 2)).toBe(true);
+            });
+        });
+
+        // ─── pointy-right ────────────────────────────────────────────────────
+        describe('pointy-right: constant-col paths stay on the same col', () => {
+            let hp: HexPath;
+            beforeEach(() => { hp = makeHP('pointy-right'); });
+
+            it('0205→0211: col 2, odd-start row (min.r=5)', () => {
+                // parity_sign(min.r=5 odd)=+1, base=+1, effective=+1
+                const r = hp.resolve('0205 0211');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(colOf(id, 'pointy-right')).toBe(2);
+            });
+
+            it('0406→0412: col 4, even-start row (min.r=6)', () => {
+                // parity_sign(min.r=6 even)=−1, base=+1, effective=−1
+                const r = hp.resolve('0406 0412');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(colOf(id, 'pointy-right')).toBe(4);
+            });
+
+            it('0211→0205: reverse is same path reversed', () => {
+                const fwd = hp.resolve('0205 0211');
+                const rev = hp.resolve('0211 0205');
+                expect(fwd.items).toEqual([...rev.items].reverse());
+                for (const id of rev.items) expect(colOf(id, 'pointy-right')).toBe(2);
+            });
+
+            it('0412→0406: reverse is same path reversed', () => {
+                const fwd = hp.resolve('0406 0412');
+                const rev = hp.resolve('0412 0406');
+                expect(fwd.items).toEqual([...rev.items].reverse());
+            });
+
+            it('0205 ~0211: flipped bias leaves col 2', () => {
+                const r = hp.resolve('0205 ~0211');
+                const cols = r.items.map(id => colOf(id, 'pointy-right'));
+                expect(cols.some(c => c !== 2)).toBe(true);
+            });
+        });
+
+        // ─── pointy-left ─────────────────────────────────────────────────────
+        describe('pointy-left: constant-col paths stay on the same col', () => {
+            let hp: HexPath;
+            beforeEach(() => { hp = makeHP('pointy-left'); });
+
+            it('0205→0211: col 2, odd-start row (min.r=5)', () => {
+                // parity_sign(min.r=5 odd)=+1, base=−1, effective=−1
+                const r = hp.resolve('0205 0211');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(colOf(id, 'pointy-left')).toBe(2);
+            });
+
+            it('0406→0412: col 4, even-start row (min.r=6)', () => {
+                // parity_sign(min.r=6 even)=−1, base=−1, effective=+1
+                const r = hp.resolve('0406 0412');
+                expect(r.items).toHaveLength(7);
+                for (const id of r.items) expect(colOf(id, 'pointy-left')).toBe(4);
+            });
+
+            it('0211→0205: reverse is same path reversed', () => {
+                const fwd = hp.resolve('0205 0211');
+                const rev = hp.resolve('0211 0205');
+                expect(fwd.items).toEqual([...rev.items].reverse());
+                for (const id of rev.items) expect(colOf(id, 'pointy-left')).toBe(2);
+            });
+
+            it('0205 ~0211: flipped bias leaves col 2', () => {
+                const r = hp.resolve('0205 ~0211');
+                const cols = r.items.map(id => colOf(id, 'pointy-left'));
+                expect(cols.some(c => c !== 2)).toBe(true);
+            });
+        });
+    });
+
+    describe('Partial Input Safety', () => {
+        it('returns empty for partial vertex input "0101."', () => {
+            const result = hexPath.resolve('0101.');
+            expect(result.items).toHaveLength(0);
+            expect(result.type).toBe('hex');
+        });
+
+        it('returns empty for partial edge input "0101/"', () => {
+            const result = hexPath.resolve('0101/');
+            expect(result.items).toHaveLength(0);
+            expect(result.type).toBe('hex');
+        });
+    });
 });

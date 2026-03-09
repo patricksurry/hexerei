@@ -253,8 +253,14 @@ export class HexPath {
             const suffix = alphaMatch[3];
             const separator = token.includes('/') ? '/' : (token.includes('.') ? '.' : (token.includes('@') ? '@' : ''));
             
-            if (separator === '/') return { id: this.resolveEdge(hexId, suffix), type: 'edge' };
-            if (separator === '.') return { id: this.resolveVertex(hexId, suffix), type: 'vertex' };
+            if (separator === '/') {
+                if (!suffix) return null;
+                return { id: this.resolveEdge(hexId, suffix), type: 'edge' };
+            }
+            if (separator === '.') {
+                if (!suffix) return null;
+                return { id: this.resolveVertex(hexId, suffix), type: 'vertex' };
+            }
             if (separator === '@') {
                 const hour = parseInt(suffix);
                 const type = this.inferType(token);
@@ -284,8 +290,14 @@ export class HexPath {
             const suffix = numericMatch[2];
             const separator = token.includes('/') ? '/' : (token.includes('.') ? '.' : (token.includes('@') ? '@' : ''));
             
-            if (separator === '/') return { id: this.resolveEdge(hexId, suffix), type: 'edge' };
-            if (separator === '.') return { id: this.resolveVertex(hexId, suffix), type: 'vertex' };
+            if (separator === '/') {
+                if (!suffix) return null;
+                return { id: this.resolveEdge(hexId, suffix), type: 'edge' };
+            }
+            if (separator === '.') {
+                if (!suffix) return null;
+                return { id: this.resolveVertex(hexId, suffix), type: 'vertex' };
+            }
             if (separator === '@') {
                 const hour = parseInt(suffix);
                 const type = this.inferType(token);
@@ -330,7 +342,15 @@ export class HexPath {
     }
 
     private resolveShortestPath(start: Hex.Cube, end: Hex.Cube, flip: boolean = false): Hex.Cube[] {
-        let nudge = Hex.defaultNudge(this.options.orientation);
+        const base = Hex.defaultNudge(this.options.orientation);
+        // Parity correction: ensures constant-row (flat) or constant-col (pointy)
+        // paths always resolve to the axis-preserving hex. Uses min(a, b) for
+        // reversal symmetry. See spec §7 for the full formula.
+        const minCoord = Hex.orientationTop(this.options.orientation) === 'flat'
+            ? Math.min(start.q, end.q)
+            : Math.min(start.r, end.r);
+        const parity = (((minCoord % 2) + 2) % 2 === 1) ? 1 : -1;
+        let nudge = (base * parity) as 1 | -1;
         if (flip) nudge = (nudge === 1 ? -1 : 1);
         return Hex.hexLine(start, end, nudge);
     }
