@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { MapModel } from './map-model.js';
 import { ViewportState, worldToScreen } from './viewport.js';
-import { hexAtScreen } from './hit-test.js';
+import { hexAtScreen, HEX_SIZE } from './hit-test.js';
 import { buildScene } from './scene.js';
+import { SceneHighlight } from './selection.js';
 import { Hex } from '@hexmap/core';
 
 const MOCK_YAML = `
@@ -61,10 +62,43 @@ describe('HitTest & Scene', () => {
     const smallVp: ViewportState = {
       center: { x: 100, y: 100 }, // far away
       zoom: 10,
-      width: 20, 
+      width: 20,
       height: 20
     };
     const scene = buildScene(model, smallVp);
     expect(scene.hexagons).toHaveLength(0);
+  });
+
+  it('buildScene draws edge highlight between the correct corners', () => {
+    // 0101 (col=1,row=1) and 0201 (col=2,row=1) are adjacent; direction 0 (NE) from 0101 to 0201
+    const cube1 = Hex.offsetToCube(1, 1, 'flat-down');
+    const cube2 = Hex.offsetToCube(2, 1, 'flat-down');
+    const boundaryId = Hex.getCanonicalBoundaryId(cube1, cube2, 0);
+
+    const hl: SceneHighlight = {
+      type: 'edge',
+      boundaryId,
+      hexIds: [],
+      color: '#FF3DFF',
+      style: 'select'
+    };
+    const scene = buildScene(model, vp, '#141414', [hl]);
+    expect(scene.edgeHighlights).toHaveLength(1);
+
+    // For a flat hex, the NE edge (direction 0) is between corner 5 (300°) and corner 0 (0°).
+    // The midpoint of corners 5 and 0 is hexEdgeMidpoints[5] — the one pointing at ~330°.
+    const orientation = Hex.orientationTop('flat-down');
+    const worldCenter1 = Hex.hexToPixel(cube1, HEX_SIZE, orientation);
+    const corners1 = Hex.hexCorners(worldCenter1, HEX_SIZE, orientation);
+
+    const expectedP1 = worldToScreen(corners1[5], vp);
+    const expectedP2 = worldToScreen(corners1[0], vp);
+
+    const { p1, p2 } = scene.edgeHighlights[0];
+    // Check that the drawn segment matches corners (5, 0), not (0, 1)
+    expect(p1.x).toBeCloseTo(expectedP1.x, 3);
+    expect(p1.y).toBeCloseTo(expectedP1.y, 3);
+    expect(p2.x).toBeCloseTo(expectedP2.x, 3);
+    expect(p2.y).toBeCloseTo(expectedP2.y, 3);
   });
 });

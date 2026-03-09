@@ -118,10 +118,11 @@ export function buildScene(
       }
       
       const corners = Hex.hexCorners(c1, HEX_SIZE, orientation);
-      // Flat-top: edge i is between corner i and (i+1)%6
-      // Pointy-top: check RFC/RedBlob
-      const p1 = worldToScreen(corners[dir], viewport);
-      const p2 = worldToScreen(corners[(dir + 1) % 6], viewport);
+      // Edge in direction d lies between corners (d+5)%6 and d for flat,
+      // or (d+4)%6 and (d+5)%6 for pointy.
+      const edgeStart = orientation === 'flat' ? (dir + 5) % 6 : (dir + 4) % 6;
+      const p1 = worldToScreen(corners[edgeStart], viewport);
+      const p2 = worldToScreen(corners[(edgeStart + 1) % 6], viewport);
       
       edgeHighlights.push({
         boundaryId: hl.boundaryId,
