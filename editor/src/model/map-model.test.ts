@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { MapModel } from './map-model.js';
 
 const MOCK_YAML = `
@@ -48,6 +50,14 @@ describe('MapModel', () => {
     expect(model.terrainColor('clear forest')).toBe('#00ff00');
   });
 
+  // S2: empty terrain string must return a visible fallback, not transparent
+  it('terrainColor for empty string returns a visible fallback color', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const color = model.terrainColor('');
+    expect(color).not.toBe('transparent');
+    expect(color).not.toBe('rgba(0,0,0,0)');
+  });
+
   it('should process features list', () => {
     const model = MapModel.load(MOCK_YAML);
     expect(model.features).toHaveLength(2);
@@ -73,4 +83,33 @@ describe('MapModel', () => {
     expect(features).toHaveLength(2);
     expect(features[1].label).toBe('Target');
   });
+
+describe('bfm.yaml RFC compliance', () => {
+  const yaml = readFileSync(
+    resolve(__dirname, '../../../maps/definitions/bfm.yaml'),
+    'utf-8'
+  );
+
+  it('loads without error', () => {
+    expect(() => MapModel.load(yaml)).not.toThrow();
+  });
+
+  it('has no features with at="complex"', () => {
+    const model = MapModel.load(yaml);
+    const complex = model.features.filter(f => f.at === 'complex');
+    expect(complex).toHaveLength(0);
+  });
+
+  it('resolves railroad features to hex IDs', () => {
+    const model = MapModel.load(yaml);
+    const rail = model.features.find(f => f.label === 'Northern Rail');
+    expect(rail).toBeDefined();
+    expect(rail!.hexIds.length).toBeGreaterThan(0);
+  });
+
+  it('uses flat-up orientation', () => {
+    const model = MapModel.load(yaml);
+    expect(model.grid.orientation).toBe('flat-up');
+  });
+});
 });

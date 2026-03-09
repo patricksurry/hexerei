@@ -13,42 +13,44 @@ metadata:
     notes: "Coordinates 1701-3010 as per bfm.md"
 
 layout:
-  hex_top: flat
+  orientation: flat-up
   columns: 14
   rows: 10
-  stagger: high
   coordinates:
     label: XXYY
-    origin: top-left
     first: [17, 1]
+  all: "1701 3001 3010 1710 !"
   georef:
     scale: 16000
 
 terrain:
   hex:
-    clear: { name: "Plain" }
-    forest: { name: "Forest" }
-    city: { name: "City" }
-    major_city: { name: "Major City" }
-    german_setup: { name: "German Setup" }
-    russian_setup: { name: "Russian Setup" }
-    fortification: { name: "Fortification" }
+    clear: { name: "Plain", style: { color: "#D9E3C8" } }
+    forest: { name: "Forest", style: { color: "#93A877" } }
+    city: { name: "City", style: { color: "#AAA" } }
+    major_city: { name: "Major City", style: { color: "#888" } }
+    german_setup: { name: "German Setup", style: { color: "#D9E3C8" } }
+    russian_setup: { name: "Russian Setup", style: { color: "#D9E3C8" } }
+    fortification: { name: "Fortification", style: { color: "#C8D3B8" } }
   edge:
-    river: { name: "River" }
-    fortification: { name: "Fortification" }
+    river: { name: "River", style: { color: "#88AADD" } }
+    fortification: { name: "Fortification", style: { color: "#444" } }
   path:
-    railroad: { name: "Railroad" }
+    railroad: { name: "Railroad", style: { color: "#333" } }
 
 defaults:
   hex:
     terrain: clear
 
 features:
+  - at: "@all"
+    terrain: clear
+
   # === Major Cities ===
   - at: "2703"
     terrain: major_city
     label: "Moscow"
-    tags: [victory]
+    tags: victory
 
   # === Cities ===
   - at: "2201"
@@ -84,58 +86,56 @@ features:
 
   # === Railroads ===
   # 1702-Rzhev-Moscow
-  - at: ["1702", "2201", "2703"]
+  - at: "1702 2201 2703"
     terrain: railroad
     label: "Northern Rail"
   
   # Smolensk-Vyazma-Rzhev
-  - at: ["1804", "1905", "2203", "2201"]
+  - at: "1804 1905 2203 2201"
     terrain: railroad
 
   # Vyazma-Mozhaisk-Moscow
-  - at: ["2203", "2303", "2403", "2703"]
+  - at: "2203 2303 2403 2703"
     terrain: railroad
 
   # Moscow-Ryazan-3006/SE
-  - at: ["2703", "3005", "3006"]
+  - at: "2703 3005 3006"
     terrain: railroad
 
   # Moscow-Tula-Orel-2410
-  - at: ["2703", "2707", "2409", "2410"]
+  - at: "2703 2707 2409 2410"
     terrain: railroad
 
   # === Rivers ===
   # 1706/N-2004/SE...
-  - at: ["1706/N", "2004/SE", "2103/SE"]
+  - at: "1706/N 2004/SE 2103/SE"
     terrain: river
 
   # 2105/S-2203/N-2406/NE-2509/NE-2510/SE
-  - at: ["2105/S", "2203/N", "2406/NE", "2509/NE", "2510/SE"]
+  - at: "2105/S 2203/N 2406/NE 2509/NE 2510/SE"
     terrain: river
 
   # === Fortifications ===
   # Vyazma Defense Line
-  - region:
-      id: vyazma-defense
-      at: { range: ["2101", "2107"] }
+  - id: vyazma-defense
+    at: "2101 2102 2103 2104 2105 2106 2107"
     terrain: fortification
     label: "Vyazma Defense Line"
 
   # Mozhaisk Defense Line
-  - region:
-      id: mozhaisk-defense
-      at: ["2401", "2402", "2403", "2404", "2405"] # 2401-Kaluga
+  - id: mozhaisk-defense
+    at: "2401 2402 2403 2404 2405" # 2401-Kaluga
     terrain: fortification
     label: "Mozhaisk Defense Line"
 
   # === Forest ===
-  - at: ["1801", "1802", "2001"]
+  - at: "1801 1802 2001"
     terrain: forest
-  - at: ["2204", "2308", "2501", "2801", "2903", "3004"]
+  - at: "2204 2308 2501 2801 2903 3004"
     terrain: forest
 
   # === Setup Zones ===
-  - at: ["1703", "1704", "1706", "1707"]
+  - at: "1703 1704 1706 1707"
     terrain: german_setup
-  - at: ["1901", "2005", "2104"]
+  - at: "1901 2005 2104"
     terrain: russian_setup

@@ -3,6 +3,7 @@ import { HexPath, GeometryType } from '@hexmap/core';
 
 export interface HexPathPreview {
   hexIds: string[];
+  segmentPath?: string[];   // ordered hex IDs for drawing center-to-center line
   type: GeometryType;
   error?: {
     message: string;
@@ -25,15 +26,28 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
     firstRow: model.grid.firstRow
   });
 
+  // I1: detect trailing separator before resolve() — avoids silent partial result
+  if (/[./]$/.test(input.trim())) {
+    return {
+      hexIds: [],
+      segmentPath: [],
+      type: 'hex',
+      error: { message: `Incomplete expression: '${input.trim()}'`, offset: input.trim().length - 1 }
+    };
+  }
+
   try {
     const result = hexPath.resolve(input);
     return {
-      hexIds: result.items,
+      hexIds: result.type === 'hex' ? result.items : [],
+      // I2: use path (traversal order, allows repeated visits) instead of items (Set)
+      segmentPath: result.type === 'hex' ? (result.path ?? result.items) : [],
       type: result.type
     };
   } catch (e: any) {
     return {
       hexIds: [],
+      segmentPath: [],
       type: 'hex',
       error: {
         message: e.message || 'Invalid expression',

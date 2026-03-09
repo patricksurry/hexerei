@@ -11,16 +11,17 @@ export function hitTest(
   viewport: ViewportState,
   model: MapModel
 ): HitResult {
+  const orientation = Hex.orientationTop(model.grid.orientation);
   const worldPt = screenToWorld(screenPt, viewport);
-  const cube = Hex.pixelToHex(worldPt, HEX_SIZE, Hex.orientationTop(model.grid.orientation));
+  const cube = Hex.pixelToHex(worldPt, HEX_SIZE, orientation);
   const id = Hex.hexId(cube);
-  
+
   // Find nearest hex even if it's off-map, to allow selecting near edges
-  const center = Hex.hexToPixel(cube, HEX_SIZE, Hex.orientationTop(model.grid.orientation));
-  
+  const center = Hex.hexToPixel(cube, HEX_SIZE, orientation);
+
   // Calculate distances to center, midpoints, and corners
-  const corners = Hex.hexCorners(center, HEX_SIZE, Hex.orientationTop(model.grid.orientation));
-  const midpoints = Hex.hexEdgeMidpoints(center, HEX_SIZE, Hex.orientationTop(model.grid.orientation));
+  const corners = Hex.hexCorners(center, HEX_SIZE, orientation);
+  const midpoints = Hex.hexEdgeMidpoints(center, HEX_SIZE, orientation);
 
   const isCenterOnMap = !!model.mesh.getHex(id);
 
@@ -97,7 +98,7 @@ export function hexAtScreen(
   
   // Fallback to nearest hex label for status bar
   const worldPt = screenToWorld(screenPt, viewport);
-  const cube = Hex.pixelToHex(worldPt, HEX_SIZE, Hex.orientationTop(model.grid.orientation));
+  const cube = Hex.pixelToHex(worldPt, HEX_SIZE, Hex.orientationTop(model.grid.orientation)); // separate function, own scope
   const id = Hex.hexId(cube);
   if (model.mesh.getHex(id)) {
     return model.hexIdToLabel(id);

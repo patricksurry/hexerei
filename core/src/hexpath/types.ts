@@ -6,7 +6,8 @@ export type GeometryType = 'hex' | 'edge' | 'vertex';
  */
 export interface HexPathResult {
     type: GeometryType;
-    items: string[];
+    items: string[];       // deduplicated set of all resolved IDs
+    path?: string[];       // traversal order, preserving repeated visits (for line drawing)
 }
 
 /**

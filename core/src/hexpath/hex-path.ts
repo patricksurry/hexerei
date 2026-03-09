@@ -54,10 +54,11 @@ export class HexPath {
         }
 
         const items = new Set<string>();
-        const cursor: Cursor = { 
-            lastHex: null, 
-            segmentStart: null, 
-            type: null, 
+        const pathOrder: string[] = [];  // traversal order, preserving repeated visits
+        const cursor: Cursor = {
+            lastHex: null,
+            segmentStart: null,
+            type: null,
             mode: ParseMode.ADD,
             floatingSteps: [],
             currentSegment: [],
@@ -69,7 +70,7 @@ export class HexPath {
 
         const applyIds = (ids: string[]) => {
             if (cursor.mode === ParseMode.ADD) {
-                ids.forEach(id => items.add(id));
+                ids.forEach(id => { items.add(id); pathOrder.push(id); });
             } else {
                 ids.forEach(id => items.delete(id));
             }
@@ -202,7 +203,8 @@ export class HexPath {
 
         return {
             type: cursor.type || 'hex',
-            items: Array.from(items)
+            items: Array.from(items),
+            path: pathOrder
         };
     }
 

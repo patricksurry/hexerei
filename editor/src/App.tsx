@@ -19,7 +19,9 @@ import {
   selectVertex,
   highlightsForSelection,
   highlightsForHover,
-  topmostFeatureAtHex
+  topmostFeatureAtHex,
+  boundaryIdToHexPath,
+  vertexIdToHexPath
 } from './model/selection';
 
 export function App() {
@@ -97,11 +99,11 @@ export function App() {
     }
     if (result.type === 'edge') {
       setSelection(selectEdge(result.boundaryId, result.hexLabels));
-      // TODO: formatting for edge labels in command bar
+      if (model) setCommandValue(boundaryIdToHexPath(result.boundaryId, model));
     }
     if (result.type === 'vertex') {
       setSelection(selectVertex(result.vertexId));
-      // TODO: formatting for vertex labels in command bar
+      if (model) setCommandValue(vertexIdToHexPath(result.vertexId, model));
     }
   };
 
@@ -144,7 +146,16 @@ export function App() {
   };
 
   const handleSelectFeature = (indices: number[], modifier: 'none' | 'shift' | 'cmd' = 'none') => {
-    setSelection(prev => selectFeature(indices[0], prev, modifier));
+    if (modifier === 'none' && indices.length > 1) {
+      // Direct multi-index selection (e.g., range from FeatureStack): set all at once
+      setSelection({ type: 'feature', indices: [...indices].sort((a, b) => a - b) });
+    } else {
+      setSelection(prev => selectFeature(indices[0], prev, modifier));
+    }
+    if (modifier === 'none' && indices.length === 1 && model) {
+      const feature = model.features[indices[0]];
+      if (feature) setCommandValue(feature.at);
+    }
   };
 
   const features = model?.features ?? [];
@@ -182,6 +193,7 @@ export function App() {
           onHitTest={handleHit}
           onNavigate={handleNavigate}
           highlights={highlights}
+          segmentPath={preview?.segmentPath ?? []}
         />
       }
       rightPanel={

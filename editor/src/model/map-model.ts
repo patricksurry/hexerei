@@ -172,14 +172,14 @@ export class MapModel {
   }
 
   terrainColor(terrainString: string): string {
-    if (!terrainString) return '#555555';
+    if (!terrainString) return '#555555'; // neutral fallback — no terrain assigned
     const parts = terrainString.split(/\s+/);
     const terrain = parts[parts.length - 1];
 
     const def = this._terrainDefs.get(terrain);
     if (def) return def.color;
     
-    if (terrain === 'unknown') return '#555555';
+    if (terrain === 'unknown') return '#888888';
     
     // Hash fallback
     let hash = 0;
