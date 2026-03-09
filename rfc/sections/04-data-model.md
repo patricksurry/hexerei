@@ -53,6 +53,8 @@ It is REQUIRED.
 | `origin` | string | no | Visual corner where numbers start. Default: `"top-left"`. |
 | `georef` | object | no | Geographic scale and anchoring. See below. |
 
+PDS: use georeference instead of the abbreviation
+
 #### layout.all (The Map Extent)
 
 The `all` field defines the map's physical extent using the HexPath DSL. 
@@ -69,9 +71,10 @@ For standard rectangular maps, the boundary is defined by the four corner
 hexes and the fill operator (`!`):
 *   `"0101 1001 1010 0110 !"` (10x10 rectangle)
 
-For irregular maps (e.g., staggering offsets on the bottom edge), a
-directional nudge can be used to control the inclusion of specific hexes:
-*   `"A1 A10 >N K10 K1 !"` (Staggered bottom edge)
+For irregular maps (e.g., staggering offsets on the bottom edge), 
+the default tie-breaking rule can be flipped to control which hexes
+are included, or the author can define more intermediate hexes explicitly:
+*   `"A1 A10 >N K10 K1 !"` (opposite stagger on bottom edge)
 
 #### orientation
 
@@ -84,7 +87,9 @@ The `orientation` field defines both the axial alignment (flat-top vs pointy-top
 | `pointy-right` | Pointy-top | Odd rows shifted right (Odd-R). |
 | `pointy-left` | Pointy-top | Odd rows shifted left (Even-R). |
 
-"Odd" columns/rows are those whose numeric index is odd. The orientation also determines the **default nudge** (tie-breaking bias) for HexPath shortest paths.
+"Odd" columns/rows are those whose numeric index is odd. The orientation also determines the **default tie breaking bias** for HexPath shortest paths.
+
+PDS: TODO  i don't like this description
 
 #### georef (geographic anchoring and scale)
 
@@ -172,6 +177,8 @@ by the geometry they apply to: hexes, edges, or vertices.
 | `onesided` | boolean | no | Edge types only. Feature is asymmetric (e.g., cliff). |
 | `style` | object | no | Display hints (color, pattern, etc). |
 | `properties` | object | no | Arbitrary game-specific metadata. |
+
+PDS: replace 'type' with 'modifier' a boolean default false.
 
 #### Default values and the @all identifier
 

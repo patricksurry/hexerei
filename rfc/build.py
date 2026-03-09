@@ -261,16 +261,11 @@ Examples:
     if args.xml:
         success = build_xml(build_dir, master_file) and success
 
-    # Text requires XML to exist
+    # Text requires fresh XML
     if args.txt:
-        # Build XML first if not already built
-        xml_file = build_dir / "hexmap-format-rfc.xml"
-        if not xml_file.exists():
-            print_info("XML not found, building it first...")
-            if not build_xml(build_dir, master_file):
-                success = False
-            else:
-                success = build_txt(build_dir) and success
+        # Always rebuild XML from markdown to ensure text output is current
+        if not build_xml(build_dir, master_file):
+            success = False
         else:
             success = build_txt(build_dir) and success
 

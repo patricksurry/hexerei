@@ -9,6 +9,8 @@ The canonical serialization is JSON (RFC 8259). A HexMap JSON file:
 - SHOULD use the file extension `.hexmap.json`.
 - SHOULD use the media type `application/vnd.hexerei.hexmap+json`.
 
+PDS: I thought we said yaml in the intro, to preserve round-trip comments etc?
+
 ### YAML (authoring format)
 
 YAML (version 1.2) is an equivalent serialization, recommended for

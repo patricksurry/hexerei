@@ -54,7 +54,7 @@ w = row
 v = -u - w
 ```
 
-### Shortest Paths and Nudging
+### Shortest Paths with Tie-breaking
 
 The `hexLine` algorithm calculates the shortest path between two hexes using linear interpolation in cube coordinates. To ensure deterministic results and enable tie-breaking, an epsilon bias (nudge) is applied to each interpolated point before rounding to the nearest hex.
 
@@ -71,6 +71,8 @@ ensures unambiguous rounding in all tie-breaking cases.
 *   **Default Nudge**: Derived from the orientation. For `flat-down` and `pointy-right`, the default nudge is `+1`. For `flat-up` and `pointy-left`, it is `-1`.
 *   **Flip Operator (`~`)**: Flips the sign of the nudge for a specific path segment.
 *   **Reversal Symmetry**: The algorithm ensures that `hexLine(A, B, nudge) == reverse(hexLine(B, A, nudge))`.
+
+PDS: clarify this rule is intended to ensure that the default tie breaking rule follows user coordinate axes.  but in our test map, "0602 1002", "0602 1102" and "0502 1002" (and the reversed versions) all resolve correctly (to XX02) but "0502 1102" (or "1102 0502") resolves to "0502 0601 0702 0801 0902 1001 1102".   so we need to add tests for these, review and potentially tweak the logic
 
 ### Neighbor directions in cube coordinates
 

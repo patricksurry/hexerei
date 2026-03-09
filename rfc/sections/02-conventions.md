@@ -22,7 +22,7 @@ relationship between faces, edges, and vertices.
 *   `pointy-right`: Pointy-top, odd rows shifted right.
 *   `pointy-left`: Pointy-top, odd rows shifted left.
 
-The orientation determines both the visual layout and the default path tie-breaking (nudge) behavior.
+The orientation determines both the visual layout and the default path tie-breaking behavior.
 
 **cube coordinates**: A three-integer coordinate system (u, v, w) for hex
 grids where u + v + w = 0. This is the canonical mathematical
@@ -46,9 +46,13 @@ selection (hexes, edges, vertices, or a path) with terrain and properties.
 **path**: An ordered sequence of connected hexes or edges representing a
 linear feature such as a road, railroad, or river.
 
-**nudge**: A deterministic tie-breaking bias used when a shortest path between two points is ambiguous. The default nudge is derived from the grid's **orientation**.
-
-**~ (flip operator)**: A prefix on a HexPath coordinate that flips the default nudge for the arriving path segment.
+**tie-breaking**: Paths on a hex grid can be ambiguous when the straight line
+from start to end is equidistant from two hexes (edges, or vertices).
+A deterministic tie-breaking bias derived from the grid's **orientation** 
+is used to pick a winner, preferring paths that follow user-coordinate axes.
+If the default rule picks the "wrong" path, it can be inverted with 
+the flip operator: **~** for a specific path,
+or the author can just provide more intermediate points explicitly. 
 
 **directed edge type**: An edge terrain type where the effect is
 asymmetric — different depending on which side you approach from (e.g.,

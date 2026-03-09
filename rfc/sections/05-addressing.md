@@ -36,6 +36,8 @@ C4          # letter-number format
 @all        # reserved: resolves to all hexes in layout.at
 ```
 
+PDS: should be layout.all?
+
 ### Edges
 
 An edge is referenced as `hex/direction` (using cardinal compass directions) or using the
