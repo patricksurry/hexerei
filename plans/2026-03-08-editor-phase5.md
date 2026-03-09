@@ -193,52 +193,67 @@ git commit -m "fix(editor): scale hex labels with zoom and position near top of 
 
 ---
 
-## Bug 3: Array/Object `at` Values Show as 'complex'
+## Bug 3: Fix `bfm.yaml` to Use RFC-Compliant Syntax
 
 **Files:**
-- Modify: `editor/src/model/map-model.ts` (constructor, around line 101)
-- Test: `editor/src/model/map-model.test.ts`
+- Modify: `maps/definitions/bfm.yaml`
+- Test: `editor/src/model/map-model.test.ts` (add integration test)
 
-**Root cause:** `bfm.yaml` uses YAML arrays (`["1702", "2201"]`) and YAML objects (`{ range: [...] }`) for `at` values. The YAML parser produces JS arrays/objects, not strings. `map-model.ts` only handles string `at`, so all non-string values fall through to `'complex'`. This affects the feature label shown in FeatureStack (shows terrain name instead of feature label) and the `at` display in Inspector.
+**Root cause:** `bfm.yaml` was authored with non-RFC syntax. The parser is correct and strict; the data file is wrong. Fix the data, not the parser.
 
-**Array fix:** Join array elements with spaces — `["1702", "2201"]` → `"1702 2201"`. This is valid HexPath that already works.
+**Violations to fix:**
 
-**Object fix:** Objects with `{ range: [...] }` or similar cannot be easily stringified to valid HexPath yet. Leave as `'complex'` but display it clearly in the UI. Plan HexPath `range:` support as a future task.
+| Location | Current (non-RFC) | RFC-compliant |
+|---|---|---|
+| `layout.hex_top` + `stagger` | `hex_top: flat` + `stagger: high` | `orientation: flat-up` |
+| `layout.coordinates.origin` | `origin: top-left` | remove (not in RFC) |
+| `features[*].at` (path features) | `at: ["1702", "2201"]` | `at: "1702 2201"` |
+| `features[*].at` (edge features) | `at: ["1706/N", "2004/SE"]` | `at: "1706/N 2004/SE"` |
+| `features[*].region` wrapper | `- region: { id: ..., at: {...} }` | `- id: ... at: "..."` (flat) |
+| `at: { range: [...] }` | object, not string | enumerate hexes explicitly |
+| `tags: [victory]` | YAML sequence | `tags: victory` (string) |
 
-**Also fix `isBase` detection:** Currently only `@all` is treated as a base layer. Extend to cover any `@`-keyword feature (`@off_map`, etc.) by checking if `at` starts with `@`.
+**`hex_top: flat` + `stagger: high` → `orientation: flat-up`:** "Stagger high" means even columns offset upward — this is `flat-up` (Stagger.Even) in the RFC. Verify by checking that first coords (17, 1) render correctly after the change.
 
-**Step 1: Write failing tests**
+**`region:` wrapper:** The two fortification line features use a nested `region:` key that isn't in the RFC. Flatten to a normal feature with `id:` and `at:` at top level.
+
+**`at: { range: ["2101", "2107"] }` (Vyazma Defense Line):** Column 21, rows 1–7 — enumerate as `"2101 2102 2103 2104 2105 2106 2107"`. This is the Vyazma defense line running seven hexes down the column.
+
+**Step 1: Write a failing integration test that loads bfm.yaml**
 
 ```typescript
-// In editor/src/model/map-model.test.ts
+// In editor/src/model/map-model.test.ts — add a describe block:
 
-it('handles array at values by joining to string', () => {
-  const yaml = `
-hexmap: "1.0"
-layout:
-  orientation: flat-down
-  all: "0101 0201 0301"
-features:
-  - at: ["0101", "0201"]
-    terrain: forest
-`;
-  const model = MapModel.load(yaml);
-  expect(model.features[0].at).toBe('0101 0201');
-  expect(model.features[0].hexIds).toHaveLength(2);
-});
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
-it('marks @-keyword features as base layer', () => {
-  const yaml = `
-hexmap: "1.0"
-layout:
-  orientation: flat-down
-  all: "0101 0201"
-features:
-  - at: "@all"
-    terrain: clear
-`;
-  const model = MapModel.load(yaml);
-  expect(model.features[0].isBase).toBe(true);
+describe('bfm.yaml RFC compliance', () => {
+  const yaml = readFileSync(
+    resolve(__dirname, '../../../../maps/definitions/bfm.yaml'),
+    'utf-8'
+  );
+
+  it('loads without error', () => {
+    expect(() => MapModel.load(yaml)).not.toThrow();
+  });
+
+  it('has no features with at="complex"', () => {
+    const model = MapModel.load(yaml);
+    const complex = model.features.filter(f => f.at === 'complex');
+    expect(complex).toHaveLength(0);
+  });
+
+  it('resolves railroad features to hex IDs', () => {
+    const model = MapModel.load(yaml);
+    const rail = model.features.find(f => f.label === 'Northern Rail');
+    expect(rail).toBeDefined();
+    expect(rail!.hexIds.length).toBeGreaterThan(0);
+  });
+
+  it('uses flat-up orientation', () => {
+    const model = MapModel.load(yaml);
+    expect(model.grid.orientation).toBe('flat-up');
+  });
 });
 ```
 
@@ -247,48 +262,70 @@ features:
 ```bash
 npx vitest run editor/src/model/map-model.test.ts
 ```
+Expected: `at="complex"` test fails (many features), orientation test fails (`hex_top` not read).
 
-**Step 3: Fix map-model.ts**
+**Step 3: Fix `bfm.yaml`**
 
-Replace the `at` computation in the feature map (around line 101):
+Apply all changes in a single editing pass:
 
-```typescript
-// Normalize at: string → as-is, array → joined string, object → 'complex'
-function normalizeAt(raw: any): string {
-  if (typeof raw === 'string') return raw;
-  if (Array.isArray(raw)) return raw.join(' ');
-  return 'complex';
-}
+1. **`layout` section:** Replace `hex_top: flat`, `stagger: high`, `origin: top-left` with `orientation: flat-up`. Keep `columns`, `rows`, `first`, `label`, `georef`.
 
-// And in the feature mapping:
-const atStr = normalizeAt(f.at);
+2. **All array `at` values:** Convert each YAML sequence to a space-separated HexPath string:
+   ```yaml
+   # Before:
+   at: ["1702", "2201", "2703"]
+   # After:
+   at: "1702 2201 2703"
+   ```
+   This applies to all railroad, river, forest, fortification, and setup zone features.
 
-const featureItem: FeatureItem = {
-  index: idx,
-  terrain: f.terrain,
-  label: f.label,
-  id: f.id,
-  tags: Array.isArray(f.tags) ? f.tags : (f.tags ? f.tags.split(/\s+/) : []),
-  at: atStr,
-  isBase: typeof f.at === 'string' && f.at.startsWith('@'),
-  hexIds,
-  raw: f
-};
+3. **`region:` wrapper features:** Flatten the two fortification entries:
+   ```yaml
+   # Before:
+   - region:
+       id: vyazma-defense
+       at: { range: ["2101", "2107"] }
+     terrain: fortification
+     label: "Vyazma Defense Line"
+
+   # After:
+   - id: vyazma-defense
+     at: "2101 2102 2103 2104 2105 2106 2107"
+     terrain: fortification
+     label: "Vyazma Defense Line"
+   ```
+   Apply the same pattern to the Mozhaisk Defense Line.
+
+4. **`tags: [victory]`** → `tags: victory`
+
+**Step 4: Validate against RFC JSON Schema**
+
+The RFC ships a JSON Schema for HexMap documents. Run it against the fixed file to confirm full compliance before touching the TypeScript tests:
+
+```bash
+# From repo root — adjust path to schema validator as needed
+cd hexmap-rfc && uv run python -m jsonschema \
+  --instance ../maps/definitions/bfm.yaml \
+  schema/hexmap.schema.json
 ```
 
-Place `normalizeAt` as a module-level function just above the class definition.
+Expected: no validation errors. If there are errors, fix them in `bfm.yaml` before proceeding — the schema is the source of truth.
 
-**Step 4: Run tests**
+**Step 5: Run model tests**
 
 ```bash
 npx vitest run editor/src/model/map-model.test.ts
 ```
+All four new tests should pass. Run full suite to confirm nothing regressed:
+```bash
+npx vitest run
+```
 
-**Step 5: Commit**
+**Step 6: Commit**
 
 ```bash
-git add editor/src/model/map-model.ts editor/src/model/map-model.test.ts
-git commit -m "fix(editor): handle array at values in map-model; broaden isBase detection"
+git add maps/definitions/bfm.yaml editor/src/model/map-model.test.ts
+git commit -m "fix(maps): bring bfm.yaml into RFC compliance (array at, layout, region)"
 ```
 
 ---
