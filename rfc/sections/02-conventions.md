@@ -22,16 +22,13 @@ relationship between faces, edges, and vertices.
 *   `pointy-right`: Pointy-top, odd rows shifted right.
 *   `pointy-left`: Pointy-top, odd rows shifted left.
 
-The orientation determines both the visual layout and the default path tie-breaking behavior.
+The orientation determines both the visual layout and the base sign of the default path bias (see Section 7).
 
-**cube coordinates**: A three-integer coordinate system (u, v, w) for hex
-grids where u + v + w = 0. This is the canonical mathematical
+**cube coordinates**: A three-integer coordinate system `(q, r, s)` for hex
+grids where `q + r + s = 0`. This is the canonical mathematical
 representation for hex math (distance, neighbors, line drawing, rings).
-Two coordinates suffice since the third is determined by the constraint;
-the two-component form (q, r) is called **axial coordinates**.
-
-The letters u, v, w are used (rather than x, y, z) to avoid confusion
-with screen coordinates or row/column indices.
+Two coordinates suffice since the third is determined by the constraint
+(`s = −q − r`); the two-component form is called **axial coordinates**.
 
 **user coordinates**: A human-readable labeling scheme for hexes, such as
 `"0304"` (column 03, row 04) or `"C4"` (column C, row 4). Defined per map.
@@ -46,13 +43,15 @@ selection (hexes, edges, vertices, or a path) with terrain and properties.
 **path**: An ordered sequence of connected hexes or edges representing a
 linear feature such as a road, railroad, or river.
 
-**tie-breaking**: Paths on a hex grid can be ambiguous when the straight line
-from start to end is equidistant from two hexes (edges, or vertices).
-A deterministic tie-breaking bias derived from the grid's **orientation** 
-is used to pick a winner, preferring paths that follow user-coordinate axes.
-If the default rule picks the "wrong" path, it can be inverted with 
-the flip operator: **~** for a specific path,
-or the author can just provide more intermediate points explicitly. 
+**path bias**: When drawing a shortest path, an interpolated point can be
+equidistant from two candidate hexes (edges, or vertices). A deterministic
+epsilon bias resolves the tie. The default bias is derived from the grid's
+**orientation** and a parity correction based on the segment endpoints,
+and is guaranteed to pick the axis-preserving hex for any path along a
+constant user-coordinate axis (same row for flat-top, same column for
+pointy-top). If the default bias picks the wrong alternative for a given
+segment, the **flip operator** (`~`) inverts it, or the author can insert
+an explicit intermediate waypoint.
 
 **directed edge type**: An edge terrain type where the effect is
 asymmetric — different depending on which side you approach from (e.g.,

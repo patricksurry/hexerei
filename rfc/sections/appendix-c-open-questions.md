@@ -18,13 +18,11 @@ specification.
    A...Z, AA..ZZ, AAA...ZZZ, ... as column (or less likely row) label 
    formats SHOULD be explored to improve flexibility.
 
-3. **Normative HexPath tie-breaking rules.** The exact pathing algorithm 
-   MUST be normative to ensure identical geometry across 
-   implementations. The current HexPath DSL specification provides basic 
-   rules, but more detailed pathing rules may be necessary for complex 
-   tie-breaking scenarios.
-
-PDS: above is resolve, or at least in progress
+3. **Normative HexPath path bias rules.** The exact pathing algorithm
+   MUST be normative to ensure identical geometry across
+   implementations. The current HexPath DSL specification provides basic
+   rules, but more detailed pathing rules may be necessary for complex
+   tie cases. **(Resolved: Section 7 now specifies the full bias formula.)**
 
 4. **Geographic reference naming.** While the `georef` object captures
    the key physical mapping parameters, the exact naming and structure 

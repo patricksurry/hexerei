@@ -40,27 +40,28 @@ PDS: should define relative atoms before we talk about anchors?
 ### Connectivity and Operators
 
 *   **Space (` `)**: **Shortest Path.** Connects the previous cursor to the next
-    atom using the geometric shortest path.
+    atom by drawing a notional straight line between their centers (analogous
+    to line-of-sight in wargame terms) and selecting the nearest hex, edge, or
+    vertex to that line at each step. When two candidates are equidistant, the
+    path bias (see Section 7) resolves the tie deterministically.
 
-PDS: 'geometric' feels ambiguous here, should explain that we draw a straight line (think line-of-sight in wargame terms) between the atom centers and extend the path from start to end by picking the nearest element to that line at each step.   When there's a tie, we use a prescribed tie-breaking rule (can point at details below).
-
-*   **Flip tie-breaker (`~`)**: A prefix on a destination coordinate that flips the
-    default tie-breaking rule for the arriving path segment. The default tie-breaker
-    is derived from the grid's orientation (see Section 7). `~` only affects the
-    single segment arriving at the prefixed coordinate — it is not a modal switch.
-    *   Example: `0101 ~0303` connects with flipped tie-breaking; `0101 0303` uses default.
+*   **Flip operator (`~`)**: A prefix on a destination coordinate that inverts
+    the path bias for the arriving segment. The default bias is derived from
+    the grid's orientation and segment endpoints (see Section 7). `~` only
+    affects the single segment arriving at the prefixed coordinate — it is not
+    a modal switch.
+    *   Example: `0101 ~0303` arrives with flipped bias; `0101 0303` uses default.
     *   `~` on the first coordinate in an expression has no effect (no incoming segment).
-    *   `~` on a non-ambiguous path or singleton has no effect (no tie to break).
+    *   `~` on a non-ambiguous path or singleton has no effect (no tie to resolve).
 
 *   **Comma (`,`)**: **Jump.** Ends the current segment. The next atom adds to
     the collection without a connecting path from the previous cursor.
 
 *   **Semicolon (`;`)**: **Close.** Connects the current cursor back to the
     start of the current segment and ends the segment.
-    The path is closed along a straight line between the two points, using the
-    same tie-breaking behavior (flipped if `~` is applied).
-
-PDS: so to clarify you would write the '~' before the ';', right?
+    The closing segment uses the default path bias unless `~` is prefixed
+    directly before the `;` (written `~;`), which inverts the bias for that
+    closing segment only.
 
 *   **Exclamation (`!`)**: **Close & Fill.** Closes the segment (like `;`) and
     then adds all items contained within the resulting boundary to the collection.

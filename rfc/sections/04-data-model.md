@@ -78,18 +78,43 @@ are included, or the author can define more intermediate hexes explicitly:
 
 #### orientation
 
-The `orientation` field defines both the axial alignment (flat-top vs pointy-top) and the stagger parity.
+The orientation name describes the position of the **origin hex** (top-left
+corner of the map) relative to its immediate neighbor in the stagger
+direction. For flat-top grids the stagger is column-wise; for pointy-top
+grids it is row-wise.
 
-| Orientation | Top geometry | Stagger description |
-|-------------|--------------|---------------------|
-| `flat-down` | Flat-top | Odd columns shifted down (Odd-Q). |
-| `flat-up` | Flat-top | Odd columns shifted up (Even-Q). |
-| `pointy-right` | Pointy-top | Odd rows shifted right (Odd-R). |
-| `pointy-left` | Pointy-top | Odd rows shifted left (Even-R). |
+```
+flat-down (Odd-Q):             flat-up (Even-Q):
 
-"Odd" columns/rows are those whose numeric index is odd. The orientation also determines the **default tie breaking bias** for HexPath shortest paths.
+      [2,1]     [4,1]          [1,1]     [3,1]     [5,1]
+[1,1]     [3,1]     [5,1]            [2,1]     [4,1]
+      [2,2]     [4,2]          [1,2]     [3,2]     [5,2]
+[1,2]     [3,2]     [5,2]            [2,2]     [4,2]
 
-PDS: TODO  i don't like this description
+origin [1,1] is BELOW [2,1]    origin [1,1] is ABOVE [2,1]
+
+
+pointy-right (Odd-R):          pointy-left (Even-R):
+
+[1,1] [2,1] [3,1]                 [1,1] [2,1] [3,1]
+   [1,2] [2,2] [3,2]           [1,2] [2,2] [3,2]
+[1,3] [2,3] [3,3]                 [1,3] [2,3] [3,3]
+   [1,4] [2,4] [3,4]           [1,4] [2,4] [3,4]
+
+origin [1,1] shifted RIGHT     origin [1,1] shifted LEFT
+  relative to [1,2]              relative to [1,2]
+```
+
+| Orientation | Hex top | Stagger | Red Blob equiv. |
+|-------------|---------|---------|-----------------|
+| `flat-down`    | Flat    | Odd columns down  | Odd-Q  |
+| `flat-up`      | Flat    | Odd columns up    | Even-Q |
+| `pointy-right` | Pointy  | Odd rows right    | Odd-R  |
+| `pointy-left`  | Pointy  | Odd rows left     | Even-R |
+
+"Odd" columns/rows are those whose numeric index is odd. The orientation
+also determines the base sign of the path bias for HexPath shortest paths
+(see Section 7).
 
 #### georef (geographic anchoring and scale)
 
@@ -116,8 +141,8 @@ The HexMap format uses two coordinate representations:
    `"C4"`. These appear in the file as hex identifiers in features, edges,
    paths, etc. They MUST be unique within a map.
 
-2. **Cube coordinates** (u, v, w integers): The canonical mathematical
-   representation where u + v + w = 0. Implementations SHOULD use cube
+2. **Cube coordinates** (q, r, s integers): The canonical mathematical
+   representation where q + r + s = 0. Implementations SHOULD use cube
    coordinates internally for hex math (distance, neighbors, rings, line
    drawing). Cube coordinates do not appear in the file.
 

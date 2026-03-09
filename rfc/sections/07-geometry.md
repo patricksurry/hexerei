@@ -5,17 +5,15 @@ systems. It is normative: implementations MUST use these conversions.
 
 ### Cube coordinates
 
-Cube coordinates (u, v, w) satisfy the constraint **u + v + w = 0**.
-This constraint means any hex can be identified by two coordinates; the
-third is derived. The three axes are symmetric, which simplifies
-algorithms for distance, neighbors, rings, and line drawing.
+Cube coordinates `(q, r, s)` satisfy the constraint **q + r + s = 0**.
+This means any hex can be identified by two coordinates; the third is
+derived (`s = −q − r`). The three axes are symmetric, which simplifies
+algorithms for distance, neighbors, rings, and line drawing. The
+two-component **axial** form `(q, r)` omits `s` since it is always derived.
 
-Axial coordinates (q, r) are a two-component shorthand:
-```
-q = u
-r = w
-v = -q - r
-```
+*Note: Some literature uses `{u, v, w}` notation where `u = q`, `v = s`,
+`w = r`. The two systems are equivalent; this spec uses `{q, r, s}`
+to match standard hex-grid implementations.*
 
 ### Offset to cube conversion
 
@@ -28,88 +26,110 @@ coordinates.
 
 **Orientation: flat-down (Odd-Q):**
 ```
-u = col
-w = row - floor(col / 2)
-v = -u - w
+q = col
+r = row - floor(col / 2)
+s = -q - r
 ```
 
 **Orientation: flat-up (Even-Q):**
 ```
-u = col
-w = row - ceil(col / 2)
-v = -u - w
+q = col
+r = row - ceil(col / 2)
+s = -q - r
 ```
 
 **Orientation: pointy-right (Odd-R):**
 ```
-u = col - floor(row / 2)
-w = row
-v = -u - w
+q = col - floor(row / 2)
+r = row
+s = -q - r
 ```
 
 **Orientation: pointy-left (Even-R):**
 ```
-u = col - ceil(row / 2)
-w = row
-v = -u - w
+q = col - ceil(row / 2)
+r = row
+s = -q - r
 ```
 
-### Shortest Paths with Tie-breaking
+### Shortest Paths
 
-The `hexLine` algorithm calculates the shortest path between two hexes using linear interpolation in cube coordinates. To ensure deterministic results and enable tie-breaking, an epsilon bias (nudge) is applied to each interpolated point before rounding to the nearest hex.
+The `hexLine` algorithm calculates the shortest path between two hexes using
+linear interpolation in cube coordinates. When an interpolated point is
+equidistant from two candidate hexes, an epsilon bias resolves the tie
+deterministically. The bias is designed so that paths along a constant
+user-coordinate axis (same row for flat-top, same column for pointy-top)
+always resolve to the axis-preserving hex.
 
 ```
-biased_u = lerp_u + (eps * nudge)
-biased_v = lerp_v + (2 * eps * nudge)
-biased_w = lerp_w - (3 * eps * nudge)
+effective_sign = base_sign × parity_sign × flip
+
+biased_q = lerp_q + (1 · eps · effective_sign)
+biased_s = lerp_s + (2 · eps · effective_sign)
+biased_r = lerp_r − (3 · eps · effective_sign)
 ```
 
-Where `eps = 1e-6`. The multipliers (1, 2, -3) sum to zero, preserving the
-cube constraint `u + v + w = 0`. Using different magnitudes on each axis
-ensures unambiguous rounding in all tie-breaking cases.
+Where `eps = 1e-6`. The multipliers `(+1, +2, −3)` sum to zero, preserving
+`q + r + s = 0`, and are all distinct, ensuring unambiguous rounding in every
+tie case.
 
-*   **Default Nudge**: Derived from the orientation. For `flat-down` and `pointy-right`, the default nudge is `+1`. For `flat-up` and `pointy-left`, it is `-1`.
-*   **Flip Operator (`~`)**: Flips the sign of the nudge for a specific path segment.
-*   **Reversal Symmetry**: The algorithm ensures that `hexLine(A, B, nudge) == reverse(hexLine(B, A, nudge))`.
+**Orientation base sign:**
 
-PDS: clarify this rule is intended to ensure that the default tie breaking rule follows user coordinate axes.  but in our test map, "0602 1002", "0602 1102" and "0502 1002" (and the reversed versions) all resolve correctly (to XX02) but "0502 1102" (or "1102 0502") resolves to "0502 0601 0702 0801 0902 1001 1102".   so we need to add tests for these, review and potentially tweak the logic
+| Orientation | Base sign |
+|-------------|-----------|
+| `flat-down`    | +1 |
+| `flat-up`      | −1 |
+| `pointy-right` | +1 |
+| `pointy-left`  | −1 |
+
+**Parity sign:** A per-segment correction that makes the "follows
+user-coordinate axis" property hold for all start positions:
+
+*   Flat-top: `parity_sign = (min(a.q, b.q) % 2 == 1) ? +1 : −1`
+*   Pointy-top: `parity_sign = (min(a.r, b.r) % 2 == 1) ? +1 : −1`
+
+**Flip operator (`~`):** Sets `flip = −1` for the arriving segment (default
+`flip = +1`). See Section 6.
+
+**Reversal symmetry:** Because `min(a, b)` is symmetric in its arguments,
+`hexLine(A, B) == reverse(hexLine(B, A))` for any bias.
 
 ### Neighbor directions in cube coordinates
 
-The six neighbors of hex (u, v, w) and their edge directions:
+The six neighbors of hex (q, r, s) and their edge directions:
 
 **Flat-top:**
 
-| Edge | Delta u | Delta v | Delta w |
-|------|---------|---------|---------|
-| N    |  0 | +1 | -1 |
-| NE   | +1 |  0 | -1 |
-| SE   | +1 | -1 |  0 |
-| S    |  0 | -1 | +1 |
-| SW   | -1 |  0 | +1 |
-| NW   | -1 | +1 |  0 |
+| Edge | Δq | Δr | Δs |
+|------|----|----|-----|
+| N    |  0 | -1 | +1 |
+| NE   | +1 | -1 |  0 |
+| SE   | +1 |  0 | -1 |
+| S    |  0 | +1 | -1 |
+| SW   | -1 | +1 |  0 |
+| NW   | -1 |  0 | +1 |
 
 **Pointy-top:**
 
-| Edge | Delta u | Delta v | Delta w |
-|------|---------|---------|---------|
-| NE   | +1 |  0 | -1 |
-| E    | +1 | -1 |  0 |
-| SE   |  0 | -1 | +1 |
-| SW   | -1 |  0 | +1 |
-| W    | -1 | +1 |  0 |
-| NW   |  0 | +1 | -1 |
+| Edge | Δq | Δr | Δs |
+|------|----|----|-----|
+| NE   | +1 | -1 |  0 |
+| E    | +1 |  0 | -1 |
+| SE   |  0 | +1 | -1 |
+| SW   | -1 | +1 |  0 |
+| W    | -1 |  0 | +1 |
+| NW   |  0 | -1 | +1 |
 
 ### Hex distance
 
 The distance between two hexes in cube coordinates is:
 
 ```
-distance = max(|u1-u2|, |v1-v2|, |w1-w2|)
+distance = max(|q1-q2|, |r1-r2|, |s1-s2|)
 ```
 
 Or equivalently:
 
 ```
-distance = (|u1-u2| + |v1-v2| + |w1-w2|) / 2
+distance = (|q1-q2| + |r1-r2| + |s1-s2|) / 2
 ```
