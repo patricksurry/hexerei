@@ -19,7 +19,7 @@ layout:
   coordinates:
     label: XXYY
     first: [17, 1]
-  all: "1701 3001 3010 1710 !"
+  all: "1701 - 3001 - 3010 - 1710 fill"
   georef:
     scale: 16000
 

@@ -88,32 +88,32 @@ features:
   # Terrain Features
   
   # Pripet Marshes (Central Swamp)
-  - at: "1420 1820 1823 1423 ! - 1621 1622" # N20 - R23, minus clear pockets
+  - at: "1420 - 1820 - 1823 - 1423 fill exclude 1621 - 1622" # N20 - R23, minus clear pockets
     terrain: swamp
     label: "Pripet Marshes"
 
   # Carpathian Mountains (South West)
-  - at: "1225 1625 1628 1228 !"
+  - at: "1225 - 1625 - 1628 - 1228 fill"
     terrain: mountain
     label: "Carpathians"
 
   # Volga River (Major)
-  - at: "4301 4306 4010 3614 3818" # Rough trace
+  - at: "4301 - 4306 - 4010 - 3614 - 3818" # Rough trace
     terrain: major_river
     label: "Volga"
 
   # Dnepr River
-  - at: "2011 1918 2125" # Very rough trace
+  - at: "2011 - 1918 - 2125" # Very rough trace
     terrain: major_river
     label: "Dnepr"
 
   # Rail Network (Strategic movement)
   # Moscow - Leningrad
-  - at: "2212 1810 1409 1008"
+  - at: "2212 - 1810 - 1409 - 1008"
     terrain: railroad
     label: "Moscow-Leningrad Rail"
 
   # Moscow - Kiev
-  - at: "2212 2015 1918"
+  - at: "2212 - 2015 - 1918"
     terrain: railroad
     label: "Moscow-Kiev Rail"

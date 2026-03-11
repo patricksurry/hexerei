@@ -21,7 +21,7 @@ describe('HexPath Preview', () => {
   });
 
   it('should resolve a path', () => {
-    const result = parseHexPathInput('0101 0103', model);
+    const result = parseHexPathInput('0101 - 0103', model);
     expect(result.hexIds).toHaveLength(3);
     expect(result.error).toBeUndefined();
   });

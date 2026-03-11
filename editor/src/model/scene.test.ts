@@ -114,7 +114,7 @@ terrain:
   hex:
     city: { style: { color: "#888" } }
 features:
-  - at: "0101 0201"
+  - at: "0101 - 0201"
     terrain: clear
   - at: "0101"
     terrain: city

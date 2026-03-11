@@ -17,7 +17,7 @@ layout:
   label: XXYY
   origin: top-left
   # Simple rectangle 14x11, then subtract specific phantom hexes
-  all: "0101 1401 1411 0111 ! - 0211, 0411, 0611, 0811, 1011, 1211, 1411"
+  all: "0101 - 1401 - 1411 - 0111 fill exclude 0211, 0411, 0611, 0811, 1011, 1211, 1411"
   georef:
     scale: 16000 # ~10 miles per hex
     projection: mercator

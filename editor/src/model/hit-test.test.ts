@@ -8,7 +8,7 @@ const MOCK_YAML = `
 hexmap: "1.0"
 layout:
   orientation: flat-down
-  all: "0000 0202 !"
+  all: "0000 - 0202 fill"
 `;
 
 describe('hitTest', () => {

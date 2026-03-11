@@ -7,7 +7,7 @@ import type { FeatureItem } from '../types';
 const mockFeatures: FeatureItem[] = [
   { index: 0, terrain: 'clear', at: '@all', isBase: true, tags: [], hexIds: [] },
   { index: 1, id: 'moscow', terrain: 'major_city', label: 'Moscow', at: '0507', isBase: false, tags: [], hexIds: ['5,7,0'] },
-  { index: 2, terrain: 'forest', at: '0302 0303 0402', isBase: false, tags: [], hexIds: ['3,2,0'] },
+  { index: 2, terrain: 'forest', at: '0302 - 0303 - 0402', isBase: false, tags: [], hexIds: ['3,2,0'] },
 ];
 
 test('renders all feature rows', () => {
