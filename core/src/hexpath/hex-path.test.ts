@@ -36,7 +36,7 @@ describe('HexPath RFC Compliance', () => {
         });
 
         it('should throw error on mixed types', () => {
-            expect(() => hexPath.resolve('0101 0101/N')).toThrow(/Inconsistent geometry type/);
+            expect(() => hexPath.resolve('0101 - 0101/N')).toThrow(/Inconsistent geometry type/);
         });
     });
 
@@ -46,7 +46,7 @@ describe('HexPath RFC Compliance', () => {
             // 0101 is col 1, row 1 => 1,1,-2
             // 1n (North) BEFORE 0101 means we started at 0102 and went North to 0101.
             // 0102 is col 1, row 2 => offsetToCube(1, 2, Odd-Q) => q=1, r=2-(1-1)/2 = 2 => 1,2,-3
-            const result = hexPath.resolve('1n 0101');
+            const result = hexPath.resolve('1n - 0101');
             expect(result.items).toContain('1,1,-2'); // 0101
             expect(result.items).toContain('1,2,-3'); // 0102
         });
@@ -54,34 +54,34 @@ describe('HexPath RFC Compliance', () => {
 
     describe('Operators', () => {
         it('should support Jump (comma)', () => {
-            const result = hexPath.resolve('0101, 0103');
+            const result = hexPath.resolve('0101 0103');
             expect(result.items).toHaveLength(2);
             expect(result.items).toContain(Hex.hexId(Hex.offsetToCube(1, 1, 'flat-down'))); 
             expect(result.items).toContain(Hex.hexId(Hex.offsetToCube(1, 3, 'flat-down')));
         });
 
         it('should support Include (+) and Exclude (-) modes', () => {
-            const result = hexPath.resolve('0101 0103 - 0102');
+            const result = hexPath.resolve('0101 - 0103 exclude 0102');
             expect(result.items).toContain(Hex.hexId(Hex.offsetToCube(1, 1, 'flat-down')));
             expect(result.items).toContain(Hex.hexId(Hex.offsetToCube(1, 3, 'flat-down')));
             expect(result.items).not.toContain(Hex.hexId(Hex.offsetToCube(1, 2, 'flat-down')));
         });
 
         it('should support Close (semicolon)', () => {
-            const result = hexPath.resolve('0101 0102 0202 ;');
+            const result = hexPath.resolve('0101 - 0102 - 0202 close');
             expect(result.items).toContain(Hex.hexId(Hex.offsetToCube(1, 1, 'flat-down')));
             expect(result.items).toContain(Hex.hexId(Hex.offsetToCube(1, 2, 'flat-down')));
             expect(result.items).toContain(Hex.hexId(Hex.offsetToCube(2, 2, 'flat-down')));
         });
 
         it('should support Fill (!) operator for HEX collections', () => {
-            const result3x3 = hexPath.resolve('0101 0301 0303 0103 !');
+            const result3x3 = hexPath.resolve('0101 - 0301 - 0303 - 0103 fill');
             const centerHex = Hex.hexId(Hex.offsetToCube(2, 2, 'flat-down')); 
             expect(result3x3.items).toContain(centerHex);
         });
 
         it('should support Modal Exclude (-) for fill', () => {
-            const result = hexPath.resolve('0101 0301 0303 0103 ! - 0101 0201 0202 0102 !');
+            const result = hexPath.resolve('0101 - 0301 - 0303 - 0103 fill exclude 0101 - 0201 - 0202 - 0102 fill');
             const centerHex = Hex.hexId(Hex.offsetToCube(2, 2, 'flat-down'));
             expect(result.items).not.toContain(centerHex);
             expect(result.items).toContain(Hex.hexId(Hex.offsetToCube(3, 3, 'flat-down')));
@@ -97,7 +97,7 @@ describe('HexPath RFC Compliance', () => {
 
     describe('Orientation', () => {
         it('should fill correctly for flat-top (default)', () => {
-            const result = hexPath.resolve('0101 0301 0303 0103 !');
+            const result = hexPath.resolve('0101 - 0301 - 0303 - 0103 fill');
             const centerHex = Hex.hexId(Hex.offsetToCube(2, 2, 'flat-down'));
             expect(result.items).toContain(centerHex);
         });
@@ -105,7 +105,7 @@ describe('HexPath RFC Compliance', () => {
         it('should fill correctly for pointy-top', () => {
             const pointyMesh = new HexMesh(Hex.createRectangularGrid(10, 10, 'pointy-right', 0, 0), { layout: { orientation: 'pointy-right', coordinates: { first: [0, 0] } } });
             const pointyPath = new HexPath(pointyMesh);
-            const result = pointyPath.resolve('0101 0301 0303 0103 !');
+            const result = pointyPath.resolve('0101 - 0301 - 0303 - 0103 fill');
             const centerHex = Hex.hexId(Hex.offsetToCube(2, 2, 'pointy-right'));
             expect(result.items).toContain(centerHex);
         });
@@ -113,22 +113,22 @@ describe('HexPath RFC Compliance', () => {
 
     describe('direction validation', () => {
         it('rejects E/W on flat-top', () => {
-            expect(() => hexPath.resolve('0101 1e')).toThrow(/invalid direction/i);
-            expect(() => hexPath.resolve('0101 1w')).toThrow(/invalid direction/i);
+            expect(() => hexPath.resolve('0101 - 1e')).toThrow(/invalid direction/i);
+            expect(() => hexPath.resolve('0101 - 1w')).toThrow(/invalid direction/i);
         });
         it('rejects N/S on pointy-top', () => {
             const pointyMesh = new HexMesh(Hex.createRectangularGrid(10, 10, 'pointy-right', 0, 0), { layout: { orientation: 'pointy-right' } });
             const pointyPath = new HexPath(pointyMesh);
-            expect(() => pointyPath.resolve('0101 1n')).toThrow(/invalid direction/i);
-            expect(() => pointyPath.resolve('0101 1s')).toThrow(/invalid direction/i);
+            expect(() => pointyPath.resolve('0101 - 1n')).toThrow(/invalid direction/i);
+            expect(() => pointyPath.resolve('0101 - 1s')).toThrow(/invalid direction/i);
         });
     });
 
     describe('~ nudge operator', () => {
         it('should resolve differently than default nudge on ambiguous paths', () => {
             // 0,0,0 to 1,1,-2
-            const resultDefault = hexPath.resolve('0000 0101');
-            const resultFlipped = hexPath.resolve('0000 ~0101');
+            const resultDefault = hexPath.resolve('0000 - 0101');
+            const resultFlipped = hexPath.resolve('0000 ~ 0101');
             
             expect(resultDefault.items).not.toEqual(resultFlipped.items);
             expect(resultDefault.items).toHaveLength(3);
@@ -138,21 +138,21 @@ describe('HexPath RFC Compliance', () => {
         it('should exhibit reversal symmetry with flipped nudge', () => {
             // hexLine(a, b, nudge) == reverse(hexLine(b, a, nudge))
             // So a ~b should be reverse of b ~a
-            const pathAB = hexPath.resolve('0000 ~0102');
-            const pathBA = hexPath.resolve('0102 ~0000');
+            const pathAB = hexPath.resolve('0000 ~ 0102');
+            const pathBA = hexPath.resolve('0102 ~ 0000');
             expect(pathAB.items).toEqual([...pathBA.items].reverse());
         });
 
         it('should have no effect on first coordinate', () => {
-            const result1 = hexPath.resolve('~0000 0102');
-            const result2 = hexPath.resolve('0000 0102');
+            const result1 = hexPath.resolve('~ 0000 - 0102');
+            const result2 = hexPath.resolve('0000 - 0102');
             expect(result1.items).toEqual(result2.items);
         });
 
         it('should have no effect on non-ambiguous paths', () => {
             // 0,0,0 to 2,0,-2
-            const result1 = hexPath.resolve('0000 0201');
-            const result2 = hexPath.resolve('0000 ~0201');
+            const result1 = hexPath.resolve('0000 - 0201');
+            const result2 = hexPath.resolve('0000 ~ 0201');
             expect(result1.items).toEqual(result2.items);
         });
     });
@@ -169,42 +169,42 @@ describe('HexPath RFC Compliance', () => {
 
         it('ne step should move to DIRECTIONS[1] on pointy-top', () => {
             // From 0,0,0: NE on pointy = DIRECTIONS[1] = (1,0,-1)
-            const result = pointyPath.resolve('0000 1ne');
+            const result = pointyPath.resolve('0000 - 1ne');
             expect(result.items).toContain(Hex.hexId({ q: 1, r: 0, s: -1 }));
         });
 
         it('se step should move to DIRECTIONS[5] on pointy-top', () => {
             // From 0,0,0: SE on pointy = DIRECTIONS[5] = (0,-1,1)
-            const result = pointyPath.resolve('0000 1se');
+            const result = pointyPath.resolve('0000 - 1se');
             expect(result.items).toContain(Hex.hexId({ q: 0, r: -1, s: 1 }));
         });
 
         it('sw step should move to DIRECTIONS[4] on pointy-top', () => {
             // From 0,0,0: SW on pointy = DIRECTIONS[4] = (-1,0,1)
-            const result = pointyPath.resolve('0000 1sw');
+            const result = pointyPath.resolve('0000 - 1sw');
             expect(result.items).toContain(Hex.hexId({ q: -1, r: 0, s: 1 }));
         });
 
         it('nw step should move to DIRECTIONS[2] on pointy-top', () => {
             // From 0,0,0: NW on pointy = DIRECTIONS[2] = (0,1,-1)
-            const result = pointyPath.resolve('0000 1nw');
+            const result = pointyPath.resolve('0000 - 1nw');
             expect(result.items).toContain(Hex.hexId({ q: 0, r: 1, s: -1 }));
         });
 
         it('e step should move to DIRECTIONS[0] on pointy-top', () => {
-            const result = pointyPath.resolve('0000 1e');
+            const result = pointyPath.resolve('0000 - 1e');
             expect(result.items).toContain(Hex.hexId({ q: 1, r: -1, s: 0 }));
         });
 
         it('w step should move to DIRECTIONS[3] on pointy-top', () => {
-            const result = pointyPath.resolve('0000 1w');
+            const result = pointyPath.resolve('0000 - 1w');
             expect(result.items).toContain(Hex.hexId({ q: -1, r: 1, s: 0 }));
         });
     });
 
     describe('* step disambiguation', () => {
         it('should parse 3*s as 3 steps south', () => {
-            const result = hexPath.resolve('0000 3*s');
+            const result = hexPath.resolve('0000 - 3*s');
             // 0,0,0 -> 0,1,-1 -> 0,2,-2 -> 0,3,-3
             expect(result.items).toHaveLength(4);
             expect(result.items).toContain(Hex.hexId({q:0, r:3, s:-3}));
@@ -248,45 +248,45 @@ describe('HexPath RFC Compliance', () => {
 
             it('0502→1102: row 2, odd-start col (min.q=5) — BFM failing case', () => {
                 // parity_sign(min.q=5 odd)=+1, base=−1, effective=−1
-                const r = hp.resolve('0502 1102');
+                const r = hp.resolve('0502 - 1102');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(rowOf(id, 'flat-up')).toBe(2);
             });
 
             it('0803→1603: row 3, even-start col (min.q=8)', () => {
                 // parity_sign(min.q=8 even)=−1, base=−1, effective=+1
-                const r = hp.resolve('0803 1603');
+                const r = hp.resolve('0803 - 1603');
                 expect(r.items).toHaveLength(9);
                 for (const id of r.items) expect(rowOf(id, 'flat-up')).toBe(3);
             });
 
             it('0301→0901: row 1, odd-start col (min.q=3)', () => {
-                const r = hp.resolve('0301 0901');
+                const r = hp.resolve('0301 - 0901');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(rowOf(id, 'flat-up')).toBe(1);
             });
 
             it('0602→1002: row 2, even-start col (min.q=6)', () => {
-                const r = hp.resolve('0602 1002');
+                const r = hp.resolve('0602 - 1002');
                 expect(r.items).toHaveLength(5);
                 for (const id of r.items) expect(rowOf(id, 'flat-up')).toBe(2);
             });
 
             it('1102→0502: reverse of 0502→1102 is same path reversed', () => {
-                const fwd = hp.resolve('0502 1102');
-                const rev = hp.resolve('1102 0502');
+                const fwd = hp.resolve('0502 - 1102');
+                const rev = hp.resolve('1102 - 0502');
                 expect(fwd.items).toEqual([...rev.items].reverse());
                 for (const id of rev.items) expect(rowOf(id, 'flat-up')).toBe(2);
             });
 
             it('1603→0803: reverse of 0803→1603 is same path reversed', () => {
-                const fwd = hp.resolve('0803 1603');
-                const rev = hp.resolve('1603 0803');
+                const fwd = hp.resolve('0803 - 1603');
+                const rev = hp.resolve('1603 - 0803');
                 expect(fwd.items).toEqual([...rev.items].reverse());
             });
 
             it('0502 ~1102: flipped bias leaves row 2', () => {
-                const r = hp.resolve('0502 ~1102');
+                const r = hp.resolve('0502 ~ 1102');
                 const rows = r.items.map(id => rowOf(id, 'flat-up'));
                 expect(rows.some(row => row !== 2)).toBe(true);
             });
@@ -298,32 +298,32 @@ describe('HexPath RFC Compliance', () => {
             beforeEach(() => { hp = makeHP('flat-down'); });
 
             it('0502→1102: row 2, odd-start col (min.q=5)', () => {
-                const r = hp.resolve('0502 1102');
+                const r = hp.resolve('0502 - 1102');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(rowOf(id, 'flat-down')).toBe(2);
             });
 
             it('0802→1402: row 2, even-start col (min.q=8)', () => {
-                const r = hp.resolve('0802 1402');
+                const r = hp.resolve('0802 - 1402');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(rowOf(id, 'flat-down')).toBe(2);
             });
 
             it('0902→1502: row 2, odd-start col (min.q=9)', () => {
-                const r = hp.resolve('0902 1502');
+                const r = hp.resolve('0902 - 1502');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(rowOf(id, 'flat-down')).toBe(2);
             });
 
             it('1102→0502: reverse is same path reversed', () => {
-                const fwd = hp.resolve('0502 1102');
-                const rev = hp.resolve('1102 0502');
+                const fwd = hp.resolve('0502 - 1102');
+                const rev = hp.resolve('1102 - 0502');
                 expect(fwd.items).toEqual([...rev.items].reverse());
                 for (const id of rev.items) expect(rowOf(id, 'flat-down')).toBe(2);
             });
 
             it('0502 ~1102: flipped bias leaves row 2', () => {
-                const r = hp.resolve('0502 ~1102');
+                const r = hp.resolve('0502 ~ 1102');
                 const rows = r.items.map(id => rowOf(id, 'flat-down'));
                 expect(rows.some(row => row !== 2)).toBe(true);
             });
@@ -336,33 +336,33 @@ describe('HexPath RFC Compliance', () => {
 
             it('0205→0211: col 2, odd-start row (min.r=5)', () => {
                 // parity_sign(min.r=5 odd)=+1, base=+1, effective=+1
-                const r = hp.resolve('0205 0211');
+                const r = hp.resolve('0205 - 0211');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(colOf(id, 'pointy-right')).toBe(2);
             });
 
             it('0406→0412: col 4, even-start row (min.r=6)', () => {
                 // parity_sign(min.r=6 even)=−1, base=+1, effective=−1
-                const r = hp.resolve('0406 0412');
+                const r = hp.resolve('0406 - 0412');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(colOf(id, 'pointy-right')).toBe(4);
             });
 
             it('0211→0205: reverse is same path reversed', () => {
-                const fwd = hp.resolve('0205 0211');
-                const rev = hp.resolve('0211 0205');
+                const fwd = hp.resolve('0205 - 0211');
+                const rev = hp.resolve('0211 - 0205');
                 expect(fwd.items).toEqual([...rev.items].reverse());
                 for (const id of rev.items) expect(colOf(id, 'pointy-right')).toBe(2);
             });
 
             it('0412→0406: reverse is same path reversed', () => {
-                const fwd = hp.resolve('0406 0412');
-                const rev = hp.resolve('0412 0406');
+                const fwd = hp.resolve('0406 - 0412');
+                const rev = hp.resolve('0412 - 0406');
                 expect(fwd.items).toEqual([...rev.items].reverse());
             });
 
             it('0205 ~0211: flipped bias leaves col 2', () => {
-                const r = hp.resolve('0205 ~0211');
+                const r = hp.resolve('0205 ~ 0211');
                 const cols = r.items.map(id => colOf(id, 'pointy-right'));
                 expect(cols.some(c => c !== 2)).toBe(true);
             });
@@ -375,27 +375,27 @@ describe('HexPath RFC Compliance', () => {
 
             it('0205→0211: col 2, odd-start row (min.r=5)', () => {
                 // parity_sign(min.r=5 odd)=+1, base=−1, effective=−1
-                const r = hp.resolve('0205 0211');
+                const r = hp.resolve('0205 - 0211');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(colOf(id, 'pointy-left')).toBe(2);
             });
 
             it('0406→0412: col 4, even-start row (min.r=6)', () => {
                 // parity_sign(min.r=6 even)=−1, base=−1, effective=+1
-                const r = hp.resolve('0406 0412');
+                const r = hp.resolve('0406 - 0412');
                 expect(r.items).toHaveLength(7);
                 for (const id of r.items) expect(colOf(id, 'pointy-left')).toBe(4);
             });
 
             it('0211→0205: reverse is same path reversed', () => {
-                const fwd = hp.resolve('0205 0211');
-                const rev = hp.resolve('0211 0205');
+                const fwd = hp.resolve('0205 - 0211');
+                const rev = hp.resolve('0211 - 0205');
                 expect(fwd.items).toEqual([...rev.items].reverse());
                 for (const id of rev.items) expect(colOf(id, 'pointy-left')).toBe(2);
             });
 
             it('0205 ~0211: flipped bias leaves col 2', () => {
-                const r = hp.resolve('0205 ~0211');
+                const r = hp.resolve('0205 ~ 0211');
                 const cols = r.items.map(id => colOf(id, 'pointy-left'));
                 expect(cols.some(c => c !== 2)).toBe(true);
             });
@@ -415,4 +415,68 @@ describe('HexPath RFC Compliance', () => {
             expect(result.type).toBe('hex');
         });
     });
+
+    describe('New Infix Grammar and Modals', () => {
+        it('should handle label-vs-connector precedence', () => {
+            // Test that a token like 0,-1,1 (which has '-' in it) is parsed as an atom, not split.
+            const result = hexPath.resolve('0,-1,1 - 0,-2,2');
+            expect(result.items.length).toBeGreaterThan(1);
+            expect(result.items).toContain('0,-1,1');
+            expect(result.items).toContain('0,-2,2');
+        });
+
+        it('should handle split paths and multi-excludes', () => {
+            // Builds path 0101-0105, excludes 0103. The result is split.
+            const result = hexPath.resolve('0101 - 0105 exclude 0103');
+            const items = result.items;
+            expect(items).toContain(Hex.hexId(Hex.offsetToCube(1, 1, 'flat-down')));
+            expect(items).toContain(Hex.hexId(Hex.offsetToCube(1, 2, 'flat-down')));
+            expect(items).not.toContain(Hex.hexId(Hex.offsetToCube(1, 3, 'flat-down')));
+            expect(items).toContain(Hex.hexId(Hex.offsetToCube(1, 4, 'flat-down')));
+            expect(items).toContain(Hex.hexId(Hex.offsetToCube(1, 5, 'flat-down')));
+            // pathOrder splitting test
+            const r2 = hexPath.resolve('0101 - 0105 exclude 0102 , 0104');
+            expect(r2.items).not.toContain(Hex.hexId(Hex.offsetToCube(1, 2, 'flat-down')));
+            expect(r2.items).not.toContain(Hex.hexId(Hex.offsetToCube(1, 4, 'flat-down')));
+            expect(r2.path).not.toContain(Hex.hexId(Hex.offsetToCube(1, 2, 'flat-down')));
+            expect(r2.path).not.toContain(Hex.hexId(Hex.offsetToCube(1, 4, 'flat-down')));
+        });
+
+        it('should handle ~close and ~fill', () => {
+            // A closed path but with flipped nudging on the close segment
+            const resultClose = hexPath.resolve('0000 - 0201 ~close');
+            expect(resultClose.items.length).toBeGreaterThan(2);
+
+            const resultFill = hexPath.resolve('0101 - 0301 - 0303 - 0103 ~fill');
+            // the center hex 0202 should be filled
+            expect(resultFill.items).toContain(Hex.hexId(Hex.offsetToCube(2, 2, 'flat-down')));
+        });
+
+        it('should handle whitespace flexibility', () => {
+            const r1 = hexPath.resolve('0101-0105');
+            const r2 = hexPath.resolve('0101 - 0105');
+            expect(r1.items).toEqual(r2.items);
+            
+            const r3 = hexPath.resolve('0101,0105');
+            const r4 = hexPath.resolve('0101 , 0105');
+            expect(r3.items).toEqual(r4.items);
+            
+            const r5 = hexPath.resolve('0101~0105');
+            const r6 = hexPath.resolve('0101 ~ 0105');
+            expect(r5.items).toEqual(r6.items);
+        });
+
+        it('should handle relative steps with connectors', () => {
+            // 0101 - 3n => connected
+            const r1 = hexPath.resolve('0101 - 3n');
+            expect(r1.items.length).toBe(4); // start + 3 steps
+            
+            // 0101 3n => jump
+            const r2 = hexPath.resolve('0101 3n');
+            expect(r2.items.length).toBe(4); // start + 3 floating steps applied independently? Wait.
+            // If jump, 3n evaluates independently. If lastHex is null, it evaluates as a sequence of steps from an origin.
+            // The floating steps logic resolves to an origin. 
+        });
+    });
+
 });
