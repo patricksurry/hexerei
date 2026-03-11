@@ -32,19 +32,32 @@ export interface VertexHighlightRenderItem {
   color: string;
 }
 
+export interface PathLineRenderItem {
+  points: Point[];   // screen-space centers in path order
+  color: string;
+}
+
+export interface FeatureLabelRenderItem {
+  text: string;
+  point: Point;    // screen-space centroid
+}
+
 export interface Scene {
   background: string;
   hexagons: HexRenderItem[];
   highlights: HighlightRenderItem[];
   edgeHighlights: EdgeHighlightRenderItem[];
   vertexHighlights: VertexHighlightRenderItem[];
+  pathLines: PathLineRenderItem[];
+  featureLabels: FeatureLabelRenderItem[];
 }
 
 export function buildScene(
   model: MapModel,
   viewport: ViewportState,
   background: string = '#141414',
-  highlights: SceneHighlight[] = []
+  highlights: SceneHighlight[] = [],
+  segmentPath: string[] = []
 ): Scene {
   const hexagons: HexRenderItem[] = [];
   const orientation = Hex.orientationTop(model.grid.orientation);
@@ -159,11 +172,40 @@ export function buildScene(
     }
   }
 
+  const pathLines: PathLineRenderItem[] = [];
+  if (segmentPath.length > 1) {
+    const points = segmentPath.map(hexId => {
+      const cube = Hex.hexFromId(hexId);
+      const world = Hex.hexToPixel(cube, HEX_SIZE, orientation);
+      return worldToScreen(world, viewport);
+    });
+    pathLines.push({ points, color: '#00D4FF' });
+  }
+
+  const featureLabels: FeatureLabelRenderItem[] = [];
+  for (const feature of model.features) {
+    if (!feature.label || feature.isBase || feature.hexIds.length === 0) continue;
+
+    // Average screen-space center of all feature hexes
+    let sumX = 0, sumY = 0, count = 0;
+    for (const hexId of feature.hexIds) {
+      const cube = Hex.hexFromId(hexId);
+      const world = Hex.hexToPixel(cube, HEX_SIZE, orientation);
+      const screen = worldToScreen(world, viewport);
+      sumX += screen.x; sumY += screen.y; count++;
+    }
+    if (count > 0) {
+      featureLabels.push({ text: feature.label, point: { x: sumX / count, y: sumY / count } });
+    }
+  }
+
   return {
     background,
     hexagons,
     highlights: highlightItems,
     edgeHighlights,
-    vertexHighlights
+    vertexHighlights,
+    pathLines,
+    featureLabels
   };
 }

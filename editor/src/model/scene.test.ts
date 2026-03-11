@@ -101,4 +101,28 @@ describe('HitTest & Scene', () => {
     expect(p2.x).toBeCloseTo(expectedP2.x, 3);
     expect(p2.y).toBeCloseTo(expectedP2.y, 3);
   });
+
+  it('buildScene includes feature label at centroid when feature has label', () => {
+    // Use MOCK_YAML with a labeled feature
+    const yaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  label: XXYY
+  all: "0101 0201"
+terrain:
+  hex:
+    city: { style: { color: "#888" } }
+features:
+  - at: "0101 0201"
+    terrain: clear
+  - at: "0101"
+    terrain: city
+    label: "Smolensk"
+`;
+    const m = MapModel.load(yaml);
+    const scene = buildScene(m, vp);
+    expect(scene.featureLabels).toHaveLength(1);
+    expect(scene.featureLabels[0].text).toBe('Smolensk');
+  });
 });

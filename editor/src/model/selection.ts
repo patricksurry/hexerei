@@ -1,5 +1,6 @@
 import { Selection } from '../types';
 import { MapModel } from './map-model';
+import { Hex } from '@hexmap/core';
 
 export interface SceneHighlight {
   type: 'hex' | 'edge' | 'vertex';
@@ -24,6 +25,49 @@ export function selectEdge(boundaryId: string, hexLabels: [string, string | null
 
 export function selectVertex(vertexId: string): Selection {
   return { type: 'vertex', vertexId };
+}
+
+export function boundaryIdToHexPath(boundaryId: string, model: MapModel): string {
+  const parts = boundaryId.split('|');
+  const h1 = Hex.hexFromId(parts[0]);
+  const label1 = model.hexIdToLabel(parts[0]);
+  const orientation = model.grid.orientation;
+  const top = Hex.orientationTop(orientation);
+
+  if (parts[1]?.startsWith('VOID') || parts[1]?.startsWith('dir')) {
+    const dir = parseInt(parts[1].split('/')[1]);
+    return `${label1}/${directionName(dir, top)}`;
+  }
+  // Find direction from h1 to h2
+  const h2 = Hex.hexFromId(parts[1]);
+  for (let d = 0; d < 6; d++) {
+    if (Hex.hexId(Hex.hexNeighbor(h1, d)) === Hex.hexId(h2)) {
+      return `${label1}/${directionName(d, top)}`;
+    }
+  }
+  return label1; // fallback
+}
+
+export function vertexIdToHexPath(vertexId: string, model: MapModel): string {
+  const ids = vertexId.split('^');
+  const h1 = Hex.hexFromId(ids[0]);
+  const label1 = model.hexIdToLabel(ids[0]);
+  // Find which corner of h1 this vertex is
+  for (let i = 0; i < 6; i++) {
+    const n1 = Hex.hexId(Hex.hexNeighbor(h1, i));
+    const n2 = Hex.hexId(Hex.hexNeighbor(h1, (i + 1) % 6));
+    if (ids.includes(n1) && ids.includes(n2)) {
+      return `${label1}.${i}`;
+    }
+  }
+  return label1;
+}
+
+// Helper — orientation-aware direction name
+function directionName(dir: number, top: 'flat' | 'pointy'): string {
+  const flatNames = ['NE', 'SE', 'S', 'SW', 'NW', 'N'];
+  const pointyNames = ['E', 'NE', 'NW', 'W', 'SW', 'SE'];
+  return top === 'flat' ? flatNames[dir] : pointyNames[dir];
 }
 
 export function selectFeature(

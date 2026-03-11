@@ -22,6 +22,7 @@ interface CanvasHostProps {
   onHitTest?: (result: HitResult) => void;
   onNavigate?: (direction: number) => void;
   highlights?: SceneHighlight[];
+  segmentPath?: string[];
 }
 
 export interface CanvasHostRef {
@@ -34,7 +35,8 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
   onZoomChange,
   onHitTest,
   onNavigate,
-  highlights = []
+  highlights = [],
+  segmentPath = []
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,13 +111,13 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
     ctx.scale(dpr, dpr);
     
     const bg = getComputedStyle(containerRef.current!).getPropertyValue('--bg-base').trim() || '#141414';
-    const scene = buildScene(model, viewport, bg, highlights);
+    const scene = buildScene(model, viewport, bg, highlights, segmentPath);
 
     drawScene(ctx, scene, { 
         labelMinZoom: 12, 
         labelColor: getComputedStyle(containerRef.current!).getPropertyValue('--text-secondary') || '#888888' 
     });
-  }, [model, viewport, highlights]);
+  }, [model, viewport, highlights, segmentPath]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 0) { // Left click

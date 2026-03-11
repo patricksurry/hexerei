@@ -41,7 +41,9 @@ describe('Canvas Drawing', () => {
     ],
     highlights: [],
     edgeHighlights: [],
-    vertexHighlights: []
+    vertexHighlights: [],
+    pathLines: [],
+    featureLabels: []
   };
 
   it('should call fillRect with background', () => {
@@ -61,11 +63,34 @@ describe('Canvas Drawing', () => {
 
   it('should draw labels if big enough', () => {
     drawScene(mockCtx, mockScene, { labelMinZoom: 5 });
-    expect(mockCtx.fillText).toHaveBeenCalledWith('0101', 10, 10);
+    // center is (10,10), radius is 10. labelY = 10 - 10 * 0.4 = 6
+    expect(mockCtx.fillText).toHaveBeenCalledWith('0101', 10, 6);
   });
 
   it('should not draw labels if too small', () => {
     drawScene(mockCtx, mockScene, { labelMinZoom: 50 });
     expect(mockCtx.fillText).not.toHaveBeenCalled();
+  });
+
+  it('should draw labels near the top of the hex, not at center', () => {
+    const sceneWithBigHex: Scene = {
+      ...mockScene,
+      hexagons: [{
+        ...mockScene.hexagons[0],
+        // corners span 40px radius — well above labelMinZoom=12
+        corners: [
+          { x: 50, y: 10 }, { x: 90, y: 30 }, { x: 90, y: 70 },
+          { x: 50, y: 90 }, { x: 10, y: 70 }, { x: 10, y: 30 }
+        ],
+        center: { x: 50, y: 50 },
+        label: '0101'
+      }]
+    };
+    drawScene(mockCtx, sceneWithBigHex, { labelMinZoom: 12 });
+    const calls = (mockCtx.fillText as any).mock.calls;
+    expect(calls).toHaveLength(1);
+    const [_text, _x, labelY] = calls[0];
+    // Label y should be above center (50) by a meaningful amount
+    expect(labelY).toBeLessThan(40);
   });
 });
