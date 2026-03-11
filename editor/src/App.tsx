@@ -19,6 +19,7 @@ import {
   selectVertex,
   highlightsForSelection,
   highlightsForHover,
+  highlightsForCursor,
   topmostFeatureAtHex,
   boundaryIdToHexPath,
   vertexIdToHexPath
@@ -34,9 +35,16 @@ export function App() {
   const [cursorHex, setCursorHex] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0);
   const [preview, setPreview] = useState<HexPathPreview | null>(null);
+  const [theme, setTheme] = useState<'sandtable' | 'classic'>('sandtable');
 
   const commandBarRef = useRef<CommandBarRef>(null);
   const canvasHostRef = useRef<CanvasHostRef>(null);
+
+  useEffect(() => {
+    // Apply theme class to root element
+    document.documentElement.classList.remove('theme-sandtable', 'theme-classic');
+    document.documentElement.classList.add(`theme-${theme}`);
+  }, [theme]);
 
   useEffect(() => {
     fetch('/maps/battle-for-moscow.hexmap.yaml')
@@ -73,9 +81,10 @@ export function App() {
     return [
       ...highlightsForSelection(selection, model),
       ...highlightsForHover(hoverIndex, model),
+      ...highlightsForCursor(cursorHex, model),
       ...previewHighlights
     ];
-  }, [selection, hoverIndex, model, preview]);
+  }, [selection, hoverIndex, cursorHex, model, preview]);
 
   const stackSelectedIndices = useMemo(() => {
     if (!model) return [];
@@ -116,6 +125,10 @@ export function App() {
         canvasHostRef.current?.resetZoom();
       } else if (cmd === 'clear') {
         setSelection(clearSelection());
+      } else if (cmd === 'theme sandtable') {
+        setTheme('sandtable');
+      } else if (cmd === 'theme classic') {
+        setTheme('classic');
       }
       setCommandValue('');
       return;

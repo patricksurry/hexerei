@@ -14,7 +14,7 @@
   padding: 0 var(--space-md);
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
-  border-right: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-accent);
 }
 
 .status-segment:last-child {

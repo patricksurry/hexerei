@@ -1,0 +1,33 @@
+:root:not(.theme-sandtable),
+:root.theme-classic {
+  /* Backgrounds */
+  --bg-base: #141414;
+  --bg-surface: #1C1C1C;
+  --bg-elevated: #242424;
+  --bg-canvas: #141414;
+
+  /* Borders */
+  --border-subtle: #2A2A2A;
+  --border-focus: #3A3A3A;
+  --border-accent: #3A3A3A;
+
+  /* Text */
+  --text-primary: #E8E8E8;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+  --text-glow: transparent;
+
+  /* Accents (geometry-typed) */
+  --accent-hex: #00D4FF;
+  --accent-hex-glow: transparent;
+  --accent-edge: #FF3DFF;
+  --accent-edge-glow: transparent;
+  --accent-vertex: #FFD600;
+  --accent-vertex-glow: transparent;
+  --accent-command: #00D4FF;
+
+  /* Semantic */
+  --color-error: #FF4D4D;
+  --color-success: #4DFF88;
+  --color-warning: #FFD600;
+}

@@ -17,14 +17,14 @@ export function Inspector({
   const renderMetadata = () => (
     <div className="inspector-content">
       <section className="inspector-section">
-        <h3 className="inspector-heading">MAP METADATA</h3>
+        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>MAP METADATA</h3>
         <div className="inspector-row">
           <label>Title</label>
           <span>{model.metadata.title || 'Untitled Map'}</span>
         </div>
       </section>
       <section className="inspector-section">
-        <h3 className="inspector-heading">LAYOUT</h3>
+        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>LAYOUT</h3>
         <div className="inspector-row">
           <label>Orientation</label>
           <span>{model.grid.orientation}</span>
@@ -35,7 +35,7 @@ export function Inspector({
         </div>
       </section>
       <section className="inspector-section">
-        <h3 className="inspector-heading">VOCABULARY</h3>
+        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>VOCABULARY</h3>
         <p className="placeholder-text">Terrain vocabulary placeholder (Phase 5)</p>
       </section>
     </div>
@@ -48,7 +48,7 @@ export function Inspector({
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-heading">FEATURE PROPERTIES</h3>
+          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>FEATURE PROPERTIES</h3>
           <div className="inspector-row">
             <label>ID</label>
             <span className="font-mono">{feature.id || '-'}</span>
@@ -63,7 +63,7 @@ export function Inspector({
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-heading">GEOMETRY</h3>
+          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>GEOMETRY</h3>
           <div className="inspector-row">
             <label>At</label>
             <span className="font-mono">{feature.at}</span>
@@ -80,14 +80,14 @@ export function Inspector({
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-heading">COORDINATE</h3>
+          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>COORDINATE</h3>
           <div className="inspector-row">
             <label>Label</label>
             <span className="font-mono">{state.label}</span>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-heading">TERRAIN</h3>
+          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>TERRAIN</h3>
           <div className="inspector-row">
             <label>Name</label>
             <span>{state.terrain}</span>
@@ -95,13 +95,13 @@ export function Inspector({
           <div className="inspector-row">
             <label>Color</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '12px', height: '12px', background: state.terrainColor, border: '1px solid #444' }} />
+              <div style={{ width: '12px', height: '12px', background: state.terrainColor, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 0 4px rgba(0,0,0,0.5)' }} />
               <span className="font-mono">{state.terrainColor}</span>
             </div>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-heading">CONTRIBUTING FEATURES</h3>
+          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>CONTRIBUTING FEATURES</h3>
           <ul className="inspector-list">
             {state.contributingFeatures.map((f) => (
               <li 
@@ -115,7 +115,7 @@ export function Inspector({
           </ul>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-heading">NEIGHBORS</h3>
+          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>NEIGHBORS</h3>
           <div className="neighbor-grid">
             {state.neighborLabels.map((l) => (
               <span key={l} className="font-mono">{l}</span>
@@ -129,14 +129,14 @@ export function Inspector({
   const renderEdge = (boundaryId: string, hexLabels: [string, string | null]) => (
     <div className="inspector-content">
       <section className="inspector-section">
-        <h3 className="inspector-heading">BOUNDARY</h3>
+        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>BOUNDARY</h3>
         <div className="inspector-row">
           <label>ID</label>
           <span className="font-mono text-xs">{boundaryId}</span>
         </div>
       </section>
       <section className="inspector-section">
-        <h3 className="inspector-heading">ADJACENT HEXES</h3>
+        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>ADJACENT HEXES</h3>
         <div className="inspector-row">
           <label>Hex A</label>
           <span className="font-mono">{hexLabels[0]}</span>
@@ -154,14 +154,14 @@ export function Inspector({
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-heading">JUNCTION</h3>
+          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>JUNCTION</h3>
           <div className="inspector-row">
             <label>ID</label>
             <span className="font-mono text-xs">{vertexId}</span>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-heading">MEETING HEXES</h3>
+          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>MEETING HEXES</h3>
           <ul className="inspector-list">
             {meetingHexes.map((l) => (
               <li key={l} className="font-mono">{l}</li>

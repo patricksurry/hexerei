@@ -6,11 +6,12 @@
 
 .inspector-header {
   padding: var(--space-md);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border-subtle);
+  text-transform: uppercase;
+  color: var(--accent-hex);
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--border-accent);
 }
 
 .inspector-content {
@@ -74,6 +75,7 @@
 }
 .clickable:hover {
   color: var(--accent-hex);
+  text-shadow: 0 0 6px var(--accent-hex-glow);
 }
 
 .inspector-list {

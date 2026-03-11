@@ -1,0 +1,35 @@
+:root {
+  /* Typography */
+  --font-ui: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 15px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  /* Layout */
+  --panel-left-width: 240px;
+  --panel-right-width: 280px;
+  --command-bar-height: 40px;
+  --status-bar-height: 28px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--font-size-md);
+}
+
+code, pre {
+  font-family: var(--font-mono);
+}

@@ -122,14 +122,14 @@ export function highlightsForSelection(
       if (id2 && id2 !== 'VOID' && !id2.startsWith('dir')) hexIds.push(id2);
       
       return [
-        { type: 'edge', boundaryId: selection.boundaryId, hexIds: [], color: '#FF3DFF', style: 'select' },
-        { type: 'hex', hexIds, color: '#FF3DFF', style: 'hover' } // Subtle background
+        { type: 'edge', boundaryId: selection.boundaryId, hexIds: [], color: '#FF44FF', style: 'select' },
+        { type: 'hex', hexIds, color: '#FF44FF', style: 'hover' } // Subtle background
       ];
     case 'vertex':
       const ids = selection.vertexId.split('^');
       return [
-        { type: 'vertex', vertexId: selection.vertexId, hexIds: [], color: '#FFD600', style: 'select' },
-        { type: 'hex', hexIds: ids, color: '#FFD600', style: 'hover' } // Subtle background
+        { type: 'vertex', vertexId: selection.vertexId, hexIds: [], color: '#FFDD00', style: 'select' },
+        { type: 'hex', hexIds: ids, color: '#FFDD00', style: 'hover' } // Subtle background
       ];
     case 'feature':
       const featureHexIds = selection.indices.flatMap(idx => model.hexIdsForFeature(idx));
@@ -144,4 +144,13 @@ export function highlightsForHover(
   if (hoverIndex === null) return [];
   const hexIds = model.hexIdsForFeature(hoverIndex);
   return [{ type: 'hex', hexIds, color: '#00D4FF', style: 'hover' }];
+}
+
+export function highlightsForCursor(
+  cursorHexId: string | null,
+  model: MapModel
+): SceneHighlight[] {
+  if (cursorHexId === null) return [];
+  if (!model.mesh.getHex(cursorHexId)) return [];
+  return [{ type: 'hex', hexIds: [cursorHexId], color: '#00D4FF', style: 'hover' }];
 }

@@ -16,10 +16,12 @@ export function StatusBar({
   return (
     <div className="status-bar">
       <div className="status-segment status-cursor font-mono">
-        {cursor}
+        <span style={{ color: 'var(--text-muted)', marginRight: '8px', fontSize: '10px' }}>POS</span>
+        <span style={{ color: 'var(--text-primary)' }}>{cursor}</span>
       </div>
       <div className="status-segment status-zoom font-mono">
-        {zoom}%
+        <span style={{ color: 'var(--text-muted)', marginRight: '8px', fontSize: '10px' }}>ZOOM</span>
+        <span style={{ color: 'var(--text-primary)' }}>{zoom}%</span>
       </div>
       <div className="status-segment status-title">
         {mapTitle}

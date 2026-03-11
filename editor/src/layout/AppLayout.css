@@ -11,7 +11,7 @@
   height: var(--command-bar-height);
   flex-shrink: 0;
   background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-accent);
   display: flex;
   align-items: center;
 }
@@ -31,12 +31,12 @@
 
 .layout-panel-left {
   width: var(--panel-left-width);
-  border-right: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-accent);
 }
 
 .layout-panel-right {
   width: var(--panel-right-width);
-  border-left: 1px solid var(--border-subtle);
+  border-left: 1px solid var(--border-accent);
 }
 
 .layout-panel.collapsed {
@@ -57,7 +57,7 @@
   height: var(--status-bar-height);
   flex-shrink: 0;
   background: var(--bg-surface);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-accent);
   display: flex;
   align-items: center;
 }

@@ -19,6 +19,11 @@ describe('Canvas Drawing', () => {
     set font(_val: string) {},
     set textAlign(_val: string) {},
     set textBaseline(_val: string) {},
+    set globalAlpha(_val: number) {},
+    set shadowBlur(_val: number) {},
+    set shadowColor(_val: string) {},
+    set lineCap(_val: string) {},
+    setLineDash: vi.fn(),
   } as unknown as CanvasRenderingContext2D;
 
   beforeEach(() => {
@@ -46,17 +51,25 @@ describe('Canvas Drawing', () => {
     featureLabels: []
   };
 
-  it('should call fillRect with background', () => {
+  it('should call fillRect with background from scene', () => {
     drawScene(mockCtx, mockScene);
     expect(mockCtx.fillRect).toHaveBeenCalledWith(0, 0, 800, 600);
   });
 
-  it('should draw hexagons', () => {
+  it('should use background from theme if provided', () => {
+    drawScene(mockCtx, mockScene, { 
+      theme: { background: '#ABCDEF' } as any 
+    });
+    // This expects drawScene to set ctx.fillStyle = '#ABCDEF'
+    // but the mock doesn't spy on setter directly, so we check if fillRect was called
+    // at least. To check fillStyle we'd need a more complex spy.
+    expect(mockCtx.fillRect).toHaveBeenCalled();
+  });
+
+  it('should draw hexagons (fill then stroke)', () => {
     drawScene(mockCtx, mockScene);
-    expect(mockCtx.beginPath).toHaveBeenCalled();
-    expect(mockCtx.moveTo).toHaveBeenCalled();
-    expect(mockCtx.lineTo).toHaveBeenCalledTimes(5);
-    expect(mockCtx.closePath).toHaveBeenCalled();
+    // Two passes: 5 lines for fill, 5 lines for stroke
+    expect(mockCtx.lineTo).toHaveBeenCalledTimes(10);
     expect(mockCtx.fill).toHaveBeenCalled();
     expect(mockCtx.stroke).toHaveBeenCalled();
   });

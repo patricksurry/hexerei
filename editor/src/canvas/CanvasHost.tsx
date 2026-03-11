@@ -10,19 +10,27 @@ import {
 } from '../model/viewport.js';
 import { HEX_SIZE, hexAtScreen, hitTest } from '../model/hit-test.js';
 import { buildScene } from '../model/scene.js';
-import { drawScene } from './draw.js';
+import { drawScene, CanvasTheme } from './draw.js';
 import { SceneHighlight } from '../model/selection.js';
 import { HitResult } from '../types.js';
 import './CanvasHost.css';
 
-interface CanvasHostProps {
-  model: MapModel | null;
-  onCursorHex?: (label: string | null) => void;
-  onZoomChange?: (zoom: number) => void;
-  onHitTest?: (result: HitResult) => void;
-  onNavigate?: (direction: number) => void;
-  highlights?: SceneHighlight[];
-  segmentPath?: string[];
+function resolveTheme(el: HTMLElement): CanvasTheme {
+  const style = getComputedStyle(el);
+  const getProp = (name: string) => style.getPropertyValue(name).trim();
+
+  return {
+    background: getProp('--bg-canvas') || getProp('--bg-base') || '#141414',
+    gridStroke: getProp('--border-accent') || getProp('--border-subtle') || '#3A3A3A',
+    gridLineWidth: 0.75, // Default for sandtable, maybe make this a token too
+    terrainOpacity: 0.6, // Default for sandtable
+    labelColor: getProp('--text-secondary') || '#888888',
+    labelGlow: getProp('--text-glow') !== 'transparent' ? getProp('--text-glow') : null,
+    selectionGlow: 8,
+    hoverGlow: 4,
+    featureLabelColor: getProp('--text-primary') || '#ffffff',
+    featureLabelShadow: 'true' // simplified
+  };
 }
 
 export interface CanvasHostRef {
@@ -96,9 +104,9 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
     return () => observer.disconnect();
   }, [model, computeFit, onZoomChange]);
 
-  // Draw: rebuild scene and paint
+    // Draw: rebuild scene and paint
   useEffect(() => {
-    if (!model || !viewport || !canvasRef.current) return;
+    if (!model || !viewport || !canvasRef.current || !containerRef.current) return;
     
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
@@ -110,12 +118,12 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(({
     canvasRef.current.style.height = viewport.height + 'px';
     ctx.scale(dpr, dpr);
     
-    const bg = getComputedStyle(containerRef.current!).getPropertyValue('--bg-base').trim() || '#141414';
-    const scene = buildScene(model, viewport, bg, highlights, segmentPath);
+    const theme = resolveTheme(containerRef.current);
+    const scene = buildScene(model, viewport, theme.background, highlights, segmentPath);
 
     drawScene(ctx, scene, { 
         labelMinZoom: 12, 
-        labelColor: getComputedStyle(containerRef.current!).getPropertyValue('--text-secondary') || '#888888' 
+        theme
     });
   }, [model, viewport, highlights, segmentPath]);
 

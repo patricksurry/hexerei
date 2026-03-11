@@ -50,8 +50,8 @@ export function FeatureStack({
               />
               <div className="feature-info">
                 <div className="feature-label truncate">{label}</div>
-                <div className="feature-at font-mono truncate">
-                  {feature.at}{feature.isBase ? ' (base)' : ''}
+                <div className="feature-at font-mono truncate" style={{ color: 'rgba(0, 180, 220, 0.5)' }}>
+                  {feature.at}<span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>{feature.isBase ? '(base)' : ''}</span>
                 </div>
               </div>
             </li>

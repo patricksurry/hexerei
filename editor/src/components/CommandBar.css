@@ -19,7 +19,8 @@
 
 .mode-badge.mode-command {
   color: var(--accent-command);
-  background: rgba(0, 212, 255, 0.1);
+  background: rgba(0, 212, 255, 0.15);
+  text-shadow: 0 0 4px var(--accent-hex-glow);
 }
 
 .mode-badge.mode-search {
@@ -74,8 +75,8 @@
 }
 
 .command-bar:focus-within {
-  outline: 2px solid var(--accent-command);
-  outline-offset: -2px;
+  border-bottom: 1px solid var(--accent-hex);
+  box-shadow: 0 1px 8px var(--accent-hex-glow);
 }
 
 .command-bar-wrapper {

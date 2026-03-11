@@ -12,3 +12,4 @@
 | `hexmap-schema-tdd` | HexMap Schema Verification & TDD | [./tracks/hexmap-schema-tdd/index.md](./tracks/hexmap-schema-tdd/index.md) | `completed` |
 | `orientation-unification` | Orientation Unification & Nudge Refactoring | [./tracks/orientation-unification/](./tracks/orientation-unification/index.md) | `todo` |
 | `editor-phase-5` | Editor Phase 5: Bug Fixes & UX Polish | [./tracks/editor-phase-5/](./tracks/editor-phase-5/index.md) | `todo` |
+| `editor-visual-identity-sandtable` | Visual Identity: Sand Table Overhaul | [./tracks/editor-visual-identity-sandtable/](./tracks/editor-visual-identity-sandtable/index.md) | `completed` |
