@@ -22,8 +22,6 @@ conversion between types (e.g., using hex coordinates to select edges).
 An expression MUST contain at least one absolute atom or a reference. This
 atom acts as the "Type Anchor" for the entire expression.
 
-PDS: should define relative atoms before we talk about anchors?
-
 *   **Floating Anchor Resolution**: Relative steps can appear anywhere, including
     before the first absolute atom (e.g., `1n 0101`). If an expression starts with
     relative steps, they are tracked as offsets from a virtual origin until the
@@ -97,8 +95,6 @@ Relative steps move the cursor and are resolved to absolute coordinates. Their c
 *   `a1 3n` — jump: `a1` and the hex 3 steps north are separate items
 
 **Direction validity depends on orientation:**
-
-PDS: clarify - compass directions are case insensitive.  also user labels?
 
 *   **Flat-top** (`flat-down`, `flat-up`): Valid directions are `n`, `ne`, `se`, `s`, `sw`, `nw`. Using `e` or `w` is a **parse error**.
 *   **Pointy-top** (`pointy-right`, `pointy-left`): Valid directions are `e`, `ne`, `nw`, `w`, `sw`, `se`. Using `n` or `s` is a **parse error**.

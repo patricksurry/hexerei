@@ -8,6 +8,7 @@ export interface HexPathResult {
     type: GeometryType;
     items: string[];       // deduplicated set of all resolved IDs
     path?: string[];       // traversal order, preserving repeated visits (for line drawing)
+    segments?: string[][]; // ordered segments, split at jumps/keywords/excludes
 }
 
 /**

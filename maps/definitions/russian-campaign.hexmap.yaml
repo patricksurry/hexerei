@@ -17,7 +17,7 @@ metadata:
 
 layout:
   hex_top: flat
-  hexes: "0101 4301 4332 0132 !"
+  hexes: "0101 - 4301 - 4332 - 0132 fill"
   stagger: high
   label: XXYY
   origin: top-left
@@ -88,7 +88,7 @@ features:
   # Terrain Features
   
   # Pripet Marshes (Central Swamp)
-  - at: "1420 - 1820 - 1823 - 1423 fill exclude 1621 - 1622" # N20 - R23, minus clear pockets
+  - at: "1420 - 1820 - 1823 - 1423 fill exclude 1621, 1622" # N20 - R23, minus clear pockets
     terrain: swamp
     label: "Pripet Marshes"
 

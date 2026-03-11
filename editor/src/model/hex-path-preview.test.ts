@@ -7,7 +7,7 @@ hexmap: "1.0"
 layout:
   orientation: flat-down
   label: XXYY
-  all: "0101 0303 !"
+  all: "0101 - 0303 fill"
 `;
 
 describe('HexPath Preview', () => {

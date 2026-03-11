@@ -14,7 +14,7 @@ metadata:
 
 layout:
   orientation: flat-up
-  all: "0101 1401 1411 0111 ! - 0211, 0411, 0611, 0811, 1011, 1211, 1411"
+  all: "0101 - 1401 - 1411 - 0111 fill exclude 0211, 0411, 0611, 0811, 1011, 1211, 1411"
   coordinates:
     label: CCRR
     origin: top-left
