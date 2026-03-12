@@ -16,7 +16,7 @@ metadata:
 layout:
   orientation: flat-down
   label: XXYY
-  all: "0101 0501 0505 0105 !"
+  all: "0101 - 0501 - 0505 - 0105 fill"
 terrain:
   hex:
     clear: { style: { color: "#ffffff" } }

@@ -7,7 +7,7 @@ hexmap: "1.0"
 layout:
   orientation: flat-down
   label: XXYY
-  all: "0101 0303 !"
+  all: "0101 - 0303 fill"
 `;
 
 describe('HexPath Preview', () => {
@@ -21,7 +21,7 @@ describe('HexPath Preview', () => {
   });
 
   it('should resolve a path', () => {
-    const result = parseHexPathInput('0101 0103', model);
+    const result = parseHexPathInput('0101 - 0103', model);
     expect(result.hexIds).toHaveLength(3);
     expect(result.error).toBeUndefined();
   });

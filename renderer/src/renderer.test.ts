@@ -83,7 +83,7 @@ describe('HexRenderer (Headless)', () => {
     });
 
     it('should support highlights', () => {
-        const mesh = HexMapLoader.load('hexmap: "1.0"\nlayout:\n  all: "0101 0202 !"');
+        const mesh = HexMapLoader.load('hexmap: "1.0"\nlayout:\n  all: "0101 - 0202 fill"');
         const renderer = new HexRenderer(mesh, {
             element: container,
             width: 800,

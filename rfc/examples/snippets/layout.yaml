@@ -1,6 +1,6 @@
 layout:
   orientation: flat-down
-  all: "0101 2201 2215 0115 !" # 22x15 rectangle
+  all: "0101 - 2201 - 2215 - 0115 fill" # 22x15 rectangle
   label: XXYY
   origin: top-left
   georef:

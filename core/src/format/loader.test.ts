@@ -38,7 +38,7 @@ describe('HexMapLoader - Format Compatibility', () => {
 hexmap: "1.0"
 layout:
   orientation: flat-down
-  all: "0101 0301 0303 0103 !"
+  all: "0101 - 0301 - 0303 - 0103 fill"
 `;
         const mesh = HexMapLoader.load(source);
         expect(Array.from(mesh.getAllHexes())).toHaveLength(9);

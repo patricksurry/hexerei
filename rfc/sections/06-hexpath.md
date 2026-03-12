@@ -22,8 +22,6 @@ conversion between types (e.g., using hex coordinates to select edges).
 An expression MUST contain at least one absolute atom or a reference. This
 atom acts as the "Type Anchor" for the entire expression.
 
-PDS: should define relative atoms before we talk about anchors?
-
 *   **Floating Anchor Resolution**: Relative steps can appear anywhere, including
     before the first absolute atom (e.g., `1n 0101`). If an expression starts with
     relative steps, they are tracked as offsets from a virtual origin until the
@@ -39,45 +37,46 @@ PDS: should define relative atoms before we talk about anchors?
 
 ### Connectivity and Operators
 
-*   **Space (` `)**: **Shortest Path.** Connects the previous cursor to the next
-    atom by drawing a notional straight line between their centers (analogous
-    to line-of-sight in wargame terms) and selecting the nearest hex, edge, or
-    vertex to that line at each step. When two candidates are equidistant, the
-    path bias (see Section 7) resolves the tie deterministically.
+Connectors (`-` and `~`) are infix operators. Whitespace is allowed around connectors and is ignored in that context. Whitespace *between two atoms without a connector* acts as a separator (jump).
 
-*   **Flip operator (`~`)**: A prefix on a destination coordinate that inverts
-    the path bias for the arriving segment. The default bias is derived from
-    the grid's orientation and segment endpoints (see Section 7). `~` only
-    affects the single segment arriving at the prefixed coordinate — it is not
-    a modal switch.
-    *   Example: `0101 ~0303` arrives with flipped bias; `0101 0303` uses default.
-    *   `~` on the first coordinate in an expression has no effect (no incoming segment).
-    *   `~` on a non-ambiguous path or singleton has no effect (no tie to resolve).
+*   **Standard Connection (`-`)**: Shortest path from the previous cursor to the next atom using the default path bias.
+*   **Flipped Connection (`~`)**: Shortest path from the previous cursor to the next atom using the flipped path bias.
+*   **Jump (Whitespace or `,`)**: Ends the current segment. The next atom starts a new segment without a connecting path.
+*   **Include Mode (`include`)**: Modal switch. Adds subsequent items to the collection (default). Implies a segment boundary.
+*   **Exclude Mode (`exclude`)**: Modal switch. Subtracts subsequent items from the collection. Implies a segment boundary.
+*   **Closure (`close` / `~close`)**: Connects the cursor back to the start of the current segment and ends the segment. `~close` uses the flipped path bias.
+*   **Fill (`fill` / `~fill`)**: Closes the segment and adds all items contained within the resulting boundary to the collection. `~fill` uses the flipped path bias.
 
-*   **Comma (`,`)**: **Jump.** Ends the current segment. The next atom adds to
-    the collection without a connecting path from the previous cursor.
+**Label Precedence:**
+When `-` appears inside a token that matches a valid coordinate label (e.g., `board1-a3`), the label interpretation takes precedence. Authors can disambiguate by adding spaces: `board1 - a3`.
 
-*   **Semicolon (`;`)**: **Close.** Connects the current cursor back to the
-    start of the current segment and ends the segment.
-    The closing segment uses the default path bias unless `~` is prefixed
-    directly before the `;` (written `~;`), which inverts the bias for that
-    closing segment only.
+### Formal Evaluation Model
 
-*   **Exclamation (`!`)**: **Close & Fill.** Closes the segment (like `;`) and
-    then adds all items contained within the resulting boundary to the collection.
-    The fill operation uses the same geometry type as the expression:
-    *   A hex path fills with all hexes within the closed boundary.
-    *   An edge path fills with all interior edges within the boundary.
-    *   A vertex path fills with all interior vertices within the boundary.
+A HexPath resolves to a **Geometry Collection**: an ordered list of **Segments**, each a contiguous sequence of atoms.
 
-*   **Plus (`+`)**: **Include Mode.** (Default) Switches the cursor to add
-    subsequent atoms and paths to the collection.
+#### 1. Segments
 
-*   **Minus (`-`)**: **Exclude Mode.** Switches the cursor to subtract
-    subsequent atoms and paths from the collection.
+*   A segment is built by appending atoms to the current active segment.
+*   **Connectors** (`-`, `~`) route from the cursor to the next atom and append all intermediate atoms (including the destination) to the segment.
+*   **Jumps** (whitespace or `,`) terminate the current segment. The next atom starts a new segment.
+*   Keywords `include`, `exclude`, `close`, `fill` also terminate the current segment.
 
-The `+` and `-` operators are **modal switches**. They affect all following
-segments until the mode is changed again.
+#### 2. Include / Exclude
+
+`include` and `exclude` are modal switches that affect how subsequent atoms are applied to the collection.
+
+*   **`exclude`** marks all subsequent atoms for subtraction. If an excluded atom already exists in the collection, the segment containing it is **split** at that point.
+*   **`include`** (the default) marks subsequent atoms for addition.
+*   Both keywords imply a segment boundary — the current segment is closed before the mode changes.
+
+#### 3. Close and Fill
+
+*   **`close`** connects the cursor back to the current segment's anchor (its first atom) and ends the segment. `~close` uses flipped bias for the closing path.
+*   **`fill`** does the same as `close`, then adds all interior atoms of the active geometry type within the closed boundary (typically in scanline order). `~fill` uses flipped bias for the closing path.
+
+#### 4. Order Preservation
+
+The resolution process preserves the order of atoms as defined by path segments, minus any atoms removed by `exclude`.
 
 ### Relative Steps and Direction Validation
 
@@ -90,24 +89,19 @@ A relative step moves the cursor by one or more hexes in a compass direction:
 The `*` form is used when a count+direction could be confused with a
 coordinate label (e.g., `3s` might look like an alpha coordinate).
 
+Relative steps move the cursor and are resolved to absolute coordinates. Their connectivity is determined by context — a preceding `-` or `~` connects; otherwise they start a new segment:
+
+*   `a1 - 3n` — connected path from `a1`, 3 steps north
+*   `a1 3n` — jump: `a1` and the hex 3 steps north are separate items
+
 **Direction validity depends on orientation:**
 
-PDS: clarify - compass directions are case insensitive.  also user labels?
-
-*   **Flat-top** (`flat-down`, `flat-up`): Valid directions are `n`, `ne`,
-    `se`, `s`, `sw`, `nw`. Using `e` or `w` is a **parse error** — flat-top
-    hexes have no neighbor in the pure east/west direction.
-
-*   **Pointy-top** (`pointy-right`, `pointy-left`): Valid directions are
-    `e`, `ne`, `nw`, `w`, `sw`, `se`. Using `n` or `s` is a **parse error** —
-    pointy-top hexes have no neighbor in the pure north/south direction.
-
-Compound directions (`ne`, `se`, `sw`, `nw`) are always valid for both
-orientations but map to different neighbor vectors depending on orientation.
+*   **Flat-top** (`flat-down`, `flat-up`): Valid directions are `n`, `ne`, `se`, `s`, `sw`, `nw`. Using `e` or `w` is a **parse error**.
+*   **Pointy-top** (`pointy-right`, `pointy-left`): Valid directions are `e`, `ne`, `nw`, `w`, `sw`, `se`. Using `n` or `s` is a **parse error**.
 
 ### Example: A Forested Ridge with a Clearing
 ```yaml
 features:
-  - at: "0105 1005 - 0505"   # A path of forest hexes, minus one hex
+  - at: "0105 - 1005 exclude 0505"   # A path of forest hexes, minus one hex
     terrain: forest
 ```

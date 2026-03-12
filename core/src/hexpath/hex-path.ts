@@ -3,8 +3,8 @@ import { MeshMap } from '../mesh/types.js';
 import { HexPathResult, GeometryType } from './types.js';
 
 enum ParseMode {
-    ADD = '+',
-    SUB = '-'
+    ADD = 'include',
+    SUB = 'exclude'
 }
 
 interface Cursor {
@@ -14,8 +14,7 @@ interface Cursor {
     mode: ParseMode;
     floatingSteps: { dir: number, count: number }[];
     currentSegment: string[];
-    isContinuation: boolean;
-    flipNudge: boolean;
+    pendingConnector: 'none' | 'standard' | 'flipped';
 }
 
 export interface HexPathOptions {
@@ -49,12 +48,14 @@ export class HexPath {
         if (path === '@all') {
             return {
                 type: 'hex',
-                items: Array.from(this.mesh.getAllHexes()).map(a => a.id)
+                items: Array.from(this.mesh.getAllHexes()).map(a => a.id),
+                segments: []
             };
         }
 
         const items = new Set<string>();
-        const pathOrder: string[] = [];  // traversal order, preserving repeated visits
+        const pathOrder: string[] = [];
+        const segments: string[][] = [];
         const cursor: Cursor = {
             lastHex: null,
             segmentStart: null,
@@ -62,108 +63,166 @@ export class HexPath {
             mode: ParseMode.ADD,
             floatingSteps: [],
             currentSegment: [],
-            isContinuation: false,
-            flipNudge: false
+            pendingConnector: 'none'
         };
 
         const tokens = this.tokenize(path);
 
+        /** Remove all occurrences of an id from pathOrder */
+        const removeFromPathOrder = (id: string) => {
+            let idx;
+            while ((idx = pathOrder.indexOf(id)) !== -1) {
+                pathOrder.splice(idx, 1);
+            }
+        };
+
+        /** Remove excluded IDs from existing segments, splitting as needed */
+        const splitSegmentsOnExclude = (excludedIds: Set<string>) => {
+            const newSegments: string[][] = [];
+            for (const seg of segments) {
+                let current: string[] = [];
+                for (const id of seg) {
+                    if (excludedIds.has(id)) {
+                        if (current.length > 0) {
+                            newSegments.push(current);
+                            current = [];
+                        }
+                    } else {
+                        current.push(id);
+                    }
+                }
+                if (current.length > 0) {
+                    newSegments.push(current);
+                }
+            }
+            segments.length = 0;
+            segments.push(...newSegments);
+        };
+
         const applyIds = (ids: string[]) => {
             if (cursor.mode === ParseMode.ADD) {
                 ids.forEach(id => { items.add(id); pathOrder.push(id); });
+                cursor.currentSegment.push(...ids);
             } else {
-                ids.forEach(id => items.delete(id));
+                const excludedSet = new Set<string>();
+                ids.forEach(id => {
+                    items.delete(id);
+                    removeFromPathOrder(id);
+                    excludedSet.add(id);
+                });
+                splitSegmentsOnExclude(excludedSet);
             }
-            cursor.currentSegment.push(...ids);
+        };
+
+        /** Flush the current segment to the segments array */
+        const flushSegment = () => {
+            if (cursor.currentSegment.length > 0) {
+                segments.push([...cursor.currentSegment]);
+            }
+        };
+
+        const handleCloseOrFill = (flip: boolean, doFill: boolean) => {
+            if (cursor.segmentStart && cursor.lastHex) {
+                const pathBack = this.resolveShortestPath(cursor.lastHex, cursor.segmentStart, flip);
+                const ids = pathBack.slice(1).map(c => this.formatId(c, cursor.type));
+                applyIds(ids);
+                
+                if (doFill) {
+                    const interior = this.fill(cursor.currentSegment);
+                    if (cursor.mode === ParseMode.ADD) {
+                        interior.forEach(id => items.add(id));
+                    } else {
+                        interior.forEach(id => {
+                            items.delete(id);
+                            removeFromPathOrder(id);
+                        });
+                    }
+                }
+            }
+            flushSegment();
+            cursor.lastHex = null;
+            cursor.segmentStart = null;
+            cursor.currentSegment = [];
+            cursor.pendingConnector = 'none';
         };
 
         for (const token of tokens) {
-            // Handle Modal Switches
-            if (token === '+') {
+            if (token === 'include') {
+                flushSegment();
                 cursor.mode = ParseMode.ADD;
-                cursor.isContinuation = false; 
+                cursor.lastHex = null;
+                cursor.segmentStart = null;
+                cursor.currentSegment = [];
                 continue;
             }
-            if (token === '-') {
+            if (token === 'exclude') {
+                flushSegment();
                 cursor.mode = ParseMode.SUB;
-                cursor.isContinuation = false; 
-                continue;
-            }
-
-            // Handle Flip Nudge
-            if (token === '~') {
-                cursor.flipNudge = true;
-                continue;
-            }
-
-            // Handle Jump
-            if (token === ',') {
                 cursor.lastHex = null;
                 cursor.segmentStart = null;
                 cursor.currentSegment = [];
-                cursor.isContinuation = false;
                 continue;
             }
-
-            // Handle Close (;) and Close & Fill (!)
-            if (token === ';' || token === '!') {
-                if (cursor.segmentStart && cursor.lastHex) {
-                    const pathBack = this.resolveShortestPath(cursor.lastHex, cursor.segmentStart, cursor.flipNudge);
-                    const ids = pathBack.slice(1).map(c => this.formatId(c, cursor.type));
-                    cursor.flipNudge = false;
-                    applyIds(ids);
-                    
-                    if (token === '!') {
-                        const interior = this.fill(cursor.currentSegment);
-                        if (cursor.mode === ParseMode.ADD) {
-                            interior.forEach(id => items.add(id));
-                        } else {
-                            interior.forEach(id => items.delete(id));
-                        }
-                    }
+            if (token === '-' || token === '~') {
+                // Validate: no consecutive connectors
+                if (cursor.pendingConnector !== 'none') {
+                    throw new Error(`Consecutive connectors: '${token}' follows a pending connector`);
                 }
+                // Allow connector when floating steps are pending (e.g. '1n - 0101')
+                // Validate: connector requires a left-hand operand (or pending floating steps)
+                if (cursor.lastHex === null && cursor.floatingSteps.length === 0) {
+                    throw new Error(`Connector '${token}' has no left-hand operand`);
+                }
+                cursor.pendingConnector = token === '-' ? 'standard' : 'flipped';
+                continue;
+            }
+            if (token === ',') {
+                flushSegment();
                 cursor.lastHex = null;
                 cursor.segmentStart = null;
                 cursor.currentSegment = [];
-                cursor.isContinuation = false;
+                cursor.pendingConnector = 'none';
                 continue;
             }
 
-            // Handle Relative Steps: e.g. 3ne, 1sw, 3*s
+            if (token === 'close') { handleCloseOrFill(false, false); continue; }
+            if (token === '~close') { handleCloseOrFill(true, false); continue; }
+            if (token === 'fill') { handleCloseOrFill(false, true); continue; }
+            if (token === '~fill') { handleCloseOrFill(true, true); continue; }
+
             const stepMatch = token.match(/^(\d*)\*?(n|ne|se|s|sw|nw|e|w)$/i);
             if (stepMatch) {
                 const count = parseInt(stepMatch[1] || '1');
                 const dir = this.parseDirection(stepMatch[2]);
-                cursor.flipNudge = false; // Reset if leading ~ followed by step? 
-                // Plan doesn't specify ~ on steps, but let's reset just in case.
-
-
                 if (cursor.lastHex) {
+                    if (cursor.pendingConnector === 'none') {
+                        flushSegment();
+                        cursor.segmentStart = null;
+                        cursor.currentSegment = [];
+                    }
+                    // Capture the first stepped hex for correct segment anchor
+                    let firstStepped: Hex.Cube | null = null;
                     for (let i = 0; i < count; i++) {
                         cursor.lastHex = Hex.hexNeighbor(cursor.lastHex, dir);
+                        if (i === 0) firstStepped = cursor.lastHex;
                         applyIds([this.formatId(cursor.lastHex, cursor.type)]);
                     }
-                    cursor.isContinuation = true;
+                    if (!cursor.segmentStart && firstStepped) cursor.segmentStart = firstStepped;
                 } else {
                     cursor.floatingSteps.push({ dir, count });
                 }
+                cursor.pendingConnector = 'none';
                 continue;
             }
 
-            // Resolve Atom (Absolute Coordinate or Reference)
             const resolved = this.resolveAtom(token);
             if (resolved) {
                 const { id, type } = resolved;
-                
-                if (cursor.type === null) {
-                    cursor.type = type;
-                } else if (cursor.type !== type) {
-                    throw new Error(`Inconsistent geometry type: expected ${cursor.type}, got ${type}`);
-                }
+                if (cursor.type === null) cursor.type = type;
+                else if (cursor.type !== type) throw new Error(`Inconsistent geometry type: expected ${cursor.type}, got ${type}`);
 
                 const cube = this.getCubeFromId(id);
                 
-                // Resolve Floating Steps
                 if (cursor.lastHex === null && cursor.floatingSteps.length > 0) {
                     let startPoint = cube;
                     for (let i = cursor.floatingSteps.length - 1; i >= 0; i--) {
@@ -184,50 +243,68 @@ export class HexPath {
                         }
                     }
                     cursor.floatingSteps = [];
-                    cursor.isContinuation = true;
                 }
 
-                if (cursor.lastHex && cursor.isContinuation) {
-                    const pathBetween = this.resolveShortestPath(cursor.lastHex, cube, cursor.flipNudge);
+                if (cursor.lastHex && cursor.pendingConnector !== 'none') {
+                    const flip = cursor.pendingConnector === 'flipped';
+                    const pathBetween = this.resolveShortestPath(cursor.lastHex, cube, flip);
                     applyIds(pathBetween.slice(1).map(c => this.formatId(c, cursor.type)));
                 } else {
+                    flushSegment();
+                    cursor.segmentStart = cube;
+                    cursor.currentSegment = [];
                     applyIds([id]);
-                    if (!cursor.segmentStart) cursor.segmentStart = cube;
                 }
-
                 cursor.lastHex = cube;
-                cursor.isContinuation = true;
-                cursor.flipNudge = false; // Reset after atom
+                cursor.pendingConnector = 'none';
+            } else {
+                throw new Error(`Unrecognized token: '${token}'`);
             }
         }
+
+        // Flush final segment
+        flushSegment();
 
         return {
             type: cursor.type || 'hex',
             items: Array.from(items),
-            path: pathOrder
+            path: pathOrder,
+            segments
         };
     }
 
+    /** Purely syntactic check — does NOT call resolveAtom */
+    private isAtomLike(token: string): boolean {
+        // Relative steps: 3n, 2ne, sw, 3*s, etc.
+        if (/^(\d*)\*?(n|ne|se|s|sw|nw|e|w)$/i.test(token)) return true;
+        // Cube coordinates: -1,2,-1
+        if (/^-?\d+,-?\d+,-?\d+$/.test(token)) return true;
+        // CCRR coordinates: 0101, 0101/N, 0101.N, 0101@2
+        if (/^\d{4}(?:[/.@].*)?$/.test(token)) return true;
+        // Alpha coordinates: a1, B10, a1/N, a1.N, a1@2
+        if (/^[a-z]+\d+(?:[/.@].*)?$/i.test(token)) return true;
+        // Quoted labels: 'some label'
+        if (/^'[^']*'$/.test(token)) return true;
+        return false;
+    }
+
     private tokenize(path: string): string[] {
+        const rawTokens = path.split(/\s+/).filter(t => t.length > 0);
         const tokens: string[] = [];
-        let current = '';
-        for (let i = 0; i < path.length; i++) {
-            const char = path[i];
-            if (/\s/.test(char)) {
-                if (current) tokens.push(current);
-                current = '';
-            } else if (char === ',' || char === ';' || char === '!' || char === '+' || char === '-' || char === '~') {
-                if (current) tokens.push(current);
-                tokens.push(char);
-                current = '';
-            } else if (char === '>') {
-                if (current) tokens.push(current);
-                current = char;
-            } else {
-                current += char;
+        
+        for (const t of rawTokens) {
+            const tl = t.toLowerCase();
+            if (/^(include|exclude|close|~close|fill|~fill|-|~|,)$/i.test(tl)) {
+                tokens.push(tl);
+                continue;
             }
+            if (this.isAtomLike(t)) {
+                tokens.push(t);
+                continue;
+            }
+            const pieces = t.split(/([,\-~])/).filter(p => p.length > 0);
+            tokens.push(...pieces);
         }
-        if (current) tokens.push(current);
         return tokens;
     }
 
@@ -240,7 +317,7 @@ export class HexPath {
         }
 
         // Alpha1 notation (e.g. A1, B10)
-        const alphaMatch = token.match(/^([a-z]+)(\d+)(?:\/|\.|@)?(.*)$/i);
+        const alphaMatch = token.match(/^([a-z]+)(\d+)(?:(?:\/|\.|@)(.*))?$/i);
         if (alphaMatch) {
             const colStr = alphaMatch[1].toLowerCase();
             const row = parseInt(alphaMatch[2]);
@@ -273,7 +350,7 @@ export class HexPath {
         }
 
         // CCRR notation (e.g. 0101)
-        const numericMatch = token.match(/^(\d{4})(?:\/|\.|@)?(.*)$/);
+        const numericMatch = token.match(/^(\d{4})(?:(?:\/|\.|@)(.*))?$/);
         if (numericMatch) {
             const coords = numericMatch[1];
             const format = this.options.labelFormat;
