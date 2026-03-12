@@ -24,6 +24,20 @@ export const DIRECTIONS: Cube[] = [
     { q: 0, r: -1, s: 1 },  // 5: N (Flat), SE (Pointy)
 ];
 
+export const DIRECTION_NAMES = {
+    flat: ['ne', 'se', 's', 'sw', 'nw', 'n'],
+    pointy: ['e', 'se', 'sw', 'w', 'nw', 'ne']
+};
+
+export function directionIndex(name: string, top: 'flat' | 'pointy'): number {
+    return DIRECTION_NAMES[top].indexOf(name.toLowerCase());
+}
+
+export function directionName(index: number, top: 'flat' | 'pointy'): string {
+    const arr = DIRECTION_NAMES[top];
+    return arr[((index % 6) + 6) % 6];
+}
+
 export function createHex(q: number, r: number, s?: number): Cube {
     const sVal = s ?? (-q - r);
     if (Math.abs(q + r + sVal) > 0.001) throw new Error(`Invalid cube coords: ${q},${r},${sVal}`);

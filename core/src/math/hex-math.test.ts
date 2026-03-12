@@ -2,6 +2,14 @@ import { describe, it, expect } from 'vitest';
 import * as Hex from './hex-math.js';
 
 describe('Hex Math', () => {
+    describe('Direction Codecs', () => {
+        it('Direction codecs work correctly', () => {
+            expect(Hex.DIRECTION_NAMES.flat[0]).toBe('ne');
+            expect(Hex.directionIndex('ne', 'flat')).toBe(0);
+            expect(Hex.directionName(0, 'flat')).toBe('ne');
+        });
+    });
+
     describe('hexToPixel & pixelToHex Round-trips', () => {
         const sizes = [1, 10, 25.5];
         const hexes: Hex.Cube[] = [
