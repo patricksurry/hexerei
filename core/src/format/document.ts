@@ -1,4 +1,5 @@
-import { parseDocument, Document, YAMLMap } from 'yaml';
+import { parseDocument, Document } from 'yaml';
+import type { HexMapLayout, HexMapMetadata, Feature } from './types.js';
 
 /**
  * A wrapper around the YAML CST/AST to allow safe editing of HexMap documents
@@ -27,9 +28,9 @@ export class HexMapDocument {
     }
 
     /**
-   * Helper to set a metadata field safely.
-   */
-    setMetadata(key: string, value: any) {
+     * Helper to set a metadata field safely.
+     */
+    setMetadata<K extends keyof HexMapMetadata>(key: K, value: HexMapMetadata[K]): void {
         if (!this.doc.has('metadata')) {
             this.doc.set('metadata', this.doc.createNode({}));
         }
@@ -38,17 +39,17 @@ export class HexMapDocument {
     }
 
     /**
-     * Helper to get a metadata field.
+     * Helper to get all metadata fields.
      */
-    getMetadata(key: string): any {
-        const metadata = this.doc.get('metadata') as YAMLMap;
-        return metadata?.get(key);
+    getMetadata(): HexMapMetadata {
+        const metadataNode = this.doc.get('metadata') as any;
+        return metadataNode?.toJSON?.() || {};
     }
 
     /**
      * Set a layout field safely.
      */
-    setLayout(key: string, value: any) {
+    setLayout<K extends keyof HexMapLayout>(key: K, value: HexMapLayout[K]): void {
         if (!this.doc.has('layout')) {
             this.doc.set('layout', this.doc.createNode({}));
         }
@@ -56,9 +57,17 @@ export class HexMapDocument {
     }
 
     /**
+     * Get the layout configuration.
+     */
+    getLayout(): HexMapLayout {
+        const layoutNode = this.doc.get('layout') as any;
+        return layoutNode?.toJSON?.() || { orientation: 'flat-down', all: 'base' };
+    }
+
+    /**
      * Add a feature to the document.
      */
-    addFeature(feature: any) {
+    addFeature(feature: Feature): void {
         if (!this.doc.has('features')) {
             this.doc.set('features', this.doc.createNode([]));
         }

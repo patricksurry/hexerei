@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, test } from 'vitest';
 import { HexMapDocument } from './document.js';
+import type { Feature } from './types.js';
 
 const SAMPLE_YAML = `hexmap: "1.0"
 metadata:
@@ -31,7 +32,18 @@ describe('HexMapDocument', () => {
     it('should create metadata if missing', () => {
         const minimal = `hexmap: "1.0"\n`;
         const doc = new HexMapDocument(minimal);
-        doc.setMetadata('author', 'Me');
-        expect(doc.toString()).toContain('author: Me');
+        doc.setMetadata('designer', 'Me');
+        expect(doc.toString()).toContain('designer: Me');
     });
+});
+
+test('HexMapDocument typed methods', () => {
+    const doc = new HexMapDocument('hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: base\n');
+    doc.setMetadata('title', 'New Map');
+    expect(doc.getMetadata().title).toBe('New Map');
+    
+    expect(doc.getLayout().orientation).toBe('flat-down');
+    
+    const feature: Feature = { at: '0101', terrain: 'M' };
+    doc.addFeature(feature); // should not throw
 });
