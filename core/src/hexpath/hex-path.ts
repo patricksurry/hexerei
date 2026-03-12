@@ -31,7 +31,7 @@ export class HexPath {
 
     constructor(mesh: MeshMap, options?: Partial<HexPathOptions>) {
         this.mesh = mesh;
-        const layout = mesh.layout || {};
+        const layout = (mesh.layout as any) || {};
         this.options = {
             labelFormat: options?.labelFormat || layout.label || layout.coordinates?.label || "XXYY",
             orientation: options?.orientation ?? layout.orientation ?? 'flat-down',

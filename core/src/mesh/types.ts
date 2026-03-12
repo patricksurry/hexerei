@@ -1,3 +1,5 @@
+import type { HexMapLayout } from '../format/types.js';
+
 /**
  * Gameplay API Specification - Abstract Map Topology.
  */
@@ -48,5 +50,5 @@ export interface MeshMap {
     getEdgeLoop(idOrHex: string | HexArea): Edge[];
 
     // Metadata
-    layout: any;
+    layout: HexMapLayout;
 }

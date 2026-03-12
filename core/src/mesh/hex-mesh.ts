@@ -1,5 +1,14 @@
 import { MeshMap, HexArea, Connection, Edge } from './types.js';
 import * as Hex from '../math/hex-math.js';
+import type { HexMapLayout } from '../format/types.js';
+
+export interface HexMeshConfig {
+    orientation?: Hex.Orientation;
+    firstCol?: number;
+    firstRow?: number;
+    terrain?: Map<string, string>;
+    layout?: HexMapLayout;
+}
 
 export class HexMesh implements MeshMap {
     private _hexes = new Map<string, HexArea>();
@@ -8,13 +17,13 @@ export class HexMesh implements MeshMap {
     private _orientation: Hex.Orientation;
     private _firstCol: number;
     private _firstRow: number;
-    private _layout: any;
+    public layout: HexMapLayout;
 
-    constructor(validHexes: Hex.Cube[], config: { orientation?: Hex.Orientation, firstCol?: number, firstRow?: number, terrain?: Map<string, string>, layout?: any } = {}) {
-        this._orientation = config.orientation ?? config.layout?.orientation ?? 'flat-down';
+    constructor(validHexes: Hex.Cube[], config: HexMeshConfig = {}) {
+        this.layout = config.layout || { orientation: 'flat-down', all: '@all' };
+        this._orientation = config.orientation ?? this.layout.orientation ?? 'flat-down';
         this._firstCol = config.firstCol ?? 1;
         this._firstRow = config.firstRow ?? 1;
-        this._layout = config.layout || {};
 
         for (const cube of validHexes) {
             const id = Hex.hexId(cube);
@@ -30,7 +39,6 @@ export class HexMesh implements MeshMap {
     public get stagger(): number { return Hex.orientationStagger(this._orientation); }
     public get firstCol(): number { return this._firstCol; }
     public get firstRow(): number { return this._firstRow; }
-    public get layout(): any { return this._layout; }
 
     getHex(id: string): HexArea | undefined {
         return this._hexes.get(id);

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, test, expect } from 'vitest';
 import { HexMesh } from './hex-mesh.js';
+import type { HexMapLayout } from '../format/types.js';
 import * as Hex from '../math/hex-math.js';
 
 describe('HexMesh Topology', () => {
@@ -61,4 +62,10 @@ describe('HexMesh Topology', () => {
         const ids = new Set(loop.map(e => e.id));
         expect(ids.size).toBe(6);
     });
+});
+
+test('HexMesh uses HexMapLayout in config', () => {
+    const layout: HexMapLayout = { orientation: 'flat-down', all: 'base' };
+    const mesh = new HexMesh([], { layout });
+    expect(mesh.layout.all).toBe('base');
 });
