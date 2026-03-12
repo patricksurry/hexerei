@@ -2,10 +2,6 @@
  * Gameplay API Specification - Abstract Map Topology.
  */
 
-export interface Point {
-    x: number;
-    y: number;
-}
 
 /**
  * Represents a discrete hex in the mesh with its attributes.

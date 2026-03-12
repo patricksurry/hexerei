@@ -1,6 +1,6 @@
 import { Hex } from '@hexmap/core';
 
-export interface Point { x: number, y: number }
+export type Point = Hex.Point;
 
 export interface ViewportState {
   center: Point;    // world-space point at screen center
