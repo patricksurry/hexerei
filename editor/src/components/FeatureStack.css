@@ -81,5 +81,5 @@
 
 .feature-at {
   font-size: var(--font-size-xs);
-  color: var(--text-secondary);
+  color: var(--canvas-label-color, var(--text-secondary));
 }

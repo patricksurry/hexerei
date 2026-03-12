@@ -23,10 +23,12 @@
 
 .status-cursor {
   min-width: 60px;
+  color: var(--text-primary);
 }
 
 .status-zoom {
   min-width: 60px;
+  color: var(--text-primary);
 }
 
 .status-title {

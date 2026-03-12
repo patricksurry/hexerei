@@ -25,6 +25,14 @@
   --accent-vertex-glow: rgba(255, 221, 0, 0.4);
   --accent-command: #00D4FF;
 
+  /* Canvas-specific */
+  --canvas-grid-stroke: rgba(0, 180, 220, 0.18);
+  --canvas-grid-line-width: 0.75;
+  --canvas-terrain-opacity: 0.6;
+  --canvas-label-color: rgba(0, 180, 220, 0.35);
+  --canvas-selection-glow: 8;
+  --canvas-hover-glow: 4;
+
   /* Semantic */
   --color-error: #F85149;
   --color-success: #3FB950;

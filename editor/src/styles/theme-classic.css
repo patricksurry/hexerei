@@ -26,6 +26,14 @@
   --accent-vertex-glow: transparent;
   --accent-command: #00D4FF;
 
+  /* Canvas-specific */
+  --canvas-grid-stroke: #3A3A3A;
+  --canvas-grid-line-width: 1;
+  --canvas-terrain-opacity: 1;
+  --canvas-label-color: #888888;
+  --canvas-selection-glow: 0;
+  --canvas-hover-glow: 0;
+
   /* Semantic */
   --color-error: #FF4D4D;
   --color-success: #4DFF88;

@@ -19,17 +19,18 @@ function resolveTheme(el: HTMLElement): CanvasTheme {
   const style = getComputedStyle(el);
   const getProp = (name: string) => style.getPropertyValue(name).trim();
 
+  const glowVal = getProp('--text-glow');
   return {
     background: getProp('--bg-canvas') || getProp('--bg-base') || '#141414',
-    gridStroke: getProp('--border-accent') || getProp('--border-subtle') || '#3A3A3A',
-    gridLineWidth: 0.75, // Default for sandtable, maybe make this a token too
-    terrainOpacity: 0.6, // Default for sandtable
-    labelColor: getProp('--text-secondary') || '#888888',
-    labelGlow: getProp('--text-glow') !== 'transparent' ? getProp('--text-glow') : null,
-    selectionGlow: 8,
-    hoverGlow: 4,
+    gridStroke: getProp('--canvas-grid-stroke') || getProp('--border-subtle') || '#3A3A3A',
+    gridLineWidth: parseFloat(getProp('--canvas-grid-line-width')) || 1,
+    terrainOpacity: parseFloat(getProp('--canvas-terrain-opacity')) || 1.0,
+    labelColor: getProp('--canvas-label-color') || getProp('--text-secondary') || '#888888',
+    labelGlow: glowVal && glowVal !== 'transparent' ? glowVal : null,
+    selectionGlow: parseFloat(getProp('--canvas-selection-glow')) || 0,
+    hoverGlow: parseFloat(getProp('--canvas-hover-glow')) || 0,
     featureLabelColor: getProp('--text-primary') || '#ffffff',
-    featureLabelShadow: 'true' // simplified
+    featureLabelShadow: 'true'
   };
 }
 
