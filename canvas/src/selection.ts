@@ -21,7 +21,7 @@ export function selectVertex(vertexId: string): Selection {
 
 export function boundaryIdToHexPath(boundaryId: string, model: MapModel): string {
   const parts = Hex.parseBoundaryId(boundaryId);
-  const label1 = model.hexIdToLabel(Hex.hexId(parts.hexA));
+  const label1 = Hex.formatHexLabel(Hex.hexFromId(Hex.hexId(parts.hexA), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow));
   const top = Hex.orientationTop(model.grid.orientation);
 
   if (parts.hexB === null && parts.direction !== undefined) {
@@ -39,7 +39,7 @@ export function boundaryIdToHexPath(boundaryId: string, model: MapModel): string
 
 export function vertexIdToHexPath(vertexId: string, model: MapModel): string {
   const parts = Hex.parseVertexId(vertexId);
-  const label1 = model.hexIdToLabel(Hex.hexId(parts[0]));
+  const label1 = Hex.formatHexLabel(Hex.hexFromId(Hex.hexId(parts[0]), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow));
   for (let i = 0; i < 6; i++) {
     const n1 = Hex.hexId(Hex.hexNeighbor(parts[0], i));
     const n2 = Hex.hexId(Hex.hexNeighbor(parts[0], (i + 1) % 6));
@@ -113,7 +113,7 @@ export function highlightsForSelection(
         { type: 'hex', hexIds: vParts, color: '#FFDD00', style: 'hover' } // Subtle background
       ];
     case 'feature':
-      const featureHexIds = selection.indices.flatMap(idx => model.hexIdsForFeature(idx));
+      const featureHexIds = selection.indices.flatMap(idx => model.features[idx].hexIds);
       return [{ type: 'hex', hexIds: Array.from(new Set(featureHexIds)), color: '#00D4FF', style: 'select' }];
   }
 }
@@ -123,7 +123,7 @@ export function highlightsForHover(
   model: MapModel
 ): SceneHighlight[] {
   if (hoverIndex === null) return [];
-  const hexIds = model.hexIdsForFeature(hoverIndex);
+  const hexIds = model.features[hoverIndex].hexIds;
   return [{ type: 'hex', hexIds, color: '#00D4FF', style: 'hover' }];
 }
 

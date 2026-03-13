@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { MapModel } from './map-model.js';
+import { MapModel } from './model.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -76,7 +76,7 @@ describe('MapModel', () => {
 
   it('should support reverse feature mapping', () => {
     const model = MapModel.load(MOCK_YAML);
-    const hexIds = model.hexIdsForFeature(1);
+    const hexIds = model.features[1].hexIds;
     expect(hexIds).toContain('2,0,-2');
     
     const features = model.featuresAtHex('2,0,-2');
@@ -86,7 +86,7 @@ describe('MapModel', () => {
 
 describe('bfm.yaml RFC compliance', () => {
   const yaml = readFileSync(
-    resolve(__dirname, '../../../maps/definitions/bfm.yaml'),
+    resolve(__dirname, '../../../../maps/definitions/bfm.yaml'),
     'utf-8'
   );
 

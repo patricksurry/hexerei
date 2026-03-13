@@ -1,5 +1,5 @@
-import { Hex, HexMapDocument, HexMesh, HexMapLoader, HexPath } from '@hexmap/core';
-import { FeatureItem } from '../types';
+import { Hex, HexMapDocument, HexMesh, HexMapLoader, HexPath, HexMapMetadata, HexMapLayout } from '@hexmap/core';
+import { FeatureItem } from './types.js';
 
 export interface GridConfig {
   orientation: Hex.Orientation;
@@ -28,7 +28,8 @@ export interface ComputedHexState {
 }
 
 export class MapModel {
-  private _metadata: Record<string, any>;
+  private _metadata: HexMapMetadata;
+  public document: HexMapDocument;
   private _grid: GridConfig;
   private _terrainDefs: Map<string, TerrainDef>;
   private _features: FeatureItem[];
@@ -36,13 +37,14 @@ export class MapModel {
   private _hexToFeatures: Map<string, FeatureItem[]>;
   private _yaml: string = '';
 
-  constructor(doc: any, mesh?: HexMesh) {
-    this._metadata = doc.metadata || {};
-    const layout = doc.layout || {};
+  private constructor(doc: HexMapDocument, mesh: HexMesh) {
+    this.document = doc;
+    this._metadata = doc.getMetadata();
+    const layout = doc.getLayout();
     
     const orientation = layout.orientation || 'flat-down';
-    const firstCol = layout.coordinates?.first?.[0] ?? layout.firstCol ?? layout.first?.[0] ?? 1;
-    const firstRow = layout.coordinates?.first?.[1] ?? layout.firstRow ?? layout.first?.[1] ?? 1;
+    const firstCol = 1; // Assuming default for now
+    const firstRow = 1; // Assuming default for now
     const labelFormat = layout.label || layout.coordinates?.label || "XXYY";
 
     this._grid = {
@@ -56,7 +58,7 @@ export class MapModel {
 
     // Terrain definitions
     this._terrainDefs = new Map();
-    const hexTerrain = doc.terrain?.hex ?? {};
+    const hexTerrain = doc.raw.getIn(['terrain', 'hex'])?.toJSON?.() || {};
     for (const [key, def] of Object.entries(hexTerrain)) {
       const terrainDef = def as any;
       this._terrainDefs.set(key, {
@@ -68,7 +70,7 @@ export class MapModel {
     }
 
     // Use provided mesh or load it from doc
-    this._mesh = mesh || HexMapLoader.load(JSON.stringify(doc));
+    this._mesh = mesh;
 
     // Resolve features and build reverse index
     const meshHexPath = new HexPath(this._mesh, { 
@@ -79,7 +81,7 @@ export class MapModel {
     });
 
     this._hexToFeatures = new Map<string, FeatureItem[]>();
-    this._features = (doc.features || []).map((f: any, idx: number) => {
+    this._features = (doc.raw.get('features')?.toJSON?.() || []).map((f: any, idx: number) => {
         let hexIds: string[] = [];
         if (f.at) {
             try {
@@ -101,7 +103,9 @@ export class MapModel {
             at: typeof f.at === 'string' ? f.at : 'complex',
             isBase: f.at === '@all',
             hexIds,
-            raw: f
+            elevation: f.elevation,
+            properties: f.properties,
+            side: f.side
         };
 
         // Populate reverse index
@@ -119,17 +123,17 @@ export class MapModel {
   static load(yamlSource: string): MapModel {
     const mesh = HexMapLoader.load(yamlSource);
     const doc = new HexMapDocument(yamlSource);
-    const model = new MapModel(doc.toJS(), mesh);
+    const model = new MapModel(doc, mesh);
     model._yaml = yamlSource;
     return model;
   }
 
   toYAML(): string { return this._yaml; }
 
-  get metadata(): Record<string, any> { return this._metadata; }
+  get metadata(): HexMapMetadata { return this._metadata; }
   get grid(): GridConfig { return this._grid; }
   get terrainDefs(): Map<string, TerrainDef> { return this._terrainDefs; }
-  get features(): FeatureItem[] { return this._features; }
+  get features(): readonly FeatureItem[] { return this._features; }
   get mesh(): HexMesh { return this._mesh; }
 
   computedHex(hexId: string): ComputedHexState | undefined {
@@ -139,12 +143,12 @@ export class MapModel {
     const terrain = hex.terrain ?? 'unknown';
     const neighbors = this._mesh.getNeighbors(hexId);
     const neighborLabels = neighbors
-      .map(h => h ? this.hexIdToLabel(h.id) : null)
+      .map(h => h ? Hex.formatHexLabel(Hex.hexFromId(h.id), this._grid.labelFormat, this._grid.orientation, this._grid.firstCol, this._grid.firstRow) : null)
       .filter((l): l is string => l !== null);
 
     return {
       hexId,
-      label: this.hexIdToLabel(hexId),
+      label: Hex.formatHexLabel(Hex.hexFromId(hexId), this._grid.labelFormat, this._grid.orientation, this._grid.firstCol, this._grid.firstRow),
       terrain,
       terrainColor: this.terrainColor(terrain),
       elevation: hex.elevation,
@@ -153,15 +157,7 @@ export class MapModel {
     };
   }
 
-  hexIdToLabel(id: string): string {
-    const cube = Hex.hexFromId(id);
-    const offset = Hex.cubeToOffset(cube, this._grid.orientation);
-    
-    if (this._grid.labelFormat === 'CCRR' || this._grid.labelFormat === 'XXYY') {
-      return `${offset.x.toString().padStart(2, '0')}${offset.y.toString().padStart(2, '0')}`;
-    }
-    return id;
-  }
+  
 
   hexIdsForFeature(index: number): string[] {
     return this._features[index]?.hexIds ?? [];

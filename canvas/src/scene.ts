@@ -106,7 +106,7 @@ export function buildScene(
       corners: screenCorners,
       center: screenCenter,
       fill: model.terrainColor(area.terrain),
-      label: model.hexIdToLabel(area.id)
+      label: Hex.formatHexLabel(Hex.hexFromId(area.id), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow)
     });
   }
 

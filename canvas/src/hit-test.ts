@@ -67,7 +67,7 @@ export function hitTest(
       return {
         type: 'edge',
         boundaryId: Hex.getCanonicalBoundaryId(cube, hasNeighbor ? neighbor : null, neighborDir),
-        hexLabels: [model.hexIdToLabel(id), hasNeighbor ? model.hexIdToLabel(nId) : null]
+        hexLabels: [Hex.formatHexLabel(Hex.hexFromId(id), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow), hasNeighbor ? Hex.formatHexLabel(Hex.hexFromId(nId), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow) : null]
       };
     }
   }
@@ -76,7 +76,7 @@ export function hitTest(
     return {
       type: 'hex',
       hexId: id,
-      label: model.hexIdToLabel(id)
+      label: Hex.formatHexLabel(Hex.hexFromId(id), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow)
     };
   }
 
