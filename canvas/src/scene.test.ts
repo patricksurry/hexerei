@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { MapModel } from './map-model.js';
-import { ViewportState, worldToScreen } from '@hexmap/canvas';
-import { hexAtScreen, HEX_SIZE } from './hit-test.js';
+import { MapModel } from '../../editor/src/model/map-model.js';
+import { ViewportState, worldToScreen } from './viewport.js';
+import { hitTest } from './hit-test.js';
 import { buildScene } from './scene.js';
 import { SceneHighlight } from './selection.js';
 import { Hex } from '@hexmap/core';
@@ -35,26 +35,26 @@ describe('HitTest & Scene', () => {
   it('hexAtScreen should return correct label at center of hex', () => {
     // col 1, row 1 (CCRR 0101) in flat-down
     const cube = Hex.offsetToCube(1, 1, 'flat-down');
-    const worldCenter = Hex.hexToPixel(cube, 1); // HEX_SIZE=1
+    const worldCenter = Hex.hexToPixel(cube, 1); // 1=1
     const screen = worldToScreen(worldCenter, vp);
-    const label = hexAtScreen(screen, vp, model);
+    const hit = hitTest(screen, vp, model); const label = hit.type === 'hex' ? hit.label : null;
     expect(label).toBe('0101');
     
     // col 2, row 1 (CCRR 0201) in flat-down
     const cube2 = Hex.offsetToCube(2, 1, 'flat-down');
     const worldCenter2 = Hex.hexToPixel(cube2, 1);
     const screen2 = worldToScreen(worldCenter2, vp);
-    const label2 = hexAtScreen(screen2, vp, model);
+    const hit2 = hitTest(screen2, vp, model); const label2 = hit2.type === 'hex' ? hit2.label : null;
     expect(label2).toBe('0201');
   });
 
   it('hexAtScreen should return null for far off-map point', () => {
-    const label = hexAtScreen({ x: 1000, y: 1000 }, vp, model);
+    const hit = hitTest({ x: 1000, y: 1000 }, vp, model); const label = hit.type === 'hex' ? hit.label : null;
     expect(label).toBeNull();
   });
 
   it('buildScene should include all visible hexes', () => {
-    const scene = buildScene(model, vp);
+    const scene = buildScene(model, vp, {});
     expect(scene.hexagons).toHaveLength(2);
   });
 
@@ -88,8 +88,8 @@ describe('HitTest & Scene', () => {
     // For a flat hex, the NE edge (direction 0) is between corner 5 (300°) and corner 0 (0°).
     // The midpoint of corners 5 and 0 is hexEdgeMidpoints[5] — the one pointing at ~330°.
     const orientation = Hex.orientationTop('flat-down');
-    const worldCenter1 = Hex.hexToPixel(cube1, HEX_SIZE, orientation);
-    const corners1 = Hex.hexCorners(worldCenter1, HEX_SIZE, orientation);
+    const worldCenter1 = Hex.hexToPixel(cube1, 1, orientation);
+    const corners1 = Hex.hexCorners(worldCenter1, 1, orientation);
 
     const expectedP1 = worldToScreen(corners1[5], vp);
     const expectedP2 = worldToScreen(corners1[0], vp);

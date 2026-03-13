@@ -1,7 +1,7 @@
 import { Selection } from './types.js';
 import { MapModel } from '../../editor/src/model/map-model.js';
 import { Hex } from '@hexmap/core';
-import { SceneHighlight } from '../../editor/src/model/scene.js'; // Will move to scene.ts soon
+import { SceneHighlight } from './scene.js'; // Will move to scene.ts soon
 
 export function clearSelection(): Selection {
   return { type: 'none' };

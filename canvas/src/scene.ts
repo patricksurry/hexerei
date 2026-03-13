@@ -1,8 +1,26 @@
 import { Hex } from '@hexmap/core';
 import { Point, ViewportState, worldToScreen } from './viewport.js';
+import { MapModel } from '../../editor/src/model/map-model.js';
+import { Point, ViewportState, worldToScreen } from './viewport.js';
 import { MapModel } from './map-model.js';
-import { HEX_SIZE } from './hit-test.js';
+const HEX_SIZE = 1;
 import { SceneHighlight } from './selection.js';
+
+
+export interface SceneHighlight {
+  type: 'hex' | 'edge' | 'vertex';
+  hexIds: string[];
+  boundaryId?: string;
+  vertexId?: string;
+  color: string;
+  style: 'select' | 'hover' | 'ghost';
+}
+
+export interface SceneOptions {
+  background?: string;
+  highlights?: SceneHighlight[];
+  segmentPath?: string[];
+}
 
 export interface HexRenderItem {
   hexId: string;
