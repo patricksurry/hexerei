@@ -1,4 +1,4 @@
-import { MapModel } from './map-model.js';
+import { MapModel } from '../../editor/src/model/map-model.js';
 import { HexPath, GeometryType } from '@hexmap/core';
 
 export interface HexPathPreview {

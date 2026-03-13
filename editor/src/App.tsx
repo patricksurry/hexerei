@@ -9,7 +9,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { Selection, HitResult } from './types';
 import { MapModel } from './model/map-model';
 import { Hex, HexMapDocument } from '@hexmap/core';
-import { parseHexPathInput, HexPathPreview } from './model/hex-path-preview';
+import { parseHexPathInput, HexPathPreview } from '@hexmap/canvas';
 import {
   SceneHighlight,
   clearSelection,

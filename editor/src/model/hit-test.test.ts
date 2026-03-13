@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { hitTest, HEX_SIZE } from './hit-test.js';
 import { MapModel } from './map-model.js';
-import { ViewportState, worldToScreen } from './viewport.js';
+import { ViewportState, worldToScreen } from '@hexmap/canvas';
 import { Hex } from '@hexmap/core';
 
 const MOCK_YAML = `

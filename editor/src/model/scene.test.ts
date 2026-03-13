@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MapModel } from './map-model.js';
-import { ViewportState, worldToScreen } from './viewport.js';
+import { ViewportState, worldToScreen } from '@hexmap/canvas';
 import { hexAtScreen, HEX_SIZE } from './hit-test.js';
 import { buildScene } from './scene.js';
 import { SceneHighlight } from './selection.js';
