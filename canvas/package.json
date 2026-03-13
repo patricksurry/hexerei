@@ -1,0 +1,21 @@
+{
+  "name": "@hexmap/canvas",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@hexmap/core": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.6.0"
+  },
+  "scripts": {
+    "test": "vitest run"
+  }
+}

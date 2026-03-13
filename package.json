@@ -5,7 +5,8 @@
   "workspaces": [
     "core",
     "renderer",
-    "editor"
+    "editor",
+    "canvas"
   ],
   "scripts": {
     "test": "vitest run",
