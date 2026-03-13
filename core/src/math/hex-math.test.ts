@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import * as Hex from './hex-math.js';
-import { parseBoundaryId, parseVertexId, hexId } from './hex-math.js';
+import { parseBoundaryId, parseVertexId, hexId, formatHexLabel, createHex } from './hex-math.js';
 
 describe('Hex Math', () => {
+    describe('Label Formatting', () => {
+        it('formatHexLabel formats correctly', () => {
+            const c = createHex(1, -2, 1);
+            expect(formatHexLabel(c, 'XXYY', 'flat-down', 1, 1)).toBeTruthy();
+        });
+    });
+
     describe('ID Parsers', () => {
         it('Boundary and Vertex ID codecs', () => {
             const bId = parseBoundaryId('0,0,0|1,-1,0');
