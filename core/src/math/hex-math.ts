@@ -305,3 +305,16 @@ export function hexLine(a: Cube, b: Cube, nudge: 1 | -1 = 1): Cube[] {
     }
     return results;
 }
+
+export function parseBoundaryId(id: string): { hexA: Cube; hexB: Cube | null; direction?: number } {
+    const parts = id.split('|');
+    if (parts.length === 3 && parts[1] === 'VOID') {
+        return { hexA: hexFromId(parts[0]), hexB: null, direction: parseInt(parts[2], 10) };
+    }
+    return { hexA: hexFromId(parts[0]), hexB: hexFromId(parts[1]) };
+}
+
+export function parseVertexId(id: string): Cube[] {
+    const parts = id.split('^');
+    return parts.map(hexFromId);
+}

@@ -1,7 +1,25 @@
 import { describe, it, expect } from 'vitest';
 import * as Hex from './hex-math.js';
+import { parseBoundaryId, parseVertexId, hexId } from './hex-math.js';
 
 describe('Hex Math', () => {
+    describe('ID Parsers', () => {
+        it('Boundary and Vertex ID codecs', () => {
+            const bId = parseBoundaryId('0,0,0|1,-1,0');
+            expect(hexId(bId.hexA)).toBe('0,0,0');
+            expect(hexId(bId.hexB!)).toBe('1,-1,0');
+            
+            const bIdVoid = parseBoundaryId('0,0,0|VOID|3');
+            expect(hexId(bIdVoid.hexA)).toBe('0,0,0');
+            expect(bIdVoid.hexB).toBeNull();
+            expect(bIdVoid.direction).toBe(3);
+            
+            const vId = parseVertexId('-1,0,1^0,-1,1^0,0,0');
+            expect(vId.length).toBe(3);
+            expect(hexId(vId[0])).toBe('-1,0,1');
+        });
+    });
+
     describe('Direction Codecs', () => {
         it('Direction codecs work correctly', () => {
             expect(Hex.DIRECTION_NAMES.flat[0]).toBe('ne');
