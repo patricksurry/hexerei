@@ -1,15 +1,22 @@
 {
-    "name": "@hexmap/core",
-    "version": "0.1.0",
-    "type": "module",
-    "description": "Reference implementation for HexMap format and topology engine",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "scripts": {
-        "build": "tsc",
-        "test": "vitest run"
-    },
-    "dependencies": {
-        "yaml": "^2.3.4"
+  "name": "@hexmap/core",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Reference implementation for HexMap format and topology engine",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "yaml": "^2.3.4"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
     }
+  }
 }

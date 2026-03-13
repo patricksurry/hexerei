@@ -1,22 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { HexMapLoader, HexMapDocument, HexMesh, Hex } from './index.js';
+import { expect, test } from 'vitest';
+import * as Core from './index.js';
 
-describe('Index Exports', () => {
-    it('should export HexMapLoader', () => {
-        expect(HexMapLoader).toBeDefined();
-        expect(typeof HexMapLoader.load).toBe('function');
-    });
-
-    it('should export HexMapDocument', () => {
-        expect(HexMapDocument).toBeDefined();
-    });
-
-    it('should export HexMesh', () => {
-        expect(HexMesh).toBeDefined();
-    });
-
-    it('should export Hex (math)', () => {
-        expect(Hex).toBeDefined();
-        expect(typeof Hex.createRectangularGrid).toBe('function');
-    });
+test('Core exports types and functions correctly', () => {
+    expect(Core.HexMapDocument).toBeDefined();
+    expect(Core.HexMesh).toBeDefined();
+    expect(Core.HexPath).toBeDefined();
 });

@@ -320,7 +320,9 @@ export function parseVertexId(id: string): Cube[] {
 }
 
 export function formatHexLabel(hex: Cube, labelFormat: string, orientation: Orientation, firstCol: number = 1, firstRow: number = 1): string {
-    const offset = cubeToOffset(hex, orientation, firstCol, firstRow);
+    const offset = cubeToOffset(hex, orientation);
+    offset.x += firstCol;
+    offset.y += firstRow;
     const colStr = String(offset.x).padStart(2, '0');
     const rowStr = String(offset.y).padStart(2, '0');
     return `${colStr}${rowStr}`;
