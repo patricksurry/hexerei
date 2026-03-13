@@ -325,3 +325,18 @@ export function formatHexLabel(hex: Cube, labelFormat: string, orientation: Orie
     const rowStr = String(offset.y).padStart(2, '0');
     return `${colStr}${rowStr}`;
 }
+
+export function vertexPoint(hex: Cube, corner: number, size: number, orientation: HexOrientation): Point {
+    const center = hexToPixel(hex, size, orientation);
+    const corners = hexCorners(center, size, orientation);
+    return corners[corner % 6];
+}
+
+export function edgeEndpoints(hex: Cube, direction: number, size: number, orientation: HexOrientation): [Point, Point] {
+    const corner1 = orientation === 'flat' ? (direction + 5) % 6 : (direction + 4) % 6;
+    const corner2 = (corner1 + 1) % 6;
+    return [
+        vertexPoint(hex, corner1, size, orientation),
+        vertexPoint(hex, corner2, size, orientation)
+    ];
+}

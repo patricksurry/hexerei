@@ -1,8 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import * as Hex from './hex-math.js';
-import { parseBoundaryId, parseVertexId, hexId, formatHexLabel, createHex } from './hex-math.js';
+import { parseBoundaryId, parseVertexId, hexId, formatHexLabel, createHex, edgeEndpoints, vertexPoint } from './hex-math.js';
 
 describe('Hex Math', () => {
+    describe('Edge and Vertex Geometry', () => {
+        it('edgeEndpoints and vertexPoint math helpers', () => {
+            const c = createHex(0,0,0);
+            const pts = edgeEndpoints(c, 0, 10, 'flat');
+            expect(pts.length).toBe(2);
+            
+            const v = vertexPoint(c, 0, 10, 'flat');
+            expect(v.x).toBeDefined();
+        });
+    });
+
     describe('Label Formatting', () => {
         it('formatHexLabel formats correctly', () => {
             const c = createHex(1, -2, 1);
