@@ -1,15 +1,7 @@
-import { Selection } from '../types';
-import { MapModel } from './map-model';
+import { Selection } from './types.js';
+import { MapModel } from '../../editor/src/model/map-model.js';
 import { Hex } from '@hexmap/core';
-
-export interface SceneHighlight {
-  type: 'hex' | 'edge' | 'vertex';
-  hexIds: string[];
-  boundaryId?: string;
-  vertexId?: string;
-  color: string;
-  style: 'select' | 'hover' | 'ghost';
-}
+import { SceneHighlight } from '../../editor/src/model/scene.js'; // Will move to scene.ts soon
 
 export function clearSelection(): Selection {
   return { type: 'none' };
@@ -28,46 +20,35 @@ export function selectVertex(vertexId: string): Selection {
 }
 
 export function boundaryIdToHexPath(boundaryId: string, model: MapModel): string {
-  const parts = boundaryId.split('|');
-  const h1 = Hex.hexFromId(parts[0]);
-  const label1 = model.hexIdToLabel(parts[0]);
-  const orientation = model.grid.orientation;
-  const top = Hex.orientationTop(orientation);
+  const parts = Hex.parseBoundaryId(boundaryId);
+  const label1 = model.hexIdToLabel(Hex.hexId(parts.hexA));
+  const top = Hex.orientationTop(model.grid.orientation);
 
-  if (parts[1]?.startsWith('VOID') || parts[1]?.startsWith('dir')) {
-    const dir = parseInt(parts[1].split('/')[1]);
-    return `${label1}/${directionName(dir, top)}`;
+  if (parts.hexB === null && parts.direction !== undefined) {
+    return `${label1}/${Hex.directionName(parts.direction, top).toUpperCase()}`;
   }
-  // Find direction from h1 to h2
-  const h2 = Hex.hexFromId(parts[1]);
-  for (let d = 0; d < 6; d++) {
-    if (Hex.hexId(Hex.hexNeighbor(h1, d)) === Hex.hexId(h2)) {
-      return `${label1}/${directionName(d, top)}`;
+  if (parts.hexB) {
+    for (let d = 0; d < 6; d++) {
+      if (Hex.hexId(Hex.hexNeighbor(parts.hexA, d)) === Hex.hexId(parts.hexB)) {
+        return `${label1}/${Hex.directionName(d, top).toUpperCase()}`;
+      }
     }
   }
   return label1; // fallback
 }
 
 export function vertexIdToHexPath(vertexId: string, model: MapModel): string {
-  const ids = vertexId.split('^');
-  const h1 = Hex.hexFromId(ids[0]);
-  const label1 = model.hexIdToLabel(ids[0]);
-  // Find which corner of h1 this vertex is
+  const parts = Hex.parseVertexId(vertexId);
+  const label1 = model.hexIdToLabel(Hex.hexId(parts[0]));
   for (let i = 0; i < 6; i++) {
-    const n1 = Hex.hexId(Hex.hexNeighbor(h1, i));
-    const n2 = Hex.hexId(Hex.hexNeighbor(h1, (i + 1) % 6));
+    const n1 = Hex.hexId(Hex.hexNeighbor(parts[0], i));
+    const n2 = Hex.hexId(Hex.hexNeighbor(parts[0], (i + 1) % 6));
+    const ids = parts.map(Hex.hexId);
     if (ids.includes(n1) && ids.includes(n2)) {
       return `${label1}.${i}`;
     }
   }
   return label1;
-}
-
-// Helper — orientation-aware direction name
-function directionName(dir: number, top: 'flat' | 'pointy'): string {
-  const flatNames = ['NE', 'SE', 'S', 'SW', 'NW', 'N'];
-  const pointyNames = ['E', 'NE', 'NW', 'W', 'SW', 'SE'];
-  return top === 'flat' ? flatNames[dir] : pointyNames[dir];
 }
 
 export function selectFeature(
@@ -117,19 +98,19 @@ export function highlightsForSelection(
     case 'hex':
       return [{ type: 'hex', hexIds: [selection.hexId], color: '#00D4FF', style: 'select' }];
     case 'edge':
-      const [id1, id2] = selection.boundaryId.split('|');
-      const hexIds = [id1];
-      if (id2 && id2 !== 'VOID' && !id2.startsWith('dir')) hexIds.push(id2);
+      const eParts = Hex.parseBoundaryId(selection.boundaryId);
+      const hexIds = [Hex.hexId(eParts.hexA)];
+      if (eParts.hexB) hexIds.push(Hex.hexId(eParts.hexB));
       
       return [
         { type: 'edge', boundaryId: selection.boundaryId, hexIds: [], color: '#FF44FF', style: 'select' },
         { type: 'hex', hexIds, color: '#FF44FF', style: 'hover' } // Subtle background
       ];
     case 'vertex':
-      const ids = selection.vertexId.split('^');
+      const vParts = Hex.parseVertexId(selection.vertexId).map(Hex.hexId);
       return [
         { type: 'vertex', vertexId: selection.vertexId, hexIds: [], color: '#FFDD00', style: 'select' },
-        { type: 'hex', hexIds: ids, color: '#FFDD00', style: 'hover' } // Subtle background
+        { type: 'hex', hexIds: vParts, color: '#FFDD00', style: 'hover' } // Subtle background
       ];
     case 'feature':
       const featureHexIds = selection.indices.flatMap(idx => model.hexIdsForFeature(idx));

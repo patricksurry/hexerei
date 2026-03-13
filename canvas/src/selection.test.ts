@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { boundaryIdToHexPath, vertexIdToHexPath } from './selection.js';
-import { MapModel } from './map-model.js';
+import { MapModel } from '../../editor/src/model/map-model.js';
 import { Hex } from '@hexmap/core';
 
 const YAML = `

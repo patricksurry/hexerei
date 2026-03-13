@@ -1,10 +1,10 @@
 import { Hex } from '@hexmap/core';
 import { Point, ViewportState, screenToWorld } from './viewport.js';
-import { MapModel } from './map-model.js';
+import { MapModel } from '../../editor/src/model/map-model.js';
 
-import { HitResult } from '../types';
+import { HitResult } from './types.js';
 
-export const HEX_SIZE = 1;
+const HEX_SIZE = 1;
 
 export function hitTest(
   screenPt: Point,
@@ -16,10 +16,8 @@ export function hitTest(
   const cube = Hex.pixelToHex(worldPt, HEX_SIZE, orientation);
   const id = Hex.hexId(cube);
 
-  // Find nearest hex even if it's off-map, to allow selecting near edges
   const center = Hex.hexToPixel(cube, HEX_SIZE, orientation);
 
-  // Calculate distances to center, midpoints, and corners
   const corners = Hex.hexCorners(center, HEX_SIZE, orientation);
   const midpoints = Hex.hexEdgeMidpoints(center, HEX_SIZE, orientation);
 
@@ -45,14 +43,12 @@ export function hitTest(
     }
   });
 
-  // Thresholds as fraction of HEX_SIZE
   if (minCornerDist < HEX_SIZE * 0.25) {
     const n1Dir = minCornerIdx;
     const n2Dir = (minCornerIdx + 1) % 6;
     const n1Id = Hex.hexId(Hex.hexNeighbor(cube, n1Dir));
     const n2Id = Hex.hexId(Hex.hexNeighbor(cube, n2Dir));
     
-    // Only return vertex hit if at least one participating hex is on the map
     if (isCenterOnMap || model.mesh.getHex(n1Id) || model.mesh.getHex(n2Id)) {
       return {
         type: 'vertex',
@@ -67,7 +63,6 @@ export function hitTest(
     const nId = Hex.hexId(neighbor);
     const hasNeighbor = !!model.mesh.getHex(nId);
     
-    // Only return edge hit if at least one participating hex is on the map
     if (isCenterOnMap || hasNeighbor) {
       return {
         type: 'edge',
@@ -85,23 +80,5 @@ export function hitTest(
     };
   }
 
-  return null;
-}
-
-export function hexAtScreen(
-  screenPt: Point,
-  viewport: ViewportState,
-  model: MapModel
-): string | null {
-  const hit = hitTest(screenPt, viewport, model);
-  if (hit?.type === 'hex') return hit.label;
-  
-  // Fallback to nearest hex label for status bar
-  const worldPt = screenToWorld(screenPt, viewport);
-  const cube = Hex.pixelToHex(worldPt, HEX_SIZE, Hex.orientationTop(model.grid.orientation)); // separate function, own scope
-  const id = Hex.hexId(cube);
-  if (model.mesh.getHex(id)) {
-    return model.hexIdToLabel(id);
-  }
-  return null;
+  return { type: 'none' };
 }

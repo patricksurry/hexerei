@@ -311,6 +311,12 @@ export function parseBoundaryId(id: string): { hexA: Cube; hexB: Cube | null; di
     if (parts.length === 3 && parts[1] === 'VOID') {
         return { hexA: hexFromId(parts[0]), hexB: null, direction: parseInt(parts[2], 10) };
     }
+    if (parts.length === 2 && parts[1].startsWith('VOID/')) {
+        return { hexA: hexFromId(parts[0]), hexB: null, direction: parseInt(parts[1].split('/')[1], 10) };
+    }
+    if (parts.length === 2 && parts[1].startsWith('dir/')) {
+        return { hexA: hexFromId(parts[0]), hexB: null, direction: parseInt(parts[1].split('/')[1], 10) };
+    }
     return { hexA: hexFromId(parts[0]), hexB: hexFromId(parts[1]) };
 }
 
