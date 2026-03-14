@@ -47,3 +47,59 @@ test('HexMapDocument typed methods', () => {
     const feature: Feature = { at: '0101', terrain: 'M' };
     doc.addFeature(feature); // should not throw
 });
+
+const SAMPLE_YAML_WITH_FEATURES = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    clear:
+      style: { color: "#ffffff" }
+    forest:
+      style: { color: "#00ff00" }
+features:
+  - at: "@all"
+    terrain: clear
+  - at: "0201"
+    terrain: forest
+    label: "Target"
+`;
+
+describe('HexMapDocument features mutation', () => {
+  test('getFeatures returns all features as typed array', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    const features = doc.getFeatures();
+    expect(features).toHaveLength(2);
+    expect(features[0].at).toBe('@all');
+    expect(features[1].terrain).toBe('forest');
+  });
+
+  test('deleteFeature removes feature at index', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    const deleted = doc.deleteFeature(1);
+    expect(deleted.terrain).toBe('forest');
+    expect(doc.getFeatures()).toHaveLength(1);
+    // Verify YAML round-trips correctly
+    const reparsed = new HexMapDocument(doc.toString());
+    expect(reparsed.getFeatures()).toHaveLength(1);
+  });
+
+  test('updateFeature merges partial changes', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    doc.updateFeature(1, { label: 'Dark Forest', elevation: 3 });
+    const features = doc.getFeatures();
+    expect(features[1].label).toBe('Dark Forest');
+    expect(features[1].elevation).toBe(3);
+    expect(features[1].terrain).toBe('forest'); // unchanged fields preserved
+  });
+
+  test('reorderFeature moves feature from one index to another', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    doc.reorderFeature(1, 0);
+    const features = doc.getFeatures();
+    expect(features[0].terrain).toBe('forest');
+    expect(features[1].at).toBe('@all');
+  });
+});
