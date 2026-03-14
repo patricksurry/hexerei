@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { drawScene } from './draw.js';
-import { Scene } from '../model/scene.js';
+import {  Scene  } from '@hexmap/canvas';
 
 describe('Canvas Drawing', () => {
   const mockCtx = {

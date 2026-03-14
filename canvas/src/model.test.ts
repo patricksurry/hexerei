@@ -86,7 +86,7 @@ describe('MapModel', () => {
 
 describe('bfm.yaml RFC compliance', () => {
   const yaml = readFileSync(
-    resolve(__dirname, '../../../../maps/definitions/bfm.yaml'),
+    resolve(__dirname, '../../maps/definitions/bfm.yaml'),
     'utf-8'
   );
 

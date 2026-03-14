@@ -1,4 +1,4 @@
-import { Scene } from '../model/scene.js';
+import {  Scene  } from '@hexmap/canvas';
 
 export interface CanvasTheme {
   background: string;

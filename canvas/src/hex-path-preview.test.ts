@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseHexPathInput } from './hex-path-preview.js';
-import { MapModel } from '../../editor/src/model/map-model.js';
+import { MapModel } from './model.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"

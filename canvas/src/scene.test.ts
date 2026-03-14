@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { MapModel } from '../../editor/src/model/map-model.js';
+import { MapModel } from './model.js';
 import { ViewportState, worldToScreen } from './viewport.js';
 import { hitTest } from './hit-test.js';
 import { buildScene } from './scene.js';
-import { SceneHighlight } from './selection.js';
+import { SceneHighlight } from './scene.js';
 import { Hex } from '@hexmap/core';
 
 const MOCK_YAML = `
@@ -54,7 +54,7 @@ describe('HitTest & Scene', () => {
   });
 
   it('buildScene should include all visible hexes', () => {
-    const scene = buildScene(model, vp, {});
+    const scene = buildScene(model, vp);
     expect(scene.hexagons).toHaveLength(2);
   });
 

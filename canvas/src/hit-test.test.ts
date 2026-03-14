@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { hitTest, HEX_SIZE } from './hit-test.js';
-import { MapModel } from './map-model.js';
+import { hitTest } from './hit-test.js';
+import { MapModel } from './model.js';
 import { ViewportState, worldToScreen } from '@hexmap/canvas';
 import { Hex } from '@hexmap/core';
 
@@ -23,8 +23,8 @@ describe('hitTest', () => {
   it('should hit the correct neighbor for edge 0 (SE neighbor for flat-top)', () => {
     // Use raw cube (0,0,0) as center
     const centerCube = Hex.createHex(0, 0, 0);
-    const centerPixel = Hex.hexToPixel(centerCube, HEX_SIZE, 'flat');
-    const midpoints = Hex.hexEdgeMidpoints(centerPixel, HEX_SIZE, 'flat');
+    const centerPixel = Hex.hexToPixel(centerCube, 1, 'flat');
+    const midpoints = Hex.hexEdgeMidpoints(centerPixel, 1, 'flat');
     
     // Midpoint 0 is at 30 degrees (ESE) - between East (0) and South-East (60)
     // For flat-top: 
@@ -43,8 +43,8 @@ describe('hitTest', () => {
     expect(hit?.type).toBe('edge');
     
     const neighborCube = Hex.hexNeighbor(centerCube, 1);
-    const expectedLabel = model.hexIdToLabel(Hex.hexId(neighborCube));
-    const centerLabel = model.hexIdToLabel(Hex.hexId(centerCube));
+    const expectedLabel = Hex.formatHexLabel(neighborCube, model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow);
+    const centerLabel = Hex.formatHexLabel(centerCube, model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow);
     
     if (hit?.type === 'edge') {
       expect(hit.hexLabels).toContain(centerLabel);

@@ -45,12 +45,12 @@ export class MapModel {
     const orientation = layout.orientation || 'flat-down';
     const firstCol = 1; // Assuming default for now
     const firstRow = 1; // Assuming default for now
-    const labelFormat = layout.label || layout.coordinates?.label || "XXYY";
+    const labelFormat = layout.label || (layout as any).coordinates?.label || "XXYY";
 
     this._grid = {
       orientation,
-      columns: layout.columns ?? 0,
-      rows: layout.rows ?? 0,
+      columns: (layout as any).columns ?? 0,
+      rows: (layout as any).rows ?? 0,
       firstCol,
       firstRow,
       labelFormat
@@ -58,7 +58,8 @@ export class MapModel {
 
     // Terrain definitions
     this._terrainDefs = new Map();
-    const hexTerrain = doc.raw.getIn(['terrain', 'hex'])?.toJSON?.() || {};
+    const terrainNode = doc.raw.get('terrain') as any;
+    const hexTerrain = terrainNode?.get?.('hex')?.toJSON?.() || terrainNode?.hex || {};
     for (const [key, def] of Object.entries(hexTerrain)) {
       const terrainDef = def as any;
       this._terrainDefs.set(key, {
@@ -81,7 +82,9 @@ export class MapModel {
     });
 
     this._hexToFeatures = new Map<string, FeatureItem[]>();
-    this._features = (doc.raw.get('features')?.toJSON?.() || []).map((f: any, idx: number) => {
+    const featuresNode = doc.raw.get('features') as any;
+    const featureList = featuresNode?.toJSON?.() || featuresNode || [];
+    this._features = featureList.map((f: any, idx: number) => {
         let hexIds: string[] = [];
         if (f.at) {
             try {

@@ -1,10 +1,7 @@
 import { Hex } from '@hexmap/core';
 import { Point, ViewportState, worldToScreen } from './viewport.js';
-import { MapModel } from '../../editor/src/model/map-model.js';
-import { Point, ViewportState, worldToScreen } from './viewport.js';
-import { MapModel } from './map-model.js';
+import { MapModel } from './model.js';
 const HEX_SIZE = 1;
-import { SceneHighlight } from './selection.js';
 
 
 export interface SceneHighlight {

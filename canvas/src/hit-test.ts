@@ -1,6 +1,6 @@
 import { Hex } from '@hexmap/core';
 import { Point, ViewportState, screenToWorld } from './viewport.js';
-import { MapModel } from '../../editor/src/model/map-model.js';
+import { MapModel } from './model.js';
 
 import { HitResult } from './types.js';
 

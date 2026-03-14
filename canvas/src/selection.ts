@@ -1,5 +1,5 @@
 import { Selection } from './types.js';
-import { MapModel } from '../../editor/src/model/map-model.js';
+import { MapModel } from './model.js';
 import { Hex } from '@hexmap/core';
 import { SceneHighlight } from './scene.js'; // Will move to scene.ts soon
 
@@ -21,7 +21,7 @@ export function selectVertex(vertexId: string): Selection {
 
 export function boundaryIdToHexPath(boundaryId: string, model: MapModel): string {
   const parts = Hex.parseBoundaryId(boundaryId);
-  const label1 = Hex.formatHexLabel(Hex.hexFromId(Hex.hexId(parts.hexA), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow));
+  const label1 = Hex.formatHexLabel(parts.hexA, model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow);
   const top = Hex.orientationTop(model.grid.orientation);
 
   if (parts.hexB === null && parts.direction !== undefined) {
@@ -39,7 +39,7 @@ export function boundaryIdToHexPath(boundaryId: string, model: MapModel): string
 
 export function vertexIdToHexPath(vertexId: string, model: MapModel): string {
   const parts = Hex.parseVertexId(vertexId);
-  const label1 = Hex.formatHexLabel(Hex.hexFromId(Hex.hexId(parts[0]), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow));
+  const label1 = Hex.formatHexLabel(parts[0], model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow);
   for (let i = 0; i < 6; i++) {
     const n1 = Hex.hexId(Hex.hexNeighbor(parts[0], i));
     const n2 = Hex.hexId(Hex.hexNeighbor(parts[0], (i + 1) % 6));

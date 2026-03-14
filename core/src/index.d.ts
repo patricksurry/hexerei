@@ -6,4 +6,4 @@ export { Hex };
 export * from './mesh/types.js';
 export { HexMapLoader } from './format/loader.js';
 export * from './hexpath/hex-path.js';
-export type { GeometryType, HexPathResult } from './hexpath/types.js';
+export { GeometryType, HexPathResult } from './hexpath/types.js';
