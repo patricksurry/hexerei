@@ -1,5 +1,5 @@
 import { parseDocument, Document } from 'yaml';
-import type { HexMapLayout, HexMapMetadata, Feature } from './types.js';
+import type { HexMapLayout, HexMapMetadata, Feature, TerrainVocabulary, TerrainTypeDef } from './types.js';
 
 /**
  * A wrapper around the YAML CST/AST to allow safe editing of HexMap documents
@@ -128,6 +128,37 @@ export class HexMapDocument {
         // Re-insert at the target position
         const featuresSeq = this.doc.get('features') as any;
         featuresSeq.items.splice(adjustedTo, 0, this.doc.createNode(feature));
+    }
+
+    /**
+     * Get the full terrain vocabulary.
+     */
+    getTerrain(): TerrainVocabulary {
+        const terrainNode = this.doc.get('terrain');
+        if (!terrainNode) return {};
+        return (terrainNode as any).toJSON() as TerrainVocabulary;
+    }
+
+    /**
+     * Set (add or update) a terrain type definition.
+     */
+    setTerrainType(geometry: 'hex' | 'edge' | 'vertex', key: string, def: TerrainTypeDef): void {
+        if (!this.doc.has('terrain')) {
+            this.doc.set('terrain', this.doc.createNode({}));
+        }
+        if (!this.doc.hasIn(['terrain', geometry])) {
+            this.doc.setIn(['terrain', geometry], this.doc.createNode({}));
+        }
+        this.doc.setIn(['terrain', geometry, key], def);
+    }
+
+    /**
+     * Delete a terrain type definition.
+     */
+    deleteTerrainType(geometry: 'hex' | 'edge' | 'vertex', key: string): void {
+        if (this.doc.hasIn(['terrain', geometry, key])) {
+            this.doc.deleteIn(['terrain', geometry, key]);
+        }
     }
 
     /**

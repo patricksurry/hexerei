@@ -103,3 +103,28 @@ describe('HexMapDocument features mutation', () => {
     expect(features[1].at).toBe('@all');
   });
 });
+
+describe('HexMapDocument terrain mutation', () => {
+  test('getTerrain returns terrain vocabulary', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    const terrain = doc.getTerrain();
+    expect(terrain.hex).toBeDefined();
+    expect(terrain.hex!['clear']).toBeDefined();
+    expect(terrain.hex!['clear'].style?.color).toBe('#ffffff');
+  });
+
+  test('setTerrainType adds a new terrain definition', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    doc.setTerrainType('hex', 'swamp', { style: { color: '#336633' } });
+    const terrain = doc.getTerrain();
+    expect(terrain.hex!['swamp'].style?.color).toBe('#336633');
+  });
+
+  test('deleteTerrainType removes a terrain definition', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    doc.deleteTerrainType('hex', 'forest');
+    const terrain = doc.getTerrain();
+    expect(terrain.hex!['forest']).toBeUndefined();
+    expect(terrain.hex!['clear']).toBeDefined();
+  });
+});
