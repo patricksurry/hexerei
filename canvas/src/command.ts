@@ -1,4 +1,4 @@
-import { HexMapDocument, type HexMapMetadata, type Feature } from '@hexmap/core';
+import { HexMapDocument, type HexMapMetadata, type HexMapLayout, type Feature, type TerrainTypeDef } from '@hexmap/core';
 import { MapModel } from './model.js';
 
 export type MapCommand =
@@ -6,7 +6,10 @@ export type MapCommand =
   | { type: 'deleteFeature'; index: number }
   | { type: 'updateFeature'; index: number; changes: Partial<Feature> }
   | { type: 'reorderFeature'; fromIndex: number; toIndex: number }
-  | { type: 'setMetadata'; key: keyof HexMapMetadata; value: unknown };
+  | { type: 'setMetadata'; key: keyof HexMapMetadata; value: unknown }
+  | { type: 'setLayout'; key: keyof HexMapLayout; value: unknown }
+  | { type: 'setTerrainType'; geometry: 'hex' | 'edge' | 'vertex'; key: string; def: TerrainTypeDef }
+  | { type: 'deleteTerrainType'; geometry: 'hex' | 'edge' | 'vertex'; key: string };
 
 export interface MapState {
   document: HexMapDocument;
@@ -56,6 +59,36 @@ export function executeCommand(command: MapCommand, state: MapState): CommandRes
             const previousValue = doc.getMetadata()[command.key];
             doc.setMetadata(command.key, command.value as any);
             inverse = { type: 'setMetadata', key: command.key, value: previousValue };
+            break;
+        }
+        case 'setLayout': {
+            const previousValue = doc.getLayout()[command.key];
+            doc.setLayout(command.key, command.value as any);
+            inverse = { type: 'setLayout', key: command.key, value: previousValue };
+            break;
+        }
+        case 'setTerrainType': {
+            const terrain = doc.getTerrain();
+            const existing = terrain[command.geometry]?.[command.key];
+            if (existing) {
+                // Updating existing — inverse restores old definition
+                inverse = { type: 'setTerrainType', geometry: command.geometry, key: command.key, def: existing };
+            } else {
+                // Adding new — inverse deletes it
+                inverse = { type: 'deleteTerrainType', geometry: command.geometry, key: command.key };
+            }
+            doc.setTerrainType(command.geometry, command.key, command.def);
+            break;
+        }
+        case 'deleteTerrainType': {
+            const terrain = doc.getTerrain();
+            const existing = terrain[command.geometry]?.[command.key];
+            if (!existing) {
+                inverse = { type: 'deleteTerrainType', geometry: command.geometry, key: command.key };
+            } else {
+                inverse = { type: 'setTerrainType', geometry: command.geometry, key: command.key, def: existing };
+            }
+            doc.deleteTerrainType(command.geometry, command.key);
             break;
         }
     }

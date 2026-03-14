@@ -78,6 +78,32 @@ describe('executeCommand', () => {
     expect(result.inverse.type).toBe('setMetadata');
   });
 
+  it('setLayout updates layout field', () => {
+    const state = makeState();
+    const result = executeCommand({ type: 'setLayout', key: 'label', value: 'CCRR' }, state);
+    expect(result.state.document.getLayout().label).toBe('CCRR');
+    expect(result.inverse.type).toBe('setLayout');
+  });
+
+  it('setTerrainType adds terrain definition', () => {
+    const state = makeState();
+    const result = executeCommand({
+      type: 'setTerrainType', geometry: 'hex', key: 'swamp',
+      def: { style: { color: '#336633' } }
+    }, state);
+    expect(result.state.document.getTerrain().hex!['swamp']).toBeDefined();
+    expect(result.inverse.type).toBe('deleteTerrainType');
+  });
+
+  it('deleteTerrainType removes terrain definition', () => {
+    const state = makeState();
+    const result = executeCommand({
+      type: 'deleteTerrainType', geometry: 'hex', key: 'forest'
+    }, state);
+    expect(result.state.document.getTerrain().hex!['forest']).toBeUndefined();
+    expect(result.inverse.type).toBe('setTerrainType');
+  });
+
   it('state is not mutated — original state unchanged', () => {
     const state = makeState();
     const originalFeatureCount = state.model.features.length;
