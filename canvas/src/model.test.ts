@@ -113,3 +113,21 @@ describe('bfm.yaml RFC compliance', () => {
   });
 });
 });
+
+import { HexMapDocument } from '@hexmap/core';
+
+it('MapModel.fromDocument rebuilds model from a HexMapDocument', () => {
+  const doc = new HexMapDocument(MOCK_YAML);
+  const model = MapModel.fromDocument(doc);
+  expect(model.metadata.title).toBe('Test Map');
+  expect(model.features).toHaveLength(2);
+  expect(model.features[1].label).toBe('Target');
+});
+
+it('MapModel.fromDocument reflects document mutations', () => {
+  const doc = new HexMapDocument(MOCK_YAML);
+  doc.addFeature({ at: '0101', terrain: 'forest', label: 'New' });
+  const model = MapModel.fromDocument(doc);
+  expect(model.features).toHaveLength(3);
+  expect(model.features[2].label).toBe('New');
+});

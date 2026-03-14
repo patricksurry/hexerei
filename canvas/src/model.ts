@@ -58,16 +58,15 @@ export class MapModel {
 
     // Terrain definitions
     this._terrainDefs = new Map();
-    const terrainNode = doc.raw.get('terrain') as any;
-    const hexTerrain = terrainNode?.get?.('hex')?.toJSON?.() || terrainNode?.hex || {};
+    const terrainVocab = doc.getTerrain();
+    const hexTerrain = terrainVocab.hex ?? {};
     for (const [key, def] of Object.entries(hexTerrain)) {
-      const terrainDef = def as any;
-      this._terrainDefs.set(key, {
-        key,
-        name: terrainDef.name ?? key,
-        color: terrainDef.style?.color ?? '#888888',
-        properties: terrainDef.properties
-      });
+        this._terrainDefs.set(key, {
+            key,
+            name: def.name ?? key,
+            color: def.style?.color ?? '#888888',
+            properties: def.properties as Record<string, any> | undefined
+        });
     }
 
     // Use provided mesh or load it from doc
@@ -82,9 +81,8 @@ export class MapModel {
     });
 
     this._hexToFeatures = new Map<string, FeatureItem[]>();
-    const featuresNode = doc.raw.get('features') as any;
-    const featureList = featuresNode?.toJSON?.() || featuresNode || [];
-    this._features = featureList.map((f: any, idx: number) => {
+    const featureList = doc.getFeatures();
+    this._features = featureList.map((f, idx) => {
         let hexIds: string[] = [];
         if (f.at) {
             try {
@@ -99,10 +97,10 @@ export class MapModel {
 
         const featureItem: FeatureItem = {
             index: idx,
-            terrain: f.terrain,
+            terrain: f.terrain ?? '',
             label: f.label,
             id: f.id,
-            tags: Array.isArray(f.tags) ? f.tags : (f.tags ? f.tags.split(/\s+/) : []),
+            tags: typeof f.tags === 'string' ? f.tags.split(/\s+/).filter(Boolean) : [],
             at: typeof f.at === 'string' ? f.at : 'complex',
             isBase: f.at === '@all',
             hexIds,
@@ -129,6 +127,17 @@ export class MapModel {
     const model = new MapModel(doc, mesh);
     model._yaml = yamlSource;
     return model;
+  }
+
+  /**
+   * Rebuild a MapModel from an existing HexMapDocument.
+   * Used by the command executor after mutations.
+   */
+  static fromDocument(doc: HexMapDocument): MapModel {
+      const mesh = HexMapLoader.load(doc.toString());
+      const model = new MapModel(doc, mesh);
+      model._yaml = doc.toString();
+      return model;
   }
 
   toYAML(): string { return this._yaml; }
