@@ -82,7 +82,7 @@ describe('HitTest & Scene', () => {
       color: '#FF3DFF',
       style: 'select'
     };
-    const scene = buildScene(model, vp, '#141414', [hl]);
+    const scene = buildScene(model, vp, { background: '#141414', highlights: [hl] });
     expect(scene.edgeHighlights).toHaveLength(1);
 
     // For a flat hex, the NE edge (direction 0) is between corner 5 (300°) and corner 0 (0°).
@@ -100,6 +100,18 @@ describe('HitTest & Scene', () => {
     expect(p1.y).toBeCloseTo(expectedP1.y, 3);
     expect(p2.x).toBeCloseTo(expectedP2.x, 3);
     expect(p2.y).toBeCloseTo(expectedP2.y, 3);
+  });
+
+  it('buildScene accepts SceneOptions object', () => {
+    const hl: SceneHighlight = {
+      type: 'hex',
+      hexIds: [Hex.hexId(Hex.offsetToCube(1, 1, 'flat-down'))],
+      color: '#00D4FF',
+      style: 'select'
+    };
+    const scene = buildScene(model, vp, { highlights: [hl] });
+    expect(scene.highlights).toHaveLength(1);
+    expect(scene.highlights[0].color).toBe('#00D4FF');
   });
 
   it('buildScene includes feature label at centroid when feature has label', () => {

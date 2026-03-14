@@ -82,7 +82,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
         featureLabelShadow: '0px 2px 4px rgba(0,0,0,0.8)'
       };
 
-      const scene = buildScene(model, vp, { background: theme.background, highlights, segmentPath } as any);
+      const scene = buildScene(model, vp, { background: theme.background, highlights, segmentPath });
       drawScene(ctx, scene, { theme });
     };
 
