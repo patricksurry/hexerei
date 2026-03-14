@@ -1,3 +1,6 @@
+# hand-craft example transcribing the battle for moscow map as text
+# to help give intuition for how hexpath should work
+
 Battle for Moscow
 Copyright 1986 by Game Designers' Workshop
 

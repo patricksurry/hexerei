@@ -54,14 +54,14 @@ When `-` appears inside a token that matches a valid coordinate label (e.g., `bo
 
 A HexPath resolves to a **Geometry Collection**: an ordered list of **Segments**, each a contiguous sequence of atoms.
 
-#### 1. Segments
+#### Segments
 
 *   A segment is built by appending atoms to the current active segment.
 *   **Connectors** (`-`, `~`) route from the cursor to the next atom and append all intermediate atoms (including the destination) to the segment.
 *   **Jumps** (whitespace or `,`) terminate the current segment. The next atom starts a new segment.
 *   Keywords `include`, `exclude`, `close`, `fill` also terminate the current segment.
 
-#### 2. Include / Exclude
+#### Include / Exclude
 
 `include` and `exclude` are modal switches that affect how subsequent atoms are applied to the collection.
 
@@ -69,12 +69,12 @@ A HexPath resolves to a **Geometry Collection**: an ordered list of **Segments**
 *   **`include`** (the default) marks subsequent atoms for addition.
 *   Both keywords imply a segment boundary — the current segment is closed before the mode changes.
 
-#### 3. Close and Fill
+#### Close and Fill
 
 *   **`close`** connects the cursor back to the current segment's anchor (its first atom) and ends the segment. `~close` uses flipped bias for the closing path.
 *   **`fill`** does the same as `close`, then adds all interior atoms of the active geometry type within the closed boundary (typically in scanline order). `~fill` uses flipped bias for the closing path.
 
-#### 4. Order Preservation
+#### Order Preservation
 
 The resolution process preserves the order of atoms as defined by path segments, minus any atoms removed by `exclude`.
 

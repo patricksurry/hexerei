@@ -1,70 +1,89 @@
 # HexMap RFC & Schema
 
-This directory contains the normative specification and JSON Schema for the HexMap format.
+The normative specification and JSON Schema for the HexMap format.
 
-## Overview
+## Directory Structure
 
-The HexMap format is a JSON/YAML-based specification for hexagonal grid maps, designed for wargames and digital mapping.
+```
+rfc/
+├── hexmap.schema.json          # Normative JSON Schema (HexMap 1.0)
+├── Makefile                    # Build RFC outputs + run schema tests
+├── src/
+│   ├── rfc.md                  # Master document (includes all sections)
+│   ├── 00-front-matter.md …    # Modular RFC sections
+│   ├── appendix-*.md           # Appendices
+│   └── snippets/*.yaml         # Includable YAML examples
+├── build/                      # Generated outputs (HTML, TXT, XML)
+├── tests/
+│   ├── valid/                  # Must-pass schema samples
+│   └── invalid/                # Must-fail schema samples
+└── docs/plans/                 # Design docs and implementation plans
+```
 
-- **[HexMap JSON Schema](hexmap.schema.json)**: The normative definition of the format.
-- **[RFC Document (Master)](master.md)**: The human-readable specification.
-- **[Validation Tests](tests/samples/)**: A suite of valid and invalid samples for regression testing.
+## Quick Start
 
-## HexMap & HexPath Cheat Sheet
+Prerequisites: `mmark`, `xml2rfc` (via uv), `ajv-cli` + `ajv-formats` (via npm).
 
-### Document Structure (YAML)
+```bash
+cd rfc
+uv sync                 # install python deps
+make tests              # validate schema test cases
+make rfc                # build HTML/TXT/XML outputs
+```
+
+## HexMap Cheat Sheet
+
+### Document Structure
 ```yaml
 hexmap: "1.0"
 metadata:
   title: "My Map"
   id: "my-map"
 layout:
-  orientation: flat-down
-  all: "0101 0505 !"
+  orientation: flat-down                # flat-down|flat-up|pointy-right|pointy-left
+  all: "0101 - 2201 - 2215 - 0115 fill"
 terrain:
   hex:
     forest:
       name: Forest
 features:
-  - at: "0101 0303"
+  - at: "0101 - 0303"
     terrain: forest
 ```
 
 ### HexPath Essentials (`at` key)
-- **Coordinates**: `"0101"`, `"A5"`
-- **Collections**: Space-separated (`"0101 0102"`)
-- **Path**: Space connects atoms via shortest path (`"0101 0505"`)
-- **Jump**: Comma starts new segment (`"0101, 0505"`)
-- **Fill**: Exclamation closes and fills area (`"0101 0501 0505 0105 !"` -> rectangle)
-- **Subtraction**: Minus operator removes items (`"0101 0505 - 0303"`)
-- **Global**: `"@all"` refers to `layout.all`
-- **Edges**: `"0101/N"`, `"0101/SE"`
-- **Vertices**: `"0101.N"`, `"0101.NE"`
+| Syntax | Meaning |
+|--------|---------|
+| `"0101"`, `"A5"` | Single hex coordinate |
+| `"0101 0102 0103"` | Collection (space-separated) |
+| `"0101 - 0505"` | Shortest path between atoms |
+| `"0101 ~ 0505"` | Path with flipped bias |
+| `"0101, 0505"` | Jump (new disconnected segment) |
+| `"0101 - 0501 - 0505 - 0105 fill"` | Close and fill area |
+| `"@all exclude 0303"` | Global ref with exclusion |
+| `"0101/N"`, `"0101/SE"` | Edge addressing |
+| `"0101.N"`, `"0101.NE"` | Vertex addressing |
 
-## Quick Start
+## Schema Validation (TDD)
 
-```bash
-cd rfc
+The JSON Schema is the normative reference. Development follows TDD:
 
-# 1. Setup dependencies
-uv sync
-
-# 2. Run Schema Validation (TDD)
-python3 run_schema_tests.py
-
-# 3. Build RFC Document (HTML/TXT)
-uv run python build.py
-```
-
-## Validation & TDD
-
-The JSON Schema (`hexmap.schema.json`) is the normative reference for map 
-structure. We use a TDD approach for schema development:
-
-1. **Add Test Case**: Put JSON files in `tests/samples/valid/` (must pass) or `tests/samples/invalid/` (must fail).
-2. **Run Runner**: `python3 run_schema_tests.py` validates all samples.
-3. **Iterate**: Update the schema until all tests are green.
+1. Add a test case in `tests/valid/` (must pass) or `tests/invalid/` (must fail)
+2. Run `make tests`
+3. Update the schema until all tests pass
 
 ## Authoring the RFC
 
-For information on how to edit the RFC sections, manage examples, or troubleshoot the build process, see **[AUTHORING.md](docs/AUTHORING.md)**.
+The RFC is split into modular sections under `src/`. The master document
+`src/rfc.md` includes them all via mmark's `{{filename.md}}` syntax.
+
+**Editing**: Modify individual `src/XX-name.md` files. YAML snippets live in
+`src/snippets/` and are included with `<{{snippets/file.yaml}}>`.
+
+**Building**: `make rfc` runs mmark to produce XML, then xml2rfc for text output,
+plus a direct HTML render. Outputs go to `build/`.
+
+**Syntax notes**:
+- Use `##` (level 2) for main RFC sections -- mmark promotes them in the output.
+- Avoid code blocks inside list items (mmark/xml2rfc is fragile here).
+- Citations use `[@RefID]` syntax; references are defined in `src/14-references.md`.

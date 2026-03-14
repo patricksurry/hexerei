@@ -1,0 +1,4 @@
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101"

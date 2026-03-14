@@ -18,7 +18,7 @@ The top-level structure of a HexMap document.
 The `metadata` object carries descriptive information about the map.
 All fields are OPTIONAL.
 
-<{{../examples/snippets/metadata.yaml}}
+<{{snippets/metadata.yaml}}
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -43,7 +43,7 @@ them through unchanged.
 The `layout` object defines the hex layout's visual arrangement and logical extent.
 It is REQUIRED.
 
-<{{../examples/snippets/layout.yaml}}
+<{{snippets/layout.yaml}}
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -191,7 +191,7 @@ Most wargames use `"top-left"` (XXYY with 01,01 in the upper-left).
 The `terrain` object defines all terrain types used on this map, organized
 by the geometry they apply to: hexes, edges, or vertices.
 
-<{{../examples/snippets/terrain.yaml}}
+<{{snippets/terrain.yaml}}
 
 #### Terrain type definition object
 

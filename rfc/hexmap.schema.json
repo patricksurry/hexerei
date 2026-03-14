@@ -131,6 +131,7 @@
       }
     },
     "FeatureEntry": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/$defs/FeatureAttributes" },
         { "$ref": "#/$defs/GeometrySelector" }
