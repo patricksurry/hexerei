@@ -1,4 +1,4 @@
-import { FeatureItem } from '../types';
+import {  FeatureItem  } from '@hexmap/canvas';
 import './FeatureStack.css';
 
 interface FeatureStackProps {
@@ -7,6 +7,7 @@ interface FeatureStackProps {
   terrainColor?: (terrain: string) => string;
   onSelect?: (indices: number[], modifier: 'none' | 'shift' | 'cmd') => void;
   onHover?: (index: number | null) => void;
+  dispatch?: (command: any) => void;
 }
 
 export function FeatureStack({

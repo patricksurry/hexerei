@@ -1,11 +1,13 @@
-import { Selection } from '../types';
-import { MapModel } from '../model/map-model';
+import { Hex } from '@hexmap/core';
+import {  Selection  } from '@hexmap/canvas';
+import {  MapModel  } from '@hexmap/canvas';
 import './Inspector.css';
 
 interface InspectorProps {
   selection: Selection;
   model: MapModel | null;
   onSelectFeature?: (index: number) => void;
+  dispatch?: (command: any) => void;
 }
 
 export function Inspector({
@@ -150,7 +152,7 @@ export function Inspector({
   );
 
   const renderVertex = (vertexId: string) => {
-    const meetingHexes = vertexId.split('^').map(id => model.hexIdToLabel(id));
+    const meetingHexes = vertexId.split('^').map(id => Hex.formatHexLabel(Hex.hexFromId(id), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow));
     return (
       <div className="inspector-content">
         <section className="inspector-section">

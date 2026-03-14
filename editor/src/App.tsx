@@ -6,11 +6,15 @@ import { Inspector } from './components/Inspector';
 import { StatusBar } from './components/StatusBar';
 import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { Selection, HitResult } from './types';
-import { MapModel } from './model/map-model';
-import { Hex, HexMapDocument } from '@hexmap/core';
-import { parseHexPathInput, HexPathPreview } from '@hexmap/canvas';
-import {
+import { Hex } from '@hexmap/core';
+import { 
+  MapModel, 
+  CommandHistory, 
+  MapCommand, 
+  Selection, 
+  HitResult, 
+  HexPathPreview, 
+  parseHexPathInput, 
   SceneHighlight,
   clearSelection,
   selectHex,
@@ -23,10 +27,11 @@ import {
   topmostFeatureAtHex,
   boundaryIdToHexPath,
   vertexIdToHexPath
-} from './model/selection';
+} from '@hexmap/canvas';
 
 export function App() {
-  const [model, setModel] = useState<MapModel | null>(null);
+  const [history, setHistory] = useState<CommandHistory | null>(null);
+  const model = history?.currentState.model ?? null;
   const [leftPanelVisible, setLeftPanelVisible] = useState(true);
   const [rightPanelVisible, setRightPanelVisible] = useState(true);
   const [commandValue, setCommandValue] = useState('');
@@ -49,7 +54,10 @@ export function App() {
   useEffect(() => {
     fetch('/maps/battle-for-moscow.hexmap.yaml')
       .then(r => r.text())
-      .then(yaml => setModel(MapModel.load(yaml)))
+      .then(yaml => {
+        const newModel = MapModel.load(yaml);
+        setHistory(new CommandHistory({ document: newModel.document, model: newModel }));
+      })
       .catch(err => console.error('Failed to load map:', err));
   }, []);
 
@@ -97,7 +105,7 @@ export function App() {
   }, [selection, model]);
 
   const handleHit = (result: HitResult) => {
-    if (!result) {
+    if (!result || result.type === 'none') {
       setSelection(clearSelection());
       return;
     }
@@ -136,25 +144,22 @@ export function App() {
 
     if (value.startsWith('/')) return;
 
-    const doc = new HexMapDocument(model.toYAML());
-    doc.addFeature({
-      at: value.trim(),
-      terrain: 'clear', // Default
-      label: 'New Feature'
-    });
-
-    const newYaml = doc.toString();
-    setModel(MapModel.load(newYaml));
+    if (history) {
+      const cmd: MapCommand = { type: 'addFeature', feature: { at: value.trim(), terrain: 'clear', label: 'New Feature' } };
+      history.execute(cmd);
+      setHistory(new CommandHistory(history.currentState)); // Ensure re-render
+    }
     setCommandValue('');
   };
 
-  const handleNavigate = (direction: number) => {
+  const handleNavigate = (directionName: string) => {
     if (!model || selection.type !== 'hex') return;
+    const direction = Hex.directionIndex(directionName, Hex.orientationTop(model.grid.orientation));
     const cube = Hex.hexFromId(selection.hexId);
     const neighbor = Hex.hexNeighbor(cube, direction);
     const neighborId = Hex.hexId(neighbor);
     if (model.mesh.getHex(neighborId)) {
-      setSelection(selectHex(neighborId, model.hexIdToLabel(neighborId)));
+      setSelection(selectHex(neighborId, Hex.formatHexLabel(neighbor, model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow)));
     }
   };
 
@@ -171,7 +176,13 @@ export function App() {
     }
   };
 
-  const features = model?.features ?? [];
+  const dispatch = (cmd: MapCommand) => {
+    if (!history) return;
+    history.execute(cmd);
+    setHistory(new CommandHistory(history.currentState));
+  };
+
+  const features = (model?.features ?? []) as any[];
   const mapTitle = model?.metadata?.title ?? 'Untitled';
 
   return (
@@ -195,6 +206,7 @@ export function App() {
           terrainColor={(t) => model?.terrainColor(t) ?? '#888'}
           onSelect={handleSelectFeature}
           onHover={setHoverIndex}
+          dispatch={dispatch}
         />
       }
       canvas={
@@ -214,6 +226,7 @@ export function App() {
           selection={selection}
           model={model}
           onSelectFeature={(idx) => handleSelectFeature([idx])}
+          dispatch={dispatch}
         />
       }
       statusBar={
@@ -221,7 +234,7 @@ export function App() {
           cursor={cursorHex ?? (hoverIndex !== null && features[hoverIndex] ? features[hoverIndex].at.split(' ')[0] : '----')}
           zoom={zoom}
           mapTitle={mapTitle}
-          dirty={false}
+          dirty={history?.isDirty ?? false}
         />
       }
     />
