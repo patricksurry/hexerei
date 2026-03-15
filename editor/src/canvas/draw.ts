@@ -83,7 +83,11 @@ export function drawScene(
     }
     ctx.closePath();
 
-    if (hl.style === 'select') {
+    if (hl.style === 'dim') {
+      // Dark overlay to dim non-matching features
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fill();
+    } else if (hl.style === 'select') {
       // Glow effect for selection
       if (theme?.selectionGlow) {
         ctx.shadowColor = hl.color;

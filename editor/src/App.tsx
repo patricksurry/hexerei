@@ -149,13 +149,27 @@ export const App = () => {
         ? [{ type: 'hex', hexIds: preview.hexIds, color: '#00D4FF', style: 'ghost' }]
         : [];
 
+    // Dim highlights for non-matching features when filter is active
+    const dimHighlights: SceneHighlight[] = [];
+    if (filteredIndices !== null) {
+      const matchingHexIds = new Set(
+        filteredIndices.flatMap((idx) => model.features[idx]?.hexIds ?? [])
+      );
+      const allHexIds = model.mesh.getAllHexes().map((h) => h.id);
+      const dimHexIds = allHexIds.filter((id) => !matchingHexIds.has(id));
+      if (dimHexIds.length > 0) {
+        dimHighlights.push({ type: 'hex', hexIds: dimHexIds, color: '#000000', style: 'dim' });
+      }
+    }
+
     return [
       ...highlightsForSelection(selection, model),
       ...highlightsForHover(hoverIndex, model),
       ...highlightsForCursor(cursorHex, model),
       ...previewHighlights,
+      ...dimHighlights,
     ];
-  }, [selection, hoverIndex, cursorHex, model, preview, historyVersion]);
+  }, [selection, hoverIndex, cursorHex, model, preview, historyVersion, filteredIndices]);
 
   const stackSelectedIndices = useMemo(() => {
     if (!model) return [];

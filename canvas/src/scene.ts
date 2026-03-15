@@ -10,7 +10,7 @@ export interface SceneHighlight {
   boundaryId?: string;
   vertexId?: string;
   color: string;
-  style: 'select' | 'hover' | 'ghost';
+  style: 'select' | 'hover' | 'ghost' | 'dim';
 }
 
 export interface SceneOptions {
@@ -31,7 +31,7 @@ export interface HighlightRenderItem {
   hexId: string;
   corners: Point[]; // 6 screen-space points
   color: string;
-  style: 'select' | 'hover' | 'ghost';
+  style: 'select' | 'hover' | 'ghost' | 'dim';
 }
 
 export interface EdgeHighlightRenderItem {

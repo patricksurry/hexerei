@@ -139,4 +139,16 @@ features:
     expect(scene.featureLabels).toHaveLength(1);
     expect(scene.featureLabels[0].text).toBe('Smolensk');
   });
+
+  it('dim highlight style is accepted', () => {
+    const hl: SceneHighlight = {
+      type: 'hex',
+      hexIds: [Hex.hexId(Hex.offsetToCube(1, 1, 'flat-down'))],
+      color: '#000000',
+      style: 'dim'
+    };
+    const scene = buildScene(model, vp, { highlights: [hl] });
+    expect(scene.highlights).toHaveLength(1);
+    expect(scene.highlights[0].style).toBe('dim');
+  });
 });
