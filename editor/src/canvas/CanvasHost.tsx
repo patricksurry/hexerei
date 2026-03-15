@@ -220,9 +220,24 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
           onPointerCancel={handlePointerUp}
           tabIndex={0}
           onKeyDown={(e) => {
-            if (e.key.startsWith('Arrow')) {
+            if (!e.key.startsWith('Arrow')) return;
+            
+            const dirMap: Record<string, string> = e.shiftKey
+              ? {
+                  ArrowUp: 'NW',
+                  ArrowDown: 'SE',
+                }
+              : {
+                  ArrowLeft: 'W',
+                  ArrowRight: 'E',
+                  ArrowUp: 'NE',
+                  ArrowDown: 'SW',
+                };
+
+            const direction = dirMap[e.key];
+            if (direction) {
               e.preventDefault();
-              onNavigate?.(e.key.replace('Arrow', '').toLowerCase());
+              onNavigate?.(direction);
             }
           }}
         />
