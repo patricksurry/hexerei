@@ -122,6 +122,26 @@ export const App = () => {
         const nextIdx = (activeZone + 1) % zones.length;
         zones[nextIdx]?.focus();
       },
+      'delete': () => {
+        if (selection.type === 'feature' && historyRef.current) {
+          // Delete in reverse order to preserve indices
+          for (const idx of [...selection.indices].sort((a, b) => b - a)) {
+            historyRef.current.execute({ type: 'deleteFeature', index: idx });
+          }
+          setHistoryVersion((v) => v + 1);
+          setSelection(clearSelection());
+        }
+      },
+      'backspace': () => {
+        // Same as delete — common on Mac keyboards without a Delete key
+        if (selection.type === 'feature' && historyRef.current) {
+          for (const idx of [...selection.indices].sort((a, b) => b - a)) {
+            historyRef.current.execute({ type: 'deleteFeature', index: idx });
+          }
+          setHistoryVersion((v) => v + 1);
+          setSelection(clearSelection());
+        }
+      },
     }),
     []
   );
