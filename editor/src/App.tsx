@@ -28,6 +28,8 @@ import { Inspector } from './components/Inspector';
 import { StatusBar } from './components/StatusBar';
 import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useHybridFocus } from './hooks/useHybridFocus';
+import { useCallback } from 'react';
 
 export const App = () => {
   const historyRef = useRef<CommandHistory | null>(null);
@@ -112,6 +114,13 @@ export const App = () => {
   );
 
   useKeyboardShortcuts(shortcuts);
+
+  const handleHybridCapture = useCallback((key: string) => {
+    setCommandValue((prev) => prev + key);
+    commandBarRef.current?.focus();
+  }, []);
+
+  useHybridFocus({ onCapture: handleHybridCapture });
 
   const filteredIndices = useMemo(() => {
     if (!filterQuery || !model) return null; // null = no filter active
