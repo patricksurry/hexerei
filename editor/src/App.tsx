@@ -99,7 +99,14 @@ export const App = () => {
           setHistoryVersion((v) => v + 1);
         }
       },
-      escape: () => setSelection(clearSelection()),
+      escape: () => {
+        if (commandValue) {
+          setCommandValue('');
+          commandBarRef.current?.blur();
+        } else {
+          setSelection(clearSelection());
+        }
+      },
     }),
     []
   );
