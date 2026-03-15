@@ -14,6 +14,7 @@ export function Inspector({
   selection,
   model,
   onSelectFeature,
+  dispatch,
 }: InspectorProps) {
   if (!model) return <div className="inspector"><div className="inspector-content">Loading...</div></div>;
   const renderMetadata = () => (
@@ -44,33 +45,111 @@ export function Inspector({
   );
 
   const renderFeature = (indices: number[]) => {
-    const feature = model.features.find((f) => indices.includes(f.index));
+    const featureIndex = indices[0];
+    const feature = model.features[featureIndex];
     if (!feature) return <div className="inspector-content">Feature not found</div>;
+
+    if (indices.length > 1) {
+        return (
+            <div className="inspector-content">
+                <section className="inspector-section">
+                    <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>MULTIPLE SELECTED</h3>
+                    <p className="placeholder-text">{indices.length} features selected</p>
+                </section>
+                <div className="inspector-actions">
+                    <button className="btn-danger" onClick={() => {
+                        // Delete in reverse order to preserve indices
+                        for (const idx of [...indices].sort((a, b) => b - a)) {
+                            dispatch?.({ type: 'deleteFeature', index: idx });
+                        }
+                    }}>Delete ({indices.length})</button>
+                </div>
+            </div>
+        );
+    }
+
+    const handleFieldBlur = (key: string, value: string | number | undefined) => {
+        const currentValue = (feature as any)[key];
+        if (value !== currentValue) {
+            dispatch?.({ type: 'updateFeature', index: featureIndex, changes: { [key]: value || undefined } });
+        }
+    };
+
+    const terrainKeys = Array.from(model.terrainDefs.keys());
 
     return (
       <div className="inspector-content">
         <section className="inspector-section">
           <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>FEATURE PROPERTIES</h3>
           <div className="inspector-row">
-            <label>ID</label>
-            <span className="font-mono">{feature.id || '-'}</span>
+            <label>Label</label>
+            <input
+                type="text"
+                className="inspector-input"
+                defaultValue={feature.label || ''}
+                key={`label-${featureIndex}-${feature.label}`}
+                onBlur={(e) => handleFieldBlur('label', e.target.value)}
+            />
           </div>
           <div className="inspector-row">
-            <label>Label</label>
-            <span>{feature.label || '-'}</span>
+            <label>ID</label>
+            <input
+                type="text"
+                className="inspector-input font-mono"
+                defaultValue={feature.id || ''}
+                key={`id-${featureIndex}-${feature.id}`}
+                onBlur={(e) => handleFieldBlur('id', e.target.value)}
+            />
           </div>
           <div className="inspector-row">
             <label>Terrain</label>
-            <span>{feature.terrain || '-'}</span>
+            <select
+                className="inspector-select"
+                defaultValue={feature.terrain}
+                key={`terrain-${featureIndex}-${feature.terrain}`}
+                onChange={(e) => handleFieldBlur('terrain', e.target.value)}
+            >
+                <option value="">(none)</option>
+                {terrainKeys.map(key => (
+                    <option key={key} value={key}>{key}</option>
+                ))}
+            </select>
           </div>
         </section>
         <section className="inspector-section">
           <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>GEOMETRY</h3>
           <div className="inspector-row">
             <label>At</label>
-            <span className="font-mono">{feature.at}</span>
+            <input
+                type="text"
+                className="inspector-input font-mono"
+                defaultValue={feature.at}
+                key={`at-${featureIndex}-${feature.at}`}
+                onBlur={(e) => handleFieldBlur('at', e.target.value)}
+            />
+          </div>
+          <div className="inspector-row">
+            <label>Elevation</label>
+            <input
+                type="number"
+                className="inspector-input"
+                defaultValue={feature.elevation ?? ''}
+                key={`elevation-${featureIndex}-${feature.elevation}`}
+                onBlur={(e) => {
+                    const val = e.target.value ? Number(e.target.value) : undefined;
+                    handleFieldBlur('elevation', val as any);
+                }}
+            />
           </div>
         </section>
+        <div className="inspector-actions">
+            <button className="btn-secondary" onClick={() => {
+                const features = model.features;
+                const f = features[featureIndex];
+                dispatch?.({ type: 'addFeature', feature: { at: f.at, terrain: f.terrain, label: f.label ? f.label + ' (copy)' : undefined } });
+            }}>Duplicate</button>
+            <button className="btn-danger" onClick={() => dispatch?.({ type: 'deleteFeature', index: featureIndex })}>Delete</button>
+        </div>
       </div>
     );
   };
@@ -124,6 +203,11 @@ export function Inspector({
             ))}
           </div>
         </section>
+        <div className="inspector-actions">
+          <button className="btn-primary" onClick={() => {
+              dispatch?.({ type: 'addFeature', feature: { at: state.label } });
+          }}>+ Add Feature Here</button>
+        </div>
       </div>
     );
   };

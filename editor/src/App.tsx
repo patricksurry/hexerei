@@ -145,7 +145,7 @@ export function App() {
     if (value.startsWith('/')) return;
 
     if (history) {
-      const cmd: MapCommand = { type: 'addFeature', feature: { at: value.trim(), terrain: 'clear', label: 'New Feature' } };
+      const cmd: MapCommand = { type: 'addFeature', feature: { at: value.trim() } };
       history.execute(cmd);
       setHistory(new CommandHistory(history.currentState)); // Ensure re-render
     }

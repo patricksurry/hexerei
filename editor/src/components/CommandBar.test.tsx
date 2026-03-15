@@ -9,13 +9,6 @@ test('renders the command bar input', () => {
   expect(screen.getByRole('combobox', { name: /command/i })).toBeInTheDocument();
 });
 
-test('calls onFocus when input receives focus', async () => {
-  const onFocus = vi.fn();
-  render(<CommandBar onFocus={onFocus} />);
-  await userEvent.click(screen.getByRole('combobox'));
-  expect(onFocus).toHaveBeenCalled();
-});
-
 test('calls onChange as user types', async () => {
   const onChange = vi.fn();
   const TestWrapper = () => {

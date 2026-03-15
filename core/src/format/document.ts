@@ -1,5 +1,5 @@
 import { parseDocument, Document } from 'yaml';
-import type { HexMapLayout, HexMapMetadata, Feature } from './types.js';
+import type { HexMapLayout, HexMapMetadata, Feature, TerrainVocabulary, TerrainTypeDef } from './types.js';
 
 /**
  * A wrapper around the YAML CST/AST to allow safe editing of HexMap documents
@@ -72,6 +72,93 @@ export class HexMapDocument {
             this.doc.set('features', this.doc.createNode([]));
         }
         this.doc.addIn(['features'], feature);
+    }
+
+    /**
+     * Get all features as a typed array.
+     */
+    getFeatures(): Feature[] {
+        const featuresNode = this.doc.get('features');
+        if (!featuresNode) return [];
+        return (featuresNode as any).toJSON() as Feature[];
+    }
+
+    /**
+     * Delete a feature by index. Returns the deleted feature.
+     */
+    deleteFeature(index: number): Feature {
+        const features = this.getFeatures();
+        if (index < 0 || index >= features.length) {
+            throw new RangeError(`Feature index ${index} out of bounds (${features.length} features)`);
+        }
+        const deleted = features[index];
+        this.doc.deleteIn(['features', index]);
+        return deleted;
+    }
+
+    /**
+     * Update a feature by index with partial changes.
+     */
+    updateFeature(index: number, changes: Partial<Feature>): void {
+        const features = this.getFeatures();
+        if (index < 0 || index >= features.length) {
+            throw new RangeError(`Feature index ${index} out of bounds (${features.length} features)`);
+        }
+        for (const [key, value] of Object.entries(changes)) {
+            if (value === undefined) {
+                this.doc.deleteIn(['features', index, key]);
+            } else {
+                this.doc.setIn(['features', index, key], value);
+            }
+        }
+    }
+
+    /**
+     * Reorder a feature from one index to another.
+     */
+    reorderFeature(fromIndex: number, toIndex: number): void {
+        const features = this.getFeatures();
+        if (fromIndex < 0 || fromIndex >= features.length || toIndex < 0 || toIndex >= features.length) {
+            throw new RangeError(`Feature index out of bounds`);
+        }
+        if (fromIndex === toIndex) return;
+        const feature = this.deleteFeature(fromIndex);
+        // After deletion, adjust target index
+        const adjustedTo = toIndex > fromIndex ? toIndex : toIndex;
+        // Re-insert at the target position
+        const featuresSeq = this.doc.get('features') as any;
+        featuresSeq.items.splice(adjustedTo, 0, this.doc.createNode(feature));
+    }
+
+    /**
+     * Get the full terrain vocabulary.
+     */
+    getTerrain(): TerrainVocabulary {
+        const terrainNode = this.doc.get('terrain');
+        if (!terrainNode) return {};
+        return (terrainNode as any).toJSON() as TerrainVocabulary;
+    }
+
+    /**
+     * Set (add or update) a terrain type definition.
+     */
+    setTerrainType(geometry: 'hex' | 'edge' | 'vertex', key: string, def: TerrainTypeDef): void {
+        if (!this.doc.has('terrain')) {
+            this.doc.set('terrain', this.doc.createNode({}));
+        }
+        if (!this.doc.hasIn(['terrain', geometry])) {
+            this.doc.setIn(['terrain', geometry], this.doc.createNode({}));
+        }
+        this.doc.setIn(['terrain', geometry, key], def);
+    }
+
+    /**
+     * Delete a terrain type definition.
+     */
+    deleteTerrainType(geometry: 'hex' | 'edge' | 'vertex', key: string): void {
+        if (this.doc.hasIn(['terrain', geometry, key])) {
+            this.doc.deleteIn(['terrain', geometry, key]);
+        }
     }
 
     /**

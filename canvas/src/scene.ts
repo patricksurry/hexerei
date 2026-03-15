@@ -70,10 +70,11 @@ export interface Scene {
 export function buildScene(
   model: MapModel,
   viewport: ViewportState,
-  background: string = '#141414',
-  highlights: SceneHighlight[] = [],
-  segmentPath: string[] = []
+  options?: SceneOptions
 ): Scene {
+  const background = options?.background ?? '#141414';
+  const highlights = options?.highlights ?? [];
+  const segmentPath = options?.segmentPath ?? [];
   const hexagons: HexRenderItem[] = [];
   const orientation = Hex.orientationTop(model.grid.orientation);
   

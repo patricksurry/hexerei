@@ -3,7 +3,7 @@ import { drawScene } from './draw.js';
 import { 
   MapModel, 
   ViewportState, 
-  panBy, zoomAt, hitTest, buildScene, SceneHighlight 
+  panBy, zoomAt, hitTest, buildScene, SceneHighlight, HitResult
 } from '@hexmap/canvas';
 
 
@@ -17,13 +17,13 @@ export interface CanvasHostProps {
   highlights?: SceneHighlight[];
   segmentPath?: string[];
   onZoomChange?: (zoom: number) => void;
-  onHitTest?: (result: any) => void;
+  onHitTest?: (result: HitResult) => void;
   onCursorHex?: (label: string | null) => void;
   onNavigate?: (direction: string) => void;
 }
 
 export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
-  ({ model, highlights, segmentPath, onZoomChange, onHitTest, onCursorHex }, ref) => {
+  ({ model, highlights, segmentPath, onZoomChange, onHitTest, onCursorHex, onNavigate }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     
@@ -82,7 +82,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
         featureLabelShadow: '0px 2px 4px rgba(0,0,0,0.8)'
       };
 
-      const scene = buildScene(model, vp, { background: theme.background, highlights, segmentPath } as any);
+      const scene = buildScene(model, vp, { background: theme.background, highlights, segmentPath });
       drawScene(ctx, scene, { theme });
     };
 
@@ -180,6 +180,13 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key.startsWith('Arrow')) {
+              e.preventDefault();
+              onNavigate?.(e.key.replace('Arrow', '').toLowerCase());
+            }
+          }}
         />
       </div>
     );

@@ -4,8 +4,6 @@ import './CommandBar.css';
 interface CommandBarProps {
   value?: string;
   onChange?: (value: string) => void;
-  onFocus?: () => void;
-  onBlur?: () => void;
   onClear?: () => void;
   onSubmit?: (value: string) => void;
   error?: string;
@@ -19,8 +17,6 @@ export interface CommandBarRef {
 export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(({
   value = '',
   onChange,
-  onFocus,
-  onBlur,
   onClear,
   onSubmit,
   error,
@@ -95,8 +91,6 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(({
             spellCheck="false"
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
-            onFocus={onFocus}
-            onBlur={onBlur}
             onKeyDown={handleKeyDown}
             className="command-input font-mono"
             placeholder="Enter HexPath, /search, or >command"

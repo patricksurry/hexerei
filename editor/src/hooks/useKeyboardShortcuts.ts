@@ -20,14 +20,15 @@ export function useKeyboardShortcuts(shortcuts: ShortcutMap) {
         const parts = shortcut.toLowerCase().split('+');
         
         const hasMod = parts.includes('mod');
-        const mainKey = parts.find(p => p !== 'mod');
+        const hasShift = parts.includes('shift');
+        const mainKey = parts.find(p => p !== 'mod' && p !== 'shift');
 
-        if (hasMod === modifier && mainKey === key) {
+        if (hasMod === modifier && hasShift === event.shiftKey && mainKey === key) {
           // If in an input, only certain shortcuts should trigger
           const isInput = event.target instanceof HTMLInputElement || 
                         event.target instanceof HTMLTextAreaElement;
           
-          if (isInput && !['k'].includes(key)) {
+          if (isInput && !['k', 'z'].includes(key)) {
             continue;
           }
 

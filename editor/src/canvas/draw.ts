@@ -14,7 +14,6 @@ export interface CanvasTheme {
 }
 
 export interface DrawOptions {
-  showLabels?: boolean;
   labelMinZoom?: number;
   theme?: CanvasTheme;
 }
@@ -25,7 +24,6 @@ export function drawScene(
   options: DrawOptions = {}
 ): void {
   const { 
-    showLabels = true, 
     labelMinZoom = 12,
     theme
   } = options;
@@ -186,7 +184,7 @@ export function drawScene(
   }
 
   // Draw labels
-  if (showLabels && scene.hexagons.length > 0) {
+  if (scene.hexagons.length > 0) {
     const h0 = scene.hexagons[0];
     const hexScreenRadius = Math.sqrt(
       Math.pow(h0.corners[0].x - h0.center.x, 2) + 
