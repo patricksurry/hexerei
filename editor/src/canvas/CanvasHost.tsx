@@ -8,11 +8,14 @@ import {
   buildScene,
   SceneHighlight,
   HitResult,
+  computeWorldBounds,
 } from '@hexmap/canvas';
+import { Hex } from '@hexmap/core';
 import { drawScene } from './draw.js';
 
 export interface CanvasHostRef {
   resetZoom: () => void;
+  centerOnHexes: (hexIds: string[]) => void;
 }
 
 export interface CanvasHostProps {
@@ -179,6 +182,23 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       resetZoom: () => {
         // Mock reset
         if (onZoomChange) onZoomChange(20);
+        requestAnimationFrame(render);
+      },
+      centerOnHexes: (hexIds: string[]) => {
+        if (!viewportRef.current || hexIds.length === 0 || !model) return;
+        const orientation = Hex.orientationTop(model.grid.orientation);
+        const centers = hexIds.map((id) => {
+          const cube = Hex.hexFromId(id);
+          return Hex.hexToPixel(cube, 1, orientation); // HEX_SIZE = 1
+        });
+        const bounds = computeWorldBounds(centers, 1, orientation);
+        const vp = viewportRef.current;
+        // Center on the midpoint of the bounds, keep current zoom
+        const newCenter = {
+          x: (bounds.min.x + bounds.max.x) / 2,
+          y: (bounds.min.y + bounds.max.y) / 2,
+        };
+        viewportRef.current = { ...vp, center: newCenter };
         requestAnimationFrame(render);
       },
     }));

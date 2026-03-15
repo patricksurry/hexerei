@@ -247,10 +247,10 @@ export const App = () => {
       );
       if (match) {
         handleSelectFeature([match.index]);
-        // Center viewport on feature's hexes (will be implemented in Task 6)
-        // if (match.hexIds.length > 0) {
-        //   canvasHostRef.current?.centerOnHexes(match.hexIds);
-        // }
+        // Center viewport on feature's hexes
+        if (match.hexIds.length > 0) {
+          canvasHostRef.current?.centerOnHexes(match.hexIds);
+        }
       }
       setCommandValue('');
       return;
