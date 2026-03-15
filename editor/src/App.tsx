@@ -109,6 +109,19 @@ export const App = () => {
           setSelection(clearSelection());
         }
       },
+      'tab': () => {
+        const zones = [
+          document.querySelector('.feature-stack'),
+          document.querySelector('.canvas-host canvas'),
+          document.querySelector('.inspector input, .inspector select'),
+        ].filter(Boolean) as HTMLElement[];
+
+        const activeZone = zones.findIndex((z) =>
+          z === document.activeElement || z.contains(document.activeElement)
+        );
+        const nextIdx = (activeZone + 1) % zones.length;
+        zones[nextIdx]?.focus();
+      },
     }),
     []
   );
