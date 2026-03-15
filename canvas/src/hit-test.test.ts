@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ViewportState, worldToScreen } from '@hexmap/canvas';
+import { ViewportState, worldToScreen } from './viewport.js';
 import { Hex } from '@hexmap/core';
 import { hitTest } from './hit-test.js';
 import { MapModel } from './model.js';
@@ -46,16 +46,12 @@ describe('hitTest', () => {
     const expectedLabel = Hex.formatHexLabel(
       neighborCube,
       model.grid.labelFormat,
-      model.grid.orientation,
-      model.grid.firstCol,
-      model.grid.firstRow
+      model.grid.orientation
     );
     const centerLabel = Hex.formatHexLabel(
       centerCube,
       model.grid.labelFormat,
-      model.grid.orientation,
-      model.grid.firstCol,
-      model.grid.firstRow
+      model.grid.orientation
     );
 
     if (hit?.type === 'edge') {
