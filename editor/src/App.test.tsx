@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, beforeEach, afterEach } from 'vitest';
+import { vi, beforeEach, afterEach, test, expect } from 'vitest';
 import { App } from './App';
+import { CommandHistory, MapModel } from '@hexmap/canvas';
+import { HexMapDocument } from '@hexmap/core';
 
 beforeEach(() => {
   vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mac');
@@ -68,4 +70,39 @@ test('Cmd+K focuses the command bar', async () => {
   render(<App />);
   await userEvent.keyboard('{Meta>}k{/Meta}');
   expect(screen.getByRole('combobox')).toHaveFocus();
+});
+
+test('CommandHistory survives undo/redo cycle (regression)', () => {
+  const yaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    clear: { style: { color: "#ffffff" } }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+  const doc = new HexMapDocument(yaml);
+  const model = MapModel.fromDocument(doc);
+  const history = new CommandHistory({ document: doc, model });
+
+  // Execute two commands
+  history.execute({ type: 'addFeature', feature: { at: '0101' } });
+  history.execute({ type: 'addFeature', feature: { at: '0201' } });
+  expect(history.currentState.model.features).toHaveLength(3);
+
+  // Undo both
+  history.undo();
+  expect(history.currentState.model.features).toHaveLength(2);
+  history.undo();
+  expect(history.currentState.model.features).toHaveLength(1);
+
+  // Redo both
+  history.redo();
+  expect(history.currentState.model.features).toHaveLength(2);
+  history.redo();
+  expect(history.currentState.model.features).toHaveLength(3);
 });

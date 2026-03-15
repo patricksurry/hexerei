@@ -30,7 +30,9 @@ import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 export const App = () => {
-  const [history, setHistory] = useState<CommandHistory | null>(null);
+  const historyRef = useRef<CommandHistory | null>(null);
+  const [historyVersion, setHistoryVersion] = useState(0);
+  const history = historyRef.current;
   const model = history?.currentState.model ?? null;
   const [leftPanelVisible, setLeftPanelVisible] = useState(true);
   const [rightPanelVisible, setRightPanelVisible] = useState(true);
@@ -56,7 +58,8 @@ export const App = () => {
       .then((r) => r.text())
       .then((yaml) => {
         const newModel = MapModel.load(yaml);
-        setHistory(new CommandHistory({ document: newModel.document, model: newModel }));
+        historyRef.current = new CommandHistory({ document: newModel.document, model: newModel });
+        setHistoryVersion((v) => v + 1);
       })
       .catch((err) => console.error('Failed to load map:', err));
   }, []);
@@ -76,20 +79,20 @@ export const App = () => {
       'mod+0': () => canvasHostRef.current?.resetZoom(),
       'mod+k': () => commandBarRef.current?.focus(),
       'mod+z': () => {
-        if (history) {
-          history.undo();
-          setHistory(new CommandHistory(history.currentState));
+        if (historyRef.current?.canUndo) {
+          historyRef.current.undo();
+          setHistoryVersion((v) => v + 1);
         }
       },
       'mod+shift+z': () => {
-        if (history) {
-          history.redo();
-          setHistory(new CommandHistory(history.currentState));
+        if (historyRef.current?.canRedo) {
+          historyRef.current.redo();
+          setHistoryVersion((v) => v + 1);
         }
       },
       escape: () => setSelection(clearSelection()),
     }),
-    [history]
+    []
   );
 
   useKeyboardShortcuts(shortcuts);
@@ -108,7 +111,7 @@ export const App = () => {
       ...highlightsForCursor(cursorHex, model),
       ...previewHighlights,
     ];
-  }, [selection, hoverIndex, cursorHex, model, preview]);
+  }, [selection, hoverIndex, cursorHex, model, preview, historyVersion]);
 
   const stackSelectedIndices = useMemo(() => {
     if (!model) return [];
@@ -118,7 +121,7 @@ export const App = () => {
       return idx !== null ? [idx] : [];
     }
     return [];
-  }, [selection, model]);
+  }, [selection, model, historyVersion]);
 
   const handleHit = (result: HitResult) => {
     if (!result || result.type === 'none') {
@@ -204,9 +207,9 @@ export const App = () => {
   };
 
   const dispatch = (cmd: MapCommand) => {
-    if (!history) return;
-    history.execute(cmd);
-    setHistory(new CommandHistory(history.currentState));
+    if (!historyRef.current) return;
+    historyRef.current.execute(cmd);
+    setHistoryVersion((v) => v + 1);
   };
 
   const features = model?.features ?? [];
