@@ -58,7 +58,7 @@ describe('executeCommand', () => {
     }
   });
 
-  it('reorderFeature moves feature and inverse restores order', () => {
+  it('reorderFeature moves feature backward and inverse restores order', () => {
     const state = makeState();
     const cmd: MapCommand = { type: 'reorderFeature', fromIndex: 1, toIndex: 0 };
     const result = executeCommand(cmd, state);
@@ -68,6 +68,27 @@ describe('executeCommand', () => {
       expect(result.inverse.fromIndex).toBe(0);
       expect(result.inverse.toIndex).toBe(1);
     }
+  });
+
+  it('reorderFeature forward + inverse roundtrips correctly', () => {
+    // Add a third feature first
+    const state = makeState();
+    const addResult = executeCommand(
+      { type: 'addFeature', feature: { at: '0101', terrain: 'clear', label: 'Third' } },
+      state
+    );
+    // Move feature 0 (@all) to position 2
+    const reorderResult = executeCommand(
+      { type: 'reorderFeature', fromIndex: 0, toIndex: 2 },
+      addResult.state
+    );
+    expect(reorderResult.state.model.features[0].terrain).toBe('forest');
+    expect(reorderResult.state.model.features[2].at).toBe('@all');
+    // Apply inverse to restore
+    const restored = executeCommand(reorderResult.inverse, reorderResult.state);
+    expect(restored.state.model.features[0].at).toBe('@all');
+    expect(restored.state.model.features[1].terrain).toBe('forest');
+    expect(restored.state.model.features[2].label).toBe('Third');
   });
 
   it('setMetadata updates field and inverse restores it', () => {

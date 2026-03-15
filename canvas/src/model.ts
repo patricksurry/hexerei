@@ -134,9 +134,10 @@ export class MapModel {
    * Used by the command executor after mutations.
    */
   static fromDocument(doc: HexMapDocument): MapModel {
-      const mesh = HexMapLoader.load(doc.toString());
+      const yaml = doc.toString();
+      const mesh = HexMapLoader.load(yaml);
       const model = new MapModel(doc, mesh);
-      model._yaml = doc.toString();
+      model._yaml = yaml;
       return model;
   }
 

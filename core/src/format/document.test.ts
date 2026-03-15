@@ -95,12 +95,83 @@ describe('HexMapDocument features mutation', () => {
     expect(features[1].terrain).toBe('forest'); // unchanged fields preserved
   });
 
-  test('reorderFeature moves feature from one index to another', () => {
+  test('reorderFeature moves feature backward', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     doc.reorderFeature(1, 0);
     const features = doc.getFeatures();
     expect(features[0].terrain).toBe('forest');
     expect(features[1].at).toBe('@all');
+  });
+
+  test('reorderFeature moves feature forward', () => {
+    // Add a third feature so we can test non-adjacent forward move
+    const yaml = SAMPLE_YAML_WITH_FEATURES.trimEnd() + `
+  - at: "0101"
+    terrain: clear
+    label: "Third"
+`;
+    const doc = new HexMapDocument(yaml);
+    expect(doc.getFeatures()).toHaveLength(3);
+    // Move feature 0 (@all) to position 2 in the result
+    // Start: [0:@all, 1:forest, 2:Third]
+    // Delete 0: [0:forest, 1:Third]
+    // Insert at position 2: [0:forest, 1:Third, 2:@all]
+    doc.reorderFeature(0, 2);
+    const features = doc.getFeatures();
+    expect(features[0].terrain).toBe('forest');  // was index 1
+    expect(features[1].label).toBe('Third');     // was index 2
+    expect(features[2].at).toBe('@all');         // moved from index 0 to end
+  });
+
+  test('reorderFeature is a no-op when from === to', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    doc.reorderFeature(0, 0);
+    const features = doc.getFeatures();
+    expect(features[0].at).toBe('@all');
+    expect(features[1].terrain).toBe('forest');
+  });
+
+  test('deleteFeature throws RangeError for out-of-bounds index', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    expect(() => doc.deleteFeature(-1)).toThrow(RangeError);
+    expect(() => doc.deleteFeature(99)).toThrow(RangeError);
+  });
+
+  test('updateFeature throws RangeError for out-of-bounds index', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    expect(() => doc.updateFeature(-1, { label: 'x' })).toThrow(RangeError);
+    expect(() => doc.updateFeature(99, { label: 'x' })).toThrow(RangeError);
+  });
+
+  test('reorderFeature throws RangeError for out-of-bounds indices', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    expect(() => doc.reorderFeature(-1, 0)).toThrow(RangeError);
+    expect(() => doc.reorderFeature(0, 99)).toThrow(RangeError);
+  });
+
+  test('getFeatures returns empty array when no features key', () => {
+    const doc = new HexMapDocument('hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: "0101"\n');
+    expect(doc.getFeatures()).toEqual([]);
+  });
+
+  test('getTerrain returns empty object when no terrain key', () => {
+    const doc = new HexMapDocument('hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: "0101"\n');
+    expect(doc.getTerrain()).toEqual({});
+  });
+
+  test('deleteTerrainType is idempotent for non-existent key', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    // Should not throw
+    doc.deleteTerrainType('hex', 'nonexistent');
+    expect(doc.getTerrain().hex!['clear']).toBeDefined();
+  });
+
+  test('updateFeature with undefined value deletes the key', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
+    doc.updateFeature(1, { label: undefined });
+    const features = doc.getFeatures();
+    expect(features[1].label).toBeUndefined();
+    expect(features[1].terrain).toBe('forest'); // other fields preserved
   });
 });
 

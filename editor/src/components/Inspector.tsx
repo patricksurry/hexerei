@@ -1,13 +1,12 @@
 import { Hex } from '@hexmap/core';
-import {  Selection  } from '@hexmap/canvas';
-import {  MapModel  } from '@hexmap/canvas';
+import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
 import './Inspector.css';
 
 interface InspectorProps {
   selection: Selection;
   model: MapModel | null;
   onSelectFeature?: (index: number) => void;
-  dispatch?: (command: any) => void;
+  dispatch?: (command: MapCommand) => void;
 }
 
 export function Inspector({
@@ -70,8 +69,10 @@ export function Inspector({
 
     const handleFieldBlur = (key: string, value: string | number | undefined) => {
         const currentValue = (feature as any)[key];
-        if (value !== currentValue) {
-            dispatch?.({ type: 'updateFeature', index: featureIndex, changes: { [key]: value || undefined } });
+        // Normalize empty strings to undefined (clear the field), but preserve 0
+        const normalized = value === '' ? undefined : value;
+        if (normalized !== currentValue) {
+            dispatch?.({ type: 'updateFeature', index: featureIndex, changes: { [key]: normalized } });
         }
     };
 

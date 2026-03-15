@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { MapModel } from './model.js';
+import { HexMapDocument } from '@hexmap/core';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -84,50 +85,48 @@ describe('MapModel', () => {
     expect(features[1].label).toBe('Target');
   });
 
-describe('bfm.yaml RFC compliance', () => {
-  const yaml = readFileSync(
-    resolve(__dirname, '../../maps/definitions/bfm.yaml'),
-    'utf-8'
-  );
+  describe('bfm.yaml RFC compliance', () => {
+    const yaml = readFileSync(
+      resolve(__dirname, '../../maps/definitions/bfm.yaml'),
+      'utf-8'
+    );
 
-  it('loads without error', () => {
-    expect(() => MapModel.load(yaml)).not.toThrow();
+    it('loads without error', () => {
+      expect(() => MapModel.load(yaml)).not.toThrow();
+    });
+
+    it('has no features with at="complex"', () => {
+      const model = MapModel.load(yaml);
+      const complex = model.features.filter(f => f.at === 'complex');
+      expect(complex).toHaveLength(0);
+    });
+
+    it('resolves railroad features to hex IDs', () => {
+      const model = MapModel.load(yaml);
+      const rail = model.features.find(f => f.label === 'Northern Rail');
+      expect(rail).toBeDefined();
+      expect(rail!.hexIds.length).toBeGreaterThan(0);
+    });
+
+    it('uses flat-up orientation', () => {
+      const model = MapModel.load(yaml);
+      expect(model.grid.orientation).toBe('flat-up');
+    });
   });
 
-  it('has no features with at="complex"', () => {
-    const model = MapModel.load(yaml);
-    const complex = model.features.filter(f => f.at === 'complex');
-    expect(complex).toHaveLength(0);
+  it('MapModel.fromDocument rebuilds model from a HexMapDocument', () => {
+    const doc = new HexMapDocument(MOCK_YAML);
+    const model = MapModel.fromDocument(doc);
+    expect(model.metadata.title).toBe('Test Map');
+    expect(model.features).toHaveLength(2);
+    expect(model.features[1].label).toBe('Target');
   });
 
-  it('resolves railroad features to hex IDs', () => {
-    const model = MapModel.load(yaml);
-    const rail = model.features.find(f => f.label === 'Northern Rail');
-    expect(rail).toBeDefined();
-    expect(rail!.hexIds.length).toBeGreaterThan(0);
+  it('MapModel.fromDocument reflects document mutations', () => {
+    const doc = new HexMapDocument(MOCK_YAML);
+    doc.addFeature({ at: '0101', terrain: 'forest', label: 'New' });
+    const model = MapModel.fromDocument(doc);
+    expect(model.features).toHaveLength(3);
+    expect(model.features[2].label).toBe('New');
   });
-
-  it('uses flat-up orientation', () => {
-    const model = MapModel.load(yaml);
-    expect(model.grid.orientation).toBe('flat-up');
-  });
-});
-});
-
-import { HexMapDocument } from '@hexmap/core';
-
-it('MapModel.fromDocument rebuilds model from a HexMapDocument', () => {
-  const doc = new HexMapDocument(MOCK_YAML);
-  const model = MapModel.fromDocument(doc);
-  expect(model.metadata.title).toBe('Test Map');
-  expect(model.features).toHaveLength(2);
-  expect(model.features[1].label).toBe('Target');
-});
-
-it('MapModel.fromDocument reflects document mutations', () => {
-  const doc = new HexMapDocument(MOCK_YAML);
-  doc.addFeature({ at: '0101', terrain: 'forest', label: 'New' });
-  const model = MapModel.fromDocument(doc);
-  expect(model.features).toHaveLength(3);
-  expect(model.features[2].label).toBe('New');
 });

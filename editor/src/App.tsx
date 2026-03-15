@@ -74,8 +74,20 @@ export function App() {
     'mod+2': () => setRightPanelVisible(v => !v),
     'mod+0': () => canvasHostRef.current?.resetZoom(),
     'mod+k': () => commandBarRef.current?.focus(),
+    'mod+z': () => {
+      if (history) {
+        history.undo();
+        setHistory(new CommandHistory(history.currentState));
+      }
+    },
+    'mod+shift+z': () => {
+      if (history) {
+        history.redo();
+        setHistory(new CommandHistory(history.currentState));
+      }
+    },
     'escape': () => setSelection(clearSelection()),
-  }), []);
+  }), [history]);
 
   useKeyboardShortcuts(shortcuts);
 
@@ -182,7 +194,7 @@ export function App() {
     setHistory(new CommandHistory(history.currentState));
   };
 
-  const features = (model?.features ?? []) as any[];
+  const features = model?.features ?? [];
   const mapTitle = model?.metadata?.title ?? 'Untitled';
 
   return (

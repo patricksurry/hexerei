@@ -56,7 +56,7 @@ export function executeCommand(command: MapCommand, state: MapState): CommandRes
             break;
         }
         case 'setMetadata': {
-            const previousValue = doc.getMetadata()[command.key];
+            const previousValue = doc.getMetadata()[command.key] ?? undefined;
             doc.setMetadata(command.key, command.value as any);
             inverse = { type: 'setMetadata', key: command.key, value: previousValue };
             break;
@@ -91,8 +91,12 @@ export function executeCommand(command: MapCommand, state: MapState): CommandRes
             doc.deleteTerrainType(command.geometry, command.key);
             break;
         }
+        default: {
+            const _exhaustive: never = command;
+            throw new Error(`Unknown command type: ${(_exhaustive as any).type}`);
+        }
     }
 
     const model = MapModel.fromDocument(doc);
-    return { state: { document: doc, model }, inverse: inverse! };
+    return { state: { document: doc, model }, inverse };
 }

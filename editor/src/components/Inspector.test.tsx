@@ -64,7 +64,6 @@ describe('Inspector', () => {
     expect(dispatched).toHaveLength(1);
     expect(dispatched[0].type).toBe('deleteFeature');
   });
-});
 
   it('hex view shows "Add Feature Here" button that dispatches addFeature', () => {
     const model = MapModel.load(MOCK_YAML);
@@ -82,3 +81,4 @@ describe('Inspector', () => {
       expect(dispatched[0].feature.at).toBe('0101');
     }
   });
+});

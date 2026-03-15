@@ -31,10 +31,16 @@ export class HexMapDocument {
      * Helper to set a metadata field safely.
      */
     setMetadata<K extends keyof HexMapMetadata>(key: K, value: HexMapMetadata[K]): void {
+        if (value === undefined || value === null) {
+            // Delete the key rather than storing null/undefined
+            if (this.doc.hasIn(['metadata', key])) {
+                this.doc.deleteIn(['metadata', key]);
+            }
+            return;
+        }
         if (!this.doc.has('metadata')) {
             this.doc.set('metadata', this.doc.createNode({}));
         }
-        // direct set on the document path handles the node wrapping
         this.doc.setIn(['metadata', key], value);
     }
 
@@ -43,7 +49,12 @@ export class HexMapDocument {
      */
     getMetadata(): HexMapMetadata {
         const metadataNode = this.doc.get('metadata') as any;
-        return metadataNode?.toJSON?.() || {};
+        const raw = metadataNode?.toJSON?.() || {};
+        // Normalize YAML nulls to undefined so callers don't need to handle both
+        for (const key of Object.keys(raw)) {
+            if (raw[key] === null) raw[key] = undefined;
+        }
+        return raw;
     }
 
     /**
@@ -119,12 +130,12 @@ export class HexMapDocument {
     reorderFeature(fromIndex: number, toIndex: number): void {
         const features = this.getFeatures();
         if (fromIndex < 0 || fromIndex >= features.length || toIndex < 0 || toIndex >= features.length) {
-            throw new RangeError(`Feature index out of bounds`);
+            throw new RangeError(`Feature index out of bounds: from=${fromIndex}, to=${toIndex} (${features.length} features)`);
         }
         if (fromIndex === toIndex) return;
         const feature = this.deleteFeature(fromIndex);
-        // After deletion, adjust target index
-        const adjustedTo = toIndex > fromIndex ? toIndex : toIndex;
+        // toIndex is the target position in the resulting array (no adjustment needed)
+        const adjustedTo = toIndex;
         // Re-insert at the target position
         const featuresSeq = this.doc.get('features') as any;
         featuresSeq.items.splice(adjustedTo, 0, this.doc.createNode(feature));

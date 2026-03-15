@@ -8,6 +8,12 @@ dist/
 build/
 *.tsbuildinfo
 
+# Stale build artifacts in source dirs (tsc should emit to dist/)
+core/src/**/*.js
+core/src/**/*.d.ts
+canvas/src/**/*.js
+canvas/src/**/*.d.ts
+
 # Debug logs
 npm-debug.log*
 yarn-debug.log*

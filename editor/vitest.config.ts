@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@hexmap/core': path.resolve(__dirname, '../core/src/index.ts')
+      '@hexmap/core': path.resolve(__dirname, '../core/src/index.ts'),
+      '@hexmap/canvas': path.resolve(__dirname, '../canvas/src/index.ts')
     }
   },
   test: {
