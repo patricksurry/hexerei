@@ -10,7 +10,8 @@ rfc/
 ├── Makefile                    # Build RFC outputs + run schema tests
 ├── src/
 │   ├── rfc.md                  # Master document (includes all sections)
-│   ├── 00-front-matter.md …    # Modular RFC sections
+│   ├── 00-front-matter.md      # Modular RFC sections
+│   ├── ...
 │   ├── appendix-*.md           # Appendices
 │   └── snippets/*.yaml         # Includable YAML examples
 ├── build/                      # Generated outputs (HTML, TXT, XML)
@@ -85,5 +86,5 @@ plus a direct HTML render. Outputs go to `build/`.
 
 **Syntax notes**:
 - Use `##` (level 2) for main RFC sections -- mmark promotes them in the output.
-- Avoid code blocks inside list items (mmark/xml2rfc is fragile here).
+- Avoid code blocks inside list items, and no numbers in headings (mmark/xml2rfc is fragile here).
 - Citations use `[@RefID]` syntax; references are defined in `src/14-references.md`.

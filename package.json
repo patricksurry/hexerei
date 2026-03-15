@@ -5,8 +5,8 @@
   "workspaces": [
     "core",
     "renderer",
-    "editor",
-    "canvas"
+    "canvas",
+    "editor"
   ],
   "scripts": {
     "test": "vitest run",
@@ -14,9 +14,12 @@
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "vitest": "^1.6.1",
+    "@types/node": "^20.11.10",
     "jsdom": "^24.0.0",
-    "@types/node": "^20.11.10"
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.1"
+  },
+  "dependencies": {
+    "ajv-cli": "^5.0.0"
   }
 }

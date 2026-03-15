@@ -300,6 +300,26 @@ describe('Hex Math', () => {
         });
     });
 
+    describe('Boundary and Vertex ID codecs', () => {
+        it('should parse boundary IDs correctly', () => {
+            const bId = Hex.parseBoundaryId('0,0,0|1,-1,0');
+            expect(Hex.hexId(bId.hexA)).toBe('0,0,0');
+            expect(Hex.hexId(bId.hexB!)).toBe('1,-1,0');
+            expect(bId.direction).toBeUndefined();
+            
+            const bIdVoid = Hex.parseBoundaryId('0,0,0|VOID|3');
+            expect(Hex.hexId(bIdVoid.hexA)).toBe('0,0,0');
+            expect(bIdVoid.hexB).toBeNull();
+            expect(bIdVoid.direction).toBe(3);
+        });
+
+        it('should parse vertex IDs correctly', () => {
+            const vId = Hex.parseVertexId('-1,0,1^0,-1,1^0,0,0');
+            expect(vId).toHaveLength(3);
+            expect(Hex.hexId(vId[0])).toBe('-1,0,1');
+        });
+    });
+
     describe('getCanonicalVertexId', () => {
         it('should be the same for all three hexes sharing the vertex', () => {
             const h1 = { q: 0, r: 0, s: 0 };

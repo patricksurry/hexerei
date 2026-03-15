@@ -81,18 +81,6 @@ export function getCanonicalBoundaryId(a: Cube, b: Cube | null, dirFromA?: numbe
  * Returns a canonical ID for a Vertex (Junction).
  * A vertex touches 3 hexes (in infinite grid).
  * Identified by the 3 hex IDs sorted.
- * 
- * Note: Map edges / corners might have <3 hexes. 
- * We might need a more robust Vertex coordinate system (e.g. Dual coordinates).
- * 
- * Standard approach: Vertex is consistent relative to a hex. 
- * "Hex + VertexIndex(0..5)".
- * Canonicalize by finding the neighbor hexes and sorting?
- */
-/**
- * Returns a canonical ID for a Vertex (Junction).
- * A vertex touches 3 hexes (in infinite grid).
- * Identified by the 3 hex IDs sorted.
  */
 export function getCanonicalVertexId(hex: Cube, corner: number): string {
     const n1 = hexNeighbor(hex, corner);
@@ -100,8 +88,6 @@ export function getCanonicalVertexId(hex: Cube, corner: number): string {
     const ids = [hexId(hex), hexId(n1), hexId(n2)].sort();
     return ids.join('^');
 }
-
-
 
 /**
  * Convert Offset coordinates (col, row) to Cube coordinates (q, r, s).
