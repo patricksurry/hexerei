@@ -3,6 +3,7 @@ import './FeatureStack.css';
 
 interface FeatureStackProps {
   features: FeatureItem[];
+  filteredIndices?: number[] | null; // null = no filter, [] = nothing matches
   selectedIndices?: number[];
   terrainColor?: (terrain: string) => string;
   onSelect?: (indices: number[], modifier: 'none' | 'shift' | 'cmd') => void;
@@ -12,6 +13,7 @@ interface FeatureStackProps {
 
 export const FeatureStack = ({
   features,
+  filteredIndices,
   selectedIndices = [],
   terrainColor,
   onSelect,
@@ -23,10 +25,16 @@ export const FeatureStack = ({
     return 'var(--text-muted)';
   };
 
+  const visibleFeatures = filteredIndices != null
+    ? features.filter((f) => filteredIndices.includes(f.index))
+    : features;
+
   return (
     <div className="feature-stack">
       <div className="feature-stack-header">
-        FEATURE STACK
+        {filteredIndices != null
+          ? <span>{filteredIndices.length} of {features.length} features</span>
+          : 'FEATURE STACK'}
         <button
           className="btn-icon"
           aria-label="Add feature"
@@ -36,7 +44,7 @@ export const FeatureStack = ({
         </button>
       </div>
       <ul className="feature-list" role="listbox">
-        {features.map((feature) => {
+        {visibleFeatures.map((feature) => {
           const isSelected = selectedIndices.includes(feature.index);
           const label =
             feature.label ||
