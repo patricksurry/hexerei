@@ -37,6 +37,7 @@ export const App = () => {
   const [leftPanelVisible, setLeftPanelVisible] = useState(true);
   const [rightPanelVisible, setRightPanelVisible] = useState(true);
   const [commandValue, setCommandValue] = useState('');
+  const [filterQuery, setFilterQuery] = useState<string | null>(null);
   const [selection, setSelection] = useState<Selection>({ type: 'none' });
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [cursorHex, setCursorHex] = useState<string | null>(null);
@@ -72,6 +73,14 @@ export const App = () => {
     }
   }, [commandValue, model]);
 
+  useEffect(() => {
+    if (commandValue.startsWith('/')) {
+      setFilterQuery(commandValue.substring(1));
+    } else {
+      setFilterQuery(null);
+    }
+  }, [commandValue]);
+
   const shortcuts = useMemo(
     () => ({
       'mod+1': () => setLeftPanelVisible((v) => !v),
@@ -96,6 +105,41 @@ export const App = () => {
   );
 
   useKeyboardShortcuts(shortcuts);
+
+  const filteredIndices = useMemo(() => {
+    if (!filterQuery || !model) return null; // null = no filter active
+    const query = filterQuery.toLowerCase();
+
+    // Key:value search (e.g., "terrain:forest")
+    const colonIdx = query.indexOf(':');
+    if (colonIdx > 0) {
+      const key = query.substring(0, colonIdx).trim();
+      const value = query.substring(colonIdx + 1).trim();
+      return model.features
+        .filter((f) => {
+          switch (key) {
+            case 'terrain': return f.terrain.toLowerCase().includes(value);
+            case 'label': return (f.label ?? '').toLowerCase().includes(value);
+            case 'id': return (f.id ?? '').toLowerCase().includes(value);
+            case 'at': return f.at.toLowerCase().includes(value);
+            case 'tags': return f.tags.some((t) => t.toLowerCase().includes(value));
+            default: return false;
+          }
+        })
+        .map((f) => f.index);
+    }
+
+    // Fuzzy match across all fields
+    return model.features
+      .filter((f) =>
+        f.terrain.toLowerCase().includes(query) ||
+        (f.label ?? '').toLowerCase().includes(query) ||
+        (f.id ?? '').toLowerCase().includes(query) ||
+        f.at.toLowerCase().includes(query) ||
+        f.tags.some((t) => t.toLowerCase().includes(query))
+      )
+      .map((f) => f.index);
+  }, [filterQuery, model]);
 
   const highlights = useMemo(() => {
     if (!model) return [];
@@ -232,6 +276,7 @@ export const App = () => {
       leftPanel={
         <FeatureStack
           features={features}
+          filteredIndices={filteredIndices}
           selectedIndices={stackSelectedIndices}
           terrainColor={(t) => model?.terrainColor(t) ?? '#888'}
           onSelect={handleSelectFeature}
