@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Hex } from '@hexmap/core';
 import {
   MapModel,
@@ -29,7 +29,6 @@ import { StatusBar } from './components/StatusBar';
 import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useHybridFocus } from './hooks/useHybridFocus';
-import { useCallback } from 'react';
 import { filterFeatures } from './utils/filter-features';
 
 export const App = () => {
@@ -50,6 +49,12 @@ export const App = () => {
 
   const commandBarRef = useRef<CommandBarRef>(null);
   const canvasHostRef = useRef<CanvasHostRef>(null);
+
+  // Refs to avoid stale closures in keyboard shortcuts (useMemo with [] deps)
+  const selectionRef = useRef(selection);
+  selectionRef.current = selection;
+  const commandValueRef = useRef(commandValue);
+  commandValueRef.current = commandValue;
 
   useEffect(() => {
     // Apply theme class to root element
@@ -84,6 +89,20 @@ export const App = () => {
     }
   }, [commandValue]);
 
+  const deleteSelected = useCallback(() => {
+    const sel = selectionRef.current;
+    if (sel.type === 'feature' && historyRef.current) {
+      // Delete in reverse index order to preserve earlier indices.
+      // Each deleteFeature is a separate command, but conceptually this is
+      // one user action — so we group them: only one setHistoryVersion bump.
+      for (const idx of [...sel.indices].sort((a, b) => b - a)) {
+        historyRef.current.execute({ type: 'deleteFeature', index: idx });
+      }
+      setHistoryVersion((v) => v + 1);
+      setSelection(clearSelection());
+    }
+  }, []);
+
   const shortcuts = useMemo(
     () => ({
       'mod+1': () => setLeftPanelVisible((v) => !v),
@@ -103,16 +122,16 @@ export const App = () => {
         }
       },
       escape: () => {
-        if (commandValue) {
+        if (commandValueRef.current) {
           setCommandValue('');
           commandBarRef.current?.blur();
         } else {
           setSelection(clearSelection());
         }
       },
-      'tab': () => {
+      tab: () => {
         const zones = [
-          document.querySelector('.feature-stack'),
+          document.querySelector('.feature-stack .feature-list'),
           document.querySelector('.canvas-host canvas'),
           document.querySelector('.inspector input, .inspector select'),
         ].filter(Boolean) as HTMLElement[];
@@ -123,29 +142,13 @@ export const App = () => {
         const nextIdx = (activeZone + 1) % zones.length;
         zones[nextIdx]?.focus();
       },
-      'delete': () => {
-        if (selection.type === 'feature' && historyRef.current) {
-          // Delete in reverse order to preserve indices
-          for (const idx of [...selection.indices].sort((a, b) => b - a)) {
-            historyRef.current.execute({ type: 'deleteFeature', index: idx });
-          }
-          setHistoryVersion((v) => v + 1);
-          setSelection(clearSelection());
-        }
-      },
-      'backspace': () => {
-        // Same as delete — common on Mac keyboards without a Delete key
-        if (selection.type === 'feature' && historyRef.current) {
-          for (const idx of [...selection.indices].sort((a, b) => b - a)) {
-            historyRef.current.execute({ type: 'deleteFeature', index: idx });
-          }
-          setHistoryVersion((v) => v + 1);
-          setSelection(clearSelection());
-        }
-      },
+      delete: deleteSelected,
+      backspace: deleteSelected,
       'mod+d': () => {
-        if (selection.type === 'feature' && selection.indices.length === 1 && model) {
-          const feature = model.features[selection.indices[0]];
+        const sel = selectionRef.current;
+        const currentModel = historyRef.current?.currentState.model;
+        if (sel.type === 'feature' && sel.indices.length === 1 && currentModel) {
+          const feature = currentModel.features[sel.indices[0]];
           if (feature && historyRef.current) {
             historyRef.current.execute({
               type: 'addFeature',
@@ -160,7 +163,7 @@ export const App = () => {
         }
       },
     }),
-    []
+    [deleteSelected]
   );
 
   useKeyboardShortcuts(shortcuts);

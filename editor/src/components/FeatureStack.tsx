@@ -43,7 +43,7 @@ export const FeatureStack = ({
           +
         </button>
       </div>
-      <ul className="feature-list" role="listbox">
+      <ul className="feature-list" role="listbox" tabIndex={0}>
         {visibleFeatures.map((feature) => {
           const isSelected = selectedIndices.includes(feature.index);
           const label =

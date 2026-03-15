@@ -44,3 +44,16 @@ test('does not capture when focus is in an input', () => {
   expect(onCapture).not.toHaveBeenCalled();
   document.body.removeChild(input);
 });
+
+test('does not capture when event.defaultPrevented is true', () => {
+  const onCapture = vi.fn();
+  renderHook(() => useHybridFocus({ onCapture }));
+
+  const event = new KeyboardEvent('keydown', { key: '0', bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'target', { value: document.body, configurable: true });
+  // Simulate a prior handler having claimed this event
+  event.preventDefault();
+  window.dispatchEvent(event);
+
+  expect(onCapture).not.toHaveBeenCalled();
+});

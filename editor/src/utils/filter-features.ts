@@ -22,7 +22,7 @@ export function filterFeatures(features: FeatureItem[], query: string): number[]
       .map((f) => f.index);
   }
 
-  // Fuzzy match across all fields
+  // Substring match across all fields
   return features
     .filter((f) =>
       f.terrain.toLowerCase().includes(q) ||

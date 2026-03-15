@@ -12,6 +12,9 @@ export function useHybridFocus({ onCapture, enabled = true }: UseHybridFocusOpti
     if (!enabled) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Respect shortcuts that already claimed this event
+      if (event.defaultPrevented) return;
+
       // Skip if modifier held (except shift — shift+number is valid for e.g. @ / > etc.)
       if (event.metaKey || event.ctrlKey || event.altKey) return;
 

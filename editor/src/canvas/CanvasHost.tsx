@@ -204,7 +204,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
     }));
 
     return (
-      <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+      <div ref={containerRef} className="canvas-host" style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
         <canvas
           ref={canvasRef}
           style={{

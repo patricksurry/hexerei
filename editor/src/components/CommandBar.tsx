@@ -114,6 +114,7 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
               <li
                 key={key}
                 role="option"
+                aria-selected={false}
                 className="command-dropdown-item"
                 onClick={() => onChange?.(`/${key}:`)}
               >
@@ -128,6 +129,7 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
               <li
                 key={s.index}
                 role="option"
+                aria-selected={false}
                 className="command-dropdown-item"
                 onClick={() => onSubmit?.(`@${s.label}`)}
               >
