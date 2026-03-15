@@ -50,7 +50,7 @@ export function FeatureStack({
               onMouseEnter={() => onHover?.(feature.index)}
               onMouseLeave={() => onHover?.(null)}
             >
-              <div className="feature-drag-handle">⋮⋮</div>
+              {/* <div className="feature-drag-handle">⋮⋮</div> */}
               <div 
                 className="feature-color-chip" 
                 style={{ backgroundColor: getTerrainColor(feature.terrain) }}

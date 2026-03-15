@@ -171,10 +171,6 @@ export class MapModel {
 
   
 
-  hexIdsForFeature(index: number): string[] {
-    return this._features[index]?.hexIds ?? [];
-  }
-
   featuresAtHex(hexId: string): FeatureItem[] {
     return this._hexToFeatures.get(hexId) ?? [];
   }
