@@ -86,6 +86,33 @@
   position: relative;
 }
 
+.command-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-top: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  z-index: 100;
+}
+
+.command-dropdown-item {
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.command-dropdown-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
 .command-bar.has-error {
   border-bottom: 1px solid var(--color-error);
 }

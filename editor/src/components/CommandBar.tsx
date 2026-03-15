@@ -14,6 +14,8 @@ export interface CommandBarRef {
   blur: () => void;
 }
 
+const SEARCH_KEYS = ['terrain', 'label', 'id', 'at', 'tags'];
+
 export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
   ({ value = '', onChange, onClear, onSubmit, error }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +32,7 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
     };
 
     const mode = getMode(value);
+    const showKeyDropdown = mode === 'search' && !value.includes(':');
 
     const renderTokens = () => {
       // Simple tokenizer for HexPath
@@ -90,7 +93,7 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
               type="text"
               role="combobox"
               aria-label="command"
-              aria-expanded="false"
+              aria-expanded={showKeyDropdown ? 'true' : 'false'}
               aria-haspopup="listbox"
               autoComplete="off"
               spellCheck="false"
@@ -102,6 +105,20 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
             />
           </div>
         </div>
+        {showKeyDropdown && (
+          <ul className="command-dropdown" role="listbox">
+            {SEARCH_KEYS.map((key) => (
+              <li
+                key={key}
+                role="option"
+                className="command-dropdown-item"
+                onClick={() => onChange?.(`/${key}:`)}
+              >
+                {key}
+              </li>
+            ))}
+          </ul>
+        )}
         {error && <div className="command-error-message">{error}</div>}
       </div>
     );

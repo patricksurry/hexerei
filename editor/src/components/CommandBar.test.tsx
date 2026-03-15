@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { vi, test, expect } from 'vitest';
 import { CommandBar } from './CommandBar';
 
 test('renders the command bar input', () => {
@@ -50,4 +50,26 @@ test('displays mode indicator for search mode', () => {
 test('displays mode indicator for path mode by default', () => {
   render(<CommandBar value="0101 3ne" />);
   expect(screen.getByText(/path/i)).toBeInTheDocument();
+});
+
+test('shows key dropdown when value is "/"', () => {
+  render(<CommandBar value="/" onChange={() => {}} />);
+  expect(screen.getByRole('listbox')).toBeDefined();
+  expect(screen.getByText('terrain')).toBeDefined();
+  expect(screen.getByText('label')).toBeDefined();
+  expect(screen.getByText('id')).toBeDefined();
+  expect(screen.getByText('at')).toBeDefined();
+  expect(screen.getByText('tags')).toBeDefined();
+});
+
+test('hides key dropdown when value has a colon', () => {
+  render(<CommandBar value="/terrain:" onChange={() => {}} />);
+  expect(screen.queryByRole('listbox')).toBeNull();
+});
+
+test('clicking a key in dropdown appends it to value', () => {
+  const onChange = vi.fn();
+  render(<CommandBar value="/" onChange={onChange} />);
+  fireEvent.click(screen.getByText('terrain'));
+  expect(onChange).toHaveBeenCalledWith('/terrain:');
 });
