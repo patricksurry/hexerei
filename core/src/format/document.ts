@@ -1,4 +1,4 @@
-import { parseDocument, Document } from 'yaml';
+import { parseDocument, Document, type Node, YAMLSeq } from 'yaml';
 import type {
   HexMapLayout,
   HexMapMetadata,
@@ -54,13 +54,15 @@ export class HexMapDocument {
    * Helper to get all metadata fields.
    */
   getMetadata(): HexMapMetadata {
-    const metadataNode = this.doc.get('metadata') as any;
-    const raw = metadataNode?.toJSON?.() || {};
+    const metadataNode = this.doc.get('metadata') as Node | undefined;
+    const rawData: unknown = metadataNode?.toJSON() ?? {};
+    const raw: Record<string, unknown> =
+      typeof rawData === 'object' && rawData !== null ? (rawData as Record<string, unknown>) : {};
     // Normalize YAML nulls to undefined so callers don't need to handle both
     for (const key of Object.keys(raw)) {
       if (raw[key] === null) raw[key] = undefined;
     }
-    return raw;
+    return raw as HexMapMetadata;
   }
 
   /**
@@ -77,8 +79,13 @@ export class HexMapDocument {
    * Get the layout configuration.
    */
   getLayout(): HexMapLayout {
-    const layoutNode = this.doc.get('layout') as any;
-    return layoutNode?.toJSON?.() || { orientation: 'flat-down', all: 'base' };
+    const layoutNode = this.doc.get('layout') as Node | undefined;
+    return (
+      (layoutNode?.toJSON() as HexMapLayout | undefined) ?? {
+        orientation: 'flat-down',
+        all: 'base',
+      }
+    );
   }
 
   /**
@@ -95,9 +102,9 @@ export class HexMapDocument {
    * Get all features as a typed array.
    */
   getFeatures(): Feature[] {
-    const featuresNode = this.doc.get('features');
+    const featuresNode = this.doc.get('features') as Node | undefined;
     if (!featuresNode) return [];
-    return (featuresNode as any).toJSON() as Feature[];
+    return featuresNode.toJSON() as Feature[];
   }
 
   /**
@@ -150,7 +157,10 @@ export class HexMapDocument {
     // toIndex is the target position in the resulting array (no adjustment needed)
     const adjustedTo = toIndex;
     // Re-insert at the target position
-    const featuresSeq = this.doc.get('features') as any;
+    const featuresSeq = this.doc.get('features') as YAMLSeq | undefined;
+    if (!featuresSeq) {
+      throw new Error('Features array not found');
+    }
     featuresSeq.items.splice(adjustedTo, 0, this.doc.createNode(feature));
   }
 
@@ -158,9 +168,9 @@ export class HexMapDocument {
    * Get the full terrain vocabulary.
    */
   getTerrain(): TerrainVocabulary {
-    const terrainNode = this.doc.get('terrain');
+    const terrainNode = this.doc.get('terrain') as Node | undefined;
     if (!terrainNode) return {};
-    return (terrainNode as any).toJSON() as TerrainVocabulary;
+    return terrainNode.toJSON() as TerrainVocabulary;
   }
 
   /**
@@ -188,7 +198,7 @@ export class HexMapDocument {
   /**
    * Return a plain JavaScript object representing the document.
    */
-  toJS(): any {
+  toJS(): unknown {
     return this.doc.toJS();
   }
 }

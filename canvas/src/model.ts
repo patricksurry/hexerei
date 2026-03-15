@@ -1,12 +1,4 @@
-import {
-  Hex,
-  HexMapDocument,
-  HexMesh,
-  HexMapLoader,
-  HexPath,
-  HexMapMetadata,
-  HexMapLayout,
-} from '@hexmap/core';
+import { Hex, HexMapDocument, HexMesh, HexMapLoader, HexPath, HexMapMetadata } from '@hexmap/core';
 import { FeatureItem } from './types.js';
 
 export interface GridConfig {
@@ -22,7 +14,7 @@ export interface TerrainDef {
   key: string;
   name: string;
   color: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
 }
 
 export interface ComputedHexState {
@@ -56,16 +48,19 @@ export class MapModel {
     this.document = doc;
     this._metadata = doc.getMetadata();
     const layout = doc.getLayout();
+    // Layout may have additional properties not in the type definition
+    // Cast to unknown first, then to a record to safely access potential extra properties
+    const layoutData = layout as unknown as Record<string, unknown>;
 
     const orientation = layout.orientation || 'flat-down';
     const firstCol = 1; // Assuming default for now
     const firstRow = 1; // Assuming default for now
-    const labelFormat = layout.label || (layout as any).coordinates?.label || 'XXYY';
+    const labelFormat = layout.label || 'XXYY';
 
     this._grid = {
       orientation,
-      columns: (layout as any).columns ?? 0,
-      rows: (layout as any).rows ?? 0,
+      columns: typeof layoutData.columns === 'number' ? layoutData.columns : 0,
+      rows: typeof layoutData.rows === 'number' ? layoutData.rows : 0,
       firstCol,
       firstRow,
       labelFormat,
@@ -80,7 +75,7 @@ export class MapModel {
         key,
         name: def.name ?? key,
         color: def.style?.color ?? '#888888',
-        properties: def.properties as Record<string, any> | undefined,
+        properties: def.properties,
       });
     }
 
@@ -195,7 +190,7 @@ export class MapModel {
               this._grid.orientation,
               this._grid.firstCol,
               this._grid.firstRow
-            )
+          )
           : null
       )
       .filter((l): l is string => l !== null);

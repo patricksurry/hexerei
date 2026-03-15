@@ -47,13 +47,14 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
       segmentPath: result.type === 'hex' ? (result.path ?? result.items) : [],
       type: result.type,
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Invalid expression';
     return {
       hexIds: [],
       segmentPath: [],
       type: 'hex',
       error: {
-        message: e.message || 'Invalid expression',
+        message,
         offset: 0, // TODO: Enhance HexPath to report error offsets
       },
     };

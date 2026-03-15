@@ -55,7 +55,8 @@ export function executeCommand(command: MapCommand, state: MapState): CommandRes
       const current = currentFeatures[command.index];
       const previousValues: Partial<Feature> = {};
       for (const key of Object.keys(command.changes) as (keyof Feature)[]) {
-        previousValues[key] = current[key] as any;
+        // Store the previous value with proper typing
+        previousValues[key] = current[key];
       }
       doc.updateFeature(command.index, command.changes);
       inverse = { type: 'updateFeature', index: command.index, changes: previousValues };
@@ -68,13 +69,17 @@ export function executeCommand(command: MapCommand, state: MapState): CommandRes
     }
     case 'setMetadata': {
       const previousValue = doc.getMetadata()[command.key] ?? undefined;
-      doc.setMetadata(command.key, command.value as any);
+      // TypeScript can't narrow the type relationship between command.key and command.value
+      // in a discriminated union, so we assert the type is correct
+      doc.setMetadata(command.key, command.value as HexMapMetadata[typeof command.key]);
       inverse = { type: 'setMetadata', key: command.key, value: previousValue };
       break;
     }
     case 'setLayout': {
       const previousValue = doc.getLayout()[command.key];
-      doc.setLayout(command.key, command.value as any);
+      // TypeScript can't narrow the type relationship between command.key and command.value
+      // in a discriminated union, so we assert the type is correct
+      doc.setLayout(command.key, command.value as HexMapLayout[typeof command.key]);
       inverse = { type: 'setLayout', key: command.key, value: previousValue };
       break;
     }
@@ -114,7 +119,8 @@ export function executeCommand(command: MapCommand, state: MapState): CommandRes
     }
     default: {
       const _exhaustive: never = command;
-      throw new Error(`Unknown command type: ${(_exhaustive as any).type}`);
+      // This should never execute if all command types are handled
+      throw new Error(`Unknown command type: ${String((_exhaustive as { type: string }).type)}`);
     }
   }
 

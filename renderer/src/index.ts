@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { MeshMap, HexArea, Edge, HexMesh, Hex } from '@hexmap/core';
+import { MeshMap, HexArea, Hex } from '@hexmap/core';
 
 export interface RendererConfig {
   element: HTMLElement;
@@ -129,7 +129,7 @@ export class HexRenderer {
     // Render Hexes
     gGrid
       .selectAll('path')
-      .data(hexes, (d: any) => d.id)
+      .data(hexes, (d: HexArea) => d.id)
       .join('path')
       .attr('d', () => pathGen(hexPoints))
       .attr('transform', (d: HexArea) => {
@@ -144,17 +144,17 @@ export class HexRenderer {
       })
       .attr('stroke', '#ccc')
       .attr('stroke-width', 1)
-      .on('mouseover', function () {
+      .on('mouseover', function mouseOver() {
         d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
       })
-      .on('mouseout', function () {
+      .on('mouseout', function mouseOut() {
         d3.select(this).attr('stroke', '#ccc').attr('stroke-width', 1);
       });
 
     // Render Labels
     gLabels
       .selectAll('text')
-      .data(hexes, (d: any) => d.id)
+      .data(hexes, (d: HexArea) => d.id)
       .join('text')
       .attr('transform', (d: HexArea) => {
         const hex = Hex.hexFromId(d.id);

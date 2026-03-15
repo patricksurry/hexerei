@@ -10,7 +10,7 @@ import type { HexMapLayout } from '../format/types.js';
 export interface HexArea {
   id: string;
   terrain: string;
-  props: Record<string, any>;
+  props: Record<string, unknown>;
   label?: string;
   elevation?: number;
 }

@@ -1,4 +1,4 @@
-import { Hex } from '@hexmap/core';
+import { Hex, Feature } from '@hexmap/core';
 import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
 import './Inspector.css';
 
@@ -92,8 +92,8 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
       );
     }
 
-    const handleFieldBlur = (key: string, value: string | number | undefined) => {
-      const currentValue = (feature as any)[key];
+    const handleFieldBlur = (key: keyof Feature, value: string | number | undefined) => {
+      const currentValue = feature[key];
       // Normalize empty strings to undefined (clear the field), but preserve 0
       const normalized = value === '' ? undefined : value;
       if (normalized !== currentValue) {
@@ -175,7 +175,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
               key={`elevation-${featureIndex}-${feature.elevation}`}
               onBlur={(e) => {
                 const val = e.target.value ? Number(e.target.value) : undefined;
-                handleFieldBlur('elevation', val as any);
+                handleFieldBlur('elevation', val);
               }}
             />
           </div>

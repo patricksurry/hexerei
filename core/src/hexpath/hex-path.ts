@@ -17,6 +17,46 @@ interface Cursor {
   pendingConnector: 'none' | 'standard' | 'flipped';
 }
 
+/**
+ * Extended layout type that includes optional coordinate configuration.
+ * Used for parsing grid configuration from various sources.
+ */
+interface LayoutWithCoordinates {
+  label?: string;
+  orientation?: Hex.Orientation;
+  coordinates?: {
+    label?: string;
+    first?: [number, number];
+  };
+}
+
+/**
+ * Type guard to check if a value has the shape of LayoutWithCoordinates.
+ */
+function isLayoutLike(value: unknown): value is LayoutWithCoordinates {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+
+  // Check optional properties have correct types if present
+  if ('label' in obj && typeof obj.label !== 'string') return false;
+  if ('orientation' in obj && typeof obj.orientation !== 'string') return false;
+
+  if ('coordinates' in obj) {
+    const coords = obj.coordinates;
+    if (typeof coords !== 'object' || coords === null) return false;
+    const coordsObj = coords as Record<string, unknown>;
+
+    if ('label' in coordsObj && typeof coordsObj.label !== 'string') return false;
+    if ('first' in coordsObj) {
+      const { first } = coordsObj;
+      if (!Array.isArray(first) || first.length !== 2) return false;
+      if (typeof first[0] !== 'number' || typeof first[1] !== 'number') return false;
+    }
+  }
+
+  return true;
+}
+
 export interface HexPathOptions {
   labelFormat?: string; // "CCRR", "RRCC", "Axx", etc.
   orientation: Hex.Orientation;
@@ -32,7 +72,9 @@ export class HexPath {
 
   constructor(mesh: MeshMap, options?: Partial<HexPathOptions>) {
     this.mesh = mesh;
-    const layout = (mesh.layout as any) || {};
+    const rawLayout: unknown = mesh.layout;
+    const layout: LayoutWithCoordinates = isLayoutLike(rawLayout) ? rawLayout : {};
+
     this.options = {
       labelFormat: options?.labelFormat || layout.label || layout.coordinates?.label || 'XXYY',
       orientation: options?.orientation ?? layout.orientation ?? 'flat-down',

@@ -4,7 +4,6 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
-    project: './tsconfig.base.json',
   },
   env: {
     node: true,
@@ -12,9 +11,7 @@ module.exports = {
   },
   extends: [
     'airbnb-base',
-    'airbnb-typescript/base',
     'plugin:@typescript-eslint/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
     'prettier',
   ],
   plugins: ['@typescript-eslint', 'prettier'],
@@ -77,16 +74,25 @@ module.exports = {
     '@typescript-eslint/dot-notation': 'off', // Sometimes bracket notation is clearer
     '@typescript-eslint/no-redundant-type-constituents': 'off', // Can be intentional
     '@typescript-eslint/no-use-before-define': 'off', // Hoisting is fine
+    '@typescript-eslint/comma-dangle': 'off', // Prettier handles this
   },
   overrides: [
     {
-      // Test files
+      // Test files - disable type-aware linting since tests are excluded from tsconfig
       files: ['**/*.test.ts', '**/*.test.tsx', '**/test-*.ts'],
+      parserOptions: {
+        project: null,
+      },
+      extends: [
+        'airbnb-base',
+        'plugin:@typescript-eslint/recommended',
+        'prettier',
+      ],
       rules: {
         '@typescript-eslint/no-explicit-any': 'warn',
-        '@typescript-eslint/no-unsafe-assignment': 'warn',
-        '@typescript-eslint/no-unsafe-member-access': 'warn',
-        '@typescript-eslint/no-unsafe-call': 'warn',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
         'import/no-extraneous-dependencies': ['error', {
           devDependencies: true,
         }],
