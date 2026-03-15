@@ -203,6 +203,11 @@ export function Inspector({
             ))}
           </div>
         </section>
+        <div className="inspector-actions">
+          <button className="btn-primary" onClick={() => {
+              dispatch?.({ type: 'addFeature', feature: { at: state.label } });
+          }}>+ Add Feature Here</button>
+        </div>
       </div>
     );
   };

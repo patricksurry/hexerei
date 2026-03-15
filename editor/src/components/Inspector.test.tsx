@@ -65,3 +65,20 @@ describe('Inspector', () => {
     expect(dispatched[0].type).toBe('deleteFeature');
   });
 });
+
+  it('hex view shows "Add Feature Here" button that dispatches addFeature', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const hexId = '1,1,-2'; // 0101
+    const sel: Selection = { type: 'hex', hexId, label: '0101' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+    
+    const addBtn = screen.getByText('+ Add Feature Here');
+    fireEvent.click(addBtn);
+    
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0].type).toBe('addFeature');
+    if (dispatched[0].type === 'addFeature') {
+      expect(dispatched[0].feature.at).toBe('0101');
+    }
+  });
