@@ -1,4 +1,4 @@
-import {  FeatureItem  } from '@hexmap/canvas';
+import {  FeatureItem, MapCommand  } from '@hexmap/canvas';
 import './FeatureStack.css';
 
 interface FeatureStackProps {
@@ -7,7 +7,7 @@ interface FeatureStackProps {
   terrainColor?: (terrain: string) => string;
   onSelect?: (indices: number[], modifier: 'none' | 'shift' | 'cmd') => void;
   onHover?: (index: number | null) => void;
-  dispatch?: (command: any) => void;
+  dispatch?: (command: MapCommand) => void;
 }
 
 export function FeatureStack({
@@ -16,6 +16,7 @@ export function FeatureStack({
   terrainColor,
   onSelect,
   onHover,
+  dispatch,
 }: FeatureStackProps) {
   const getTerrainColor = (terrain: string) => {
     if (terrainColor) return terrainColor(terrain);
@@ -26,6 +27,11 @@ export function FeatureStack({
     <div className="feature-stack">
       <div className="feature-stack-header">
         FEATURE STACK
+        <button 
+          className="btn-icon" 
+          aria-label="Add feature"
+          onClick={() => dispatch?.({ type: 'addFeature', feature: { at: '' } })}
+        >+</button>
       </div>
       <ul className="feature-list" role="listbox">
         {features.map((feature) => {
