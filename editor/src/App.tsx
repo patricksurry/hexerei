@@ -142,6 +142,22 @@ export const App = () => {
           setSelection(clearSelection());
         }
       },
+      'mod+d': () => {
+        if (selection.type === 'feature' && selection.indices.length === 1 && model) {
+          const feature = model.features[selection.indices[0]];
+          if (feature && historyRef.current) {
+            historyRef.current.execute({
+              type: 'addFeature',
+              feature: {
+                at: feature.at,
+                terrain: feature.terrain || undefined,
+                label: feature.label ? `${feature.label} (copy)` : undefined,
+              },
+            });
+            setHistoryVersion((v) => v + 1);
+          }
+        }
+      },
     }),
     []
   );
