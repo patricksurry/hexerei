@@ -78,7 +78,7 @@ export function hitTest(screenPt: Point, viewport: ViewportState, model: MapMode
                 model.grid.orientation,
                 model.grid.firstCol,
                 model.grid.firstRow
-            )
+              )
             : null,
         ],
       };

@@ -226,11 +226,11 @@ export function hexCorners(
 ): Point[] {
   const corners: Point[] = [];
   for (let i = 0; i < 6; i++) {
-    const angle_deg = orientation === 'flat' ? 60 * i : 60 * i + 30;
-    const angle_rad = (Math.PI / 180) * angle_deg;
+    const angleDeg = orientation === 'flat' ? 60 * i : 60 * i + 30;
+    const angleRad = (Math.PI / 180) * angleDeg;
     corners.push({
-      x: center.x + size * Math.cos(angle_rad),
-      y: center.y + size * Math.sin(angle_rad),
+      x: center.x + size * Math.cos(angleRad),
+      y: center.y + size * Math.sin(angleRad),
     });
   }
   return corners;
@@ -334,13 +334,7 @@ export function parseVertexId(id: string): Cube[] {
   return parts.map(hexFromId);
 }
 
-export function formatHexLabel(
-  hex: Cube,
-  _labelFormat: string,
-  orientation: Orientation,
-  _firstCol: number = 1,
-  _firstRow: number = 1
-): string {
+export function formatHexLabel(hex: Cube, _labelFormat: string, orientation: Orientation): string {
   const offset = cubeToOffset(hex, orientation);
   const colStr = String(offset.x).padStart(2, '0');
   const rowStr = String(offset.y).padStart(2, '0');

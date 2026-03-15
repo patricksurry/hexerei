@@ -483,7 +483,7 @@ export class HexPath {
     return Hex.hexFromId(id);
   }
 
-  private formatId(cube: Hex.Cube, _type: GeometryType | null): string {
+  private formatId(cube: Hex.Cube): string {
     return Hex.hexId(cube);
   }
 

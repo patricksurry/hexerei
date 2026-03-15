@@ -14,5 +14,9 @@ module.exports = {
     
     // Allow unnamed functions for D3 event handlers
     'func-names': 'off',
+    
+    // Prettier handles formatting
+    '@typescript-eslint/indent': 'off',
+    '@typescript-eslint/comma-dangle': 'off',
   },
 };

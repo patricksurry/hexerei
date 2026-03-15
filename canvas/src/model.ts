@@ -190,7 +190,7 @@ export class MapModel {
               this._grid.orientation,
               this._grid.firstCol,
               this._grid.firstRow
-          )
+            )
           : null
       )
       .filter((l): l is string => l !== null);

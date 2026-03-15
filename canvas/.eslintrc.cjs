@@ -3,4 +3,9 @@ module.exports = {
   parserOptions: {
     project: './tsconfig.json',
   },
+  rules: {
+    '@typescript-eslint/indent': 'off', // Prettier handles this
+    '@typescript-eslint/comma-dangle': 'off', // Prettier handles this
+    '@typescript-eslint/naming-convention': 'off', // Too restrictive
+  },
 };

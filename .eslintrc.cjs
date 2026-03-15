@@ -75,6 +75,8 @@ module.exports = {
     '@typescript-eslint/no-redundant-type-constituents': 'off', // Can be intentional
     '@typescript-eslint/no-use-before-define': 'off', // Hoisting is fine
     '@typescript-eslint/comma-dangle': 'off', // Prettier handles this
+    '@typescript-eslint/indent': 'off', // Prettier handles this
+    'indent': 'off', // Prettier handles this
   },
   overrides: [
     {
