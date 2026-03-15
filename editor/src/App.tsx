@@ -30,6 +30,7 @@ import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useHybridFocus } from './hooks/useHybridFocus';
 import { useCallback } from 'react';
+import { filterFeatures } from './utils/filter-features';
 
 export const App = () => {
   const historyRef = useRef<CommandHistory | null>(null);
@@ -173,37 +174,7 @@ export const App = () => {
 
   const filteredIndices = useMemo(() => {
     if (!filterQuery || !model) return null; // null = no filter active
-    const query = filterQuery.toLowerCase();
-
-    // Key:value search (e.g., "terrain:forest")
-    const colonIdx = query.indexOf(':');
-    if (colonIdx > 0) {
-      const key = query.substring(0, colonIdx).trim();
-      const value = query.substring(colonIdx + 1).trim();
-      return model.features
-        .filter((f) => {
-          switch (key) {
-            case 'terrain': return f.terrain.toLowerCase().includes(value);
-            case 'label': return (f.label ?? '').toLowerCase().includes(value);
-            case 'id': return (f.id ?? '').toLowerCase().includes(value);
-            case 'at': return f.at.toLowerCase().includes(value);
-            case 'tags': return f.tags.some((t) => t.toLowerCase().includes(value));
-            default: return false;
-          }
-        })
-        .map((f) => f.index);
-    }
-
-    // Fuzzy match across all fields
-    return model.features
-      .filter((f) =>
-        f.terrain.toLowerCase().includes(query) ||
-        (f.label ?? '').toLowerCase().includes(query) ||
-        (f.id ?? '').toLowerCase().includes(query) ||
-        f.at.toLowerCase().includes(query) ||
-        f.tags.some((t) => t.toLowerCase().includes(query))
-      )
-      .map((f) => f.index);
+    return filterFeatures(model.features, filterQuery);
   }, [filterQuery, model]);
 
   const highlights = useMemo(() => {
