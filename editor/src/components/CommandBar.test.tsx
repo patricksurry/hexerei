@@ -73,3 +73,18 @@ test('clicking a key in dropdown appends it to value', () => {
   fireEvent.click(screen.getByText('terrain'));
   expect(onChange).toHaveBeenCalledWith('/terrain:');
 });
+
+test('displays GOTO mode badge for @ prefix', () => {
+  render(<CommandBar value="@" onChange={() => {}} />);
+  expect(screen.getByText('GOTO')).toBeDefined();
+});
+
+test('shows feature suggestions in GOTO mode', () => {
+  const suggestions = [
+    { label: 'River', index: 1 },
+    { label: 'Forest', index: 2 },
+  ];
+  render(<CommandBar value="@r" onChange={() => {}} gotoSuggestions={suggestions} />);
+  expect(screen.getByRole('listbox')).toBeDefined();
+  expect(screen.getByText('River')).toBeDefined();
+});

@@ -7,6 +7,7 @@ interface CommandBarProps {
   onClear?: () => void;
   onSubmit?: (value: string) => void;
   error?: string;
+  gotoSuggestions?: { label: string; index: number }[];
 }
 
 export interface CommandBarRef {
@@ -17,7 +18,7 @@ export interface CommandBarRef {
 const SEARCH_KEYS = ['terrain', 'label', 'id', 'at', 'tags'];
 
 export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
-  ({ value = '', onChange, onClear, onSubmit, error }, ref) => {
+  ({ value = '', onChange, onClear, onSubmit, error, gotoSuggestions }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     useImperativeHandle(ref, () => ({
@@ -28,11 +29,13 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
     const getMode = (val: string) => {
       if (val.startsWith('>')) return 'command';
       if (val.startsWith('/')) return 'search';
+      if (val.startsWith('@')) return 'goto';
       return 'path';
     };
 
     const mode = getMode(value);
     const showKeyDropdown = mode === 'search' && !value.includes(':');
+    const showGotoDropdown = mode === 'goto' && gotoSuggestions && gotoSuggestions.length > 0;
 
     const renderTokens = () => {
       // Simple tokenizer for HexPath
@@ -93,7 +96,7 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
               type="text"
               role="combobox"
               aria-label="command"
-              aria-expanded={showKeyDropdown ? 'true' : 'false'}
+              aria-expanded={showKeyDropdown || showGotoDropdown ? 'true' : 'false'}
               aria-haspopup="listbox"
               autoComplete="off"
               spellCheck="false"
@@ -115,6 +118,20 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
                 onClick={() => onChange?.(`/${key}:`)}
               >
                 {key}
+              </li>
+            ))}
+          </ul>
+        )}
+        {showGotoDropdown && (
+          <ul className="command-dropdown" role="listbox">
+            {gotoSuggestions!.map((s) => (
+              <li
+                key={s.index}
+                role="option"
+                className="command-dropdown-item"
+                onClick={() => onSubmit?.(`@${s.label}`)}
+              >
+                {s.label}
               </li>
             ))}
           </ul>

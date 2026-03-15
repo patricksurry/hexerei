@@ -181,6 +181,23 @@ export const App = () => {
     return [];
   }, [selection, model, historyVersion]);
 
+  const gotoSuggestions = useMemo(() => {
+    if (!model || !commandValue.startsWith('@')) return [];
+    const query = commandValue.substring(1).toLowerCase();
+    if (!query) {
+      return model.features
+        .filter((f) => f.label)
+        .map((f) => ({ label: f.label!, index: f.index }));
+    }
+    return model.features
+      .filter((f) =>
+        (f.label ?? '').toLowerCase().includes(query) ||
+        (f.id ?? '').toLowerCase().includes(query)
+      )
+      .filter((f) => f.label || f.id)
+      .map((f) => ({ label: f.label ?? f.id ?? `Feature ${f.index}`, index: f.index }));
+  }, [commandValue, model]);
+
   const handleHit = (result: HitResult) => {
     if (!result || result.type === 'none') {
       setSelection(clearSelection());
@@ -221,10 +238,28 @@ export const App = () => {
 
     if (value.startsWith('/')) return;
 
-    if (history) {
+    if (value.startsWith('@')) {
+      const query = value.substring(1).toLowerCase();
+      if (!model) return;
+      const match = model.features.find((f) =>
+        (f.label ?? '').toLowerCase() === query ||
+        (f.id ?? '').toLowerCase() === query
+      );
+      if (match) {
+        handleSelectFeature([match.index]);
+        // Center viewport on feature's hexes (will be implemented in Task 6)
+        // if (match.hexIds.length > 0) {
+        //   canvasHostRef.current?.centerOnHexes(match.hexIds);
+        // }
+      }
+      setCommandValue('');
+      return;
+    }
+
+    if (historyRef.current) {
       const cmd: MapCommand = { type: 'addFeature', feature: { at: value.trim() } };
-      history.execute(cmd);
-      setHistory(new CommandHistory(history.currentState)); // Ensure re-render
+      historyRef.current.execute(cmd);
+      setHistoryVersion((v) => v + 1);
     }
     setCommandValue('');
   };
@@ -285,6 +320,7 @@ export const App = () => {
           onClear={() => setCommandValue('')}
           onSubmit={handleCommandSubmit}
           error={preview?.error?.message}
+          gotoSuggestions={gotoSuggestions}
         />
       }
       leftPanel={

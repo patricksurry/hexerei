@@ -33,6 +33,11 @@
   background: rgba(0, 212, 255, 0.1);
 }
 
+.mode-badge.mode-goto {
+  color: var(--surface-base);
+  background: var(--accent-edge);
+}
+
 .command-input-container {
   flex: 1;
   height: 100%;
