@@ -51,7 +51,8 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Project specific
-.serena/cache/
+.serena/
+conductor/
 bugs/
 importer/output/
 importer/diagnostics/
