@@ -5,11 +5,12 @@ import { App } from './App';
 
 beforeEach(() => {
   vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mac');
-  
+
   // Mock fetch for the map file
   global.fetch = vi.fn().mockImplementation(() =>
     Promise.resolve({
-      text: () => Promise.resolve(`
+      text: () =>
+        Promise.resolve(`
 hexmap: "1.0"
 metadata:
   title: "Mock Map"
@@ -23,7 +24,7 @@ terrain:
 features:
   - at: "@all"
     terrain: clear
-      `)
+      `),
     })
   );
 });

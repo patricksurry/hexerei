@@ -12,11 +12,11 @@ test('renders all layout regions', () => {
     />
   );
 
-  expect(screen.getByRole('banner')).toBeInTheDocument();       // command bar
-  expect(screen.getByRole('main')).toBeInTheDocument();          // canvas
+  expect(screen.getByRole('banner')).toBeInTheDocument(); // command bar
+  expect(screen.getByRole('main')).toBeInTheDocument(); // canvas
   expect(screen.getByRole('complementary', { name: /features/i })).toBeInTheDocument();
   expect(screen.getByRole('complementary', { name: /inspector/i })).toBeInTheDocument();
-  expect(screen.getByRole('contentinfo')).toBeInTheDocument();   // status bar
+  expect(screen.getByRole('contentinfo')).toBeInTheDocument(); // status bar
 });
 
 test('hides left panel when leftPanelVisible is false', () => {

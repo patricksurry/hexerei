@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+coverage/
+*.min.js
+.git/
+.worktrees/
+vitest.workspace.ts
+*.config.ts
+*.config.js
+.eslintrc.js
+.prettierrc.js

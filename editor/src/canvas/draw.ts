@@ -1,13 +1,13 @@
-import {  Scene  } from '@hexmap/canvas';
+import { Scene } from '@hexmap/canvas';
 
 export interface CanvasTheme {
   background: string;
   gridStroke: string;
   gridLineWidth: number;
-  terrainOpacity: number;        // 0–1, applied to terrain fills
+  terrainOpacity: number; // 0–1, applied to terrain fills
   labelColor: string;
-  labelGlow: string | null;      // null = no glow
-  selectionGlow: number;         // shadowBlur radius
+  labelGlow: string | null; // null = no glow
+  selectionGlow: number; // shadowBlur radius
   hoverGlow: number;
   featureLabelColor: string;
   featureLabelShadow: string;
@@ -23,10 +23,7 @@ export function drawScene(
   scene: Scene,
   options: DrawOptions = {}
 ): void {
-  const { 
-    labelMinZoom = 12,
-    theme
-  } = options;
+  const { labelMinZoom = 12, theme } = options;
 
   // Use theme colors or fallbacks from scene/hardcoded
   const background = theme?.background || scene.background.trim() || '#141414';
@@ -43,9 +40,9 @@ export function drawScene(
   // First pass: Fill
   for (const hex of scene.hexagons) {
     ctx.beginPath();
-    const corners = hex.corners;
+    const { corners } = hex;
     if (corners.length < 6) continue;
-    
+
     ctx.moveTo(corners[0].x, corners[0].y);
     for (let i = 1; i < 6; i++) {
       ctx.lineTo(corners[i].x, corners[i].y);
@@ -63,9 +60,9 @@ export function drawScene(
   ctx.lineWidth = gridLineWidth;
   for (const hex of scene.hexagons) {
     ctx.beginPath();
-    const corners = hex.corners;
+    const { corners } = hex;
     if (corners.length < 6) continue;
-    
+
     ctx.moveTo(corners[0].x, corners[0].y);
     for (let i = 1; i < 6; i++) {
       ctx.lineTo(corners[i].x, corners[i].y);
@@ -77,9 +74,9 @@ export function drawScene(
   // Draw highlights
   for (const hl of scene.highlights) {
     ctx.beginPath();
-    const corners = hl.corners;
+    const { corners } = hl;
     if (corners.length < 6) continue;
-    
+
     ctx.moveTo(corners[0].x, corners[0].y);
     for (let i = 1; i < 6; i++) {
       ctx.lineTo(corners[i].x, corners[i].y);
@@ -92,14 +89,14 @@ export function drawScene(
         ctx.shadowColor = hl.color;
         ctx.shadowBlur = theme.selectionGlow;
       }
-      
+
       ctx.fillStyle = `${hl.color}26`; // ~15% opacity
       ctx.fill();
       ctx.strokeStyle = hl.color;
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
       ctx.stroke();
-      
+
       // Reset shadow
       ctx.shadowBlur = 0;
     } else if (hl.style === 'hover') {
@@ -121,7 +118,7 @@ export function drawScene(
       ctx.stroke();
       ctx.setLineDash([]);
     } else {
-      ctx.fillStyle = `${hl.color}1A`; 
+      ctx.fillStyle = `${hl.color}1A`;
       ctx.fill();
     }
   }
@@ -131,12 +128,12 @@ export function drawScene(
     ctx.beginPath();
     ctx.moveTo(edge.p1.x, edge.p1.y);
     ctx.lineTo(edge.p2.x, edge.p2.y);
-    
+
     if (theme?.selectionGlow) {
       ctx.shadowColor = edge.color;
       ctx.shadowBlur = theme.selectionGlow;
     }
-    
+
     ctx.strokeStyle = edge.color;
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
@@ -148,15 +145,15 @@ export function drawScene(
   for (const vtx of scene.vertexHighlights) {
     ctx.beginPath();
     ctx.arc(vtx.point.x, vtx.point.y, 5, 0, Math.PI * 2);
-    
+
     if (theme?.selectionGlow) {
       ctx.shadowColor = vtx.color;
       ctx.shadowBlur = theme.selectionGlow;
     }
-    
+
     ctx.fillStyle = vtx.color;
     ctx.fill();
-    
+
     // No black stroke as per design
     ctx.shadowBlur = 0;
   }
@@ -169,12 +166,12 @@ export function drawScene(
     for (let i = 1; i < line.points.length; i++) {
       ctx.lineTo(line.points[i].x, line.points[i].y);
     }
-    
+
     if (theme?.hoverGlow) {
       ctx.shadowColor = line.color;
       ctx.shadowBlur = theme.hoverGlow;
     }
-    
+
     ctx.strokeStyle = `${line.color}99`; // 60% opacity
     ctx.lineWidth = 1.5;
     ctx.setLineDash([6, 4]);
@@ -187,25 +184,24 @@ export function drawScene(
   if (scene.hexagons.length > 0) {
     const h0 = scene.hexagons[0];
     const hexScreenRadius = Math.sqrt(
-      Math.pow(h0.corners[0].x - h0.center.x, 2) + 
-      Math.pow(h0.corners[0].y - h0.center.y, 2)
+      (h0.corners[0].x - h0.center.x) ** 2 + (h0.corners[0].y - h0.center.y) ** 2
     );
-    
+
     if (hexScreenRadius > labelMinZoom) {
       const fontSize = Math.max(8, hexScreenRadius * 0.28);
-      
+
       if (theme?.labelGlow) {
         ctx.shadowColor = theme.labelGlow;
         ctx.shadowBlur = 4;
       }
-      
+
       ctx.fillStyle = labelColor;
       ctx.font = `${fontSize}px monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      
+
       for (const hex of scene.hexagons) {
-        const labelY = hex.center.y - hexScreenRadius * 0.40;
+        const labelY = hex.center.y - hexScreenRadius * 0.4;
         ctx.fillText(hex.label, hex.center.x, labelY);
       }
       ctx.shadowBlur = 0;
@@ -216,8 +212,7 @@ export function drawScene(
   if (scene.featureLabels.length > 0 && scene.hexagons.length > 0) {
     const h0 = scene.hexagons[0];
     const hexScreenRadius = Math.sqrt(
-      Math.pow(h0.corners[0].x - h0.center.x, 2) +
-      Math.pow(h0.corners[0].y - h0.center.y, 2)
+      (h0.corners[0].x - h0.center.x) ** 2 + (h0.corners[0].y - h0.center.y) ** 2
     );
     if (hexScreenRadius > (options.labelMinZoom ?? 12)) {
       const fontSize = Math.max(7, hexScreenRadius * 0.22);
@@ -227,10 +222,10 @@ export function drawScene(
 
       for (const fl of scene.featureLabels) {
         if (theme?.featureLabelShadow) {
-           ctx.shadowColor = 'rgba(0,0,0,0.8)';
-           ctx.shadowBlur = 6;
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.shadowBlur = 6;
         }
-        
+
         // Double shadow for that HUD feel if theme specifies
         ctx.fillStyle = theme?.featureLabelColor || '#ffffff';
         ctx.fillText(fl.text, fl.point.x, fl.point.y);

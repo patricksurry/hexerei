@@ -1,20 +1,13 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
-import { AppLayout } from './layout/AppLayout';
-import { CommandBar, CommandBarRef } from './components/CommandBar';
-import { FeatureStack } from './components/FeatureStack';
-import { Inspector } from './components/Inspector';
-import { StatusBar } from './components/StatusBar';
-import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { Hex } from '@hexmap/core';
-import { 
-  MapModel, 
-  CommandHistory, 
-  MapCommand, 
-  Selection, 
-  HitResult, 
-  HexPathPreview, 
-  parseHexPathInput, 
+import {
+  MapModel,
+  CommandHistory,
+  MapCommand,
+  Selection,
+  HitResult,
+  HexPathPreview,
+  parseHexPathInput,
   SceneHighlight,
   clearSelection,
   selectHex,
@@ -26,10 +19,17 @@ import {
   highlightsForCursor,
   topmostFeatureAtHex,
   boundaryIdToHexPath,
-  vertexIdToHexPath
+  vertexIdToHexPath,
 } from '@hexmap/canvas';
+import { AppLayout } from './layout/AppLayout';
+import { CommandBar, CommandBarRef } from './components/CommandBar';
+import { FeatureStack } from './components/FeatureStack';
+import { Inspector } from './components/Inspector';
+import { StatusBar } from './components/StatusBar';
+import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
-export function App() {
+export const App = () => {
   const [history, setHistory] = useState<CommandHistory | null>(null);
   const model = history?.currentState.model ?? null;
   const [leftPanelVisible, setLeftPanelVisible] = useState(true);
@@ -53,12 +53,12 @@ export function App() {
 
   useEffect(() => {
     fetch('/maps/battle-for-moscow.hexmap.yaml')
-      .then(r => r.text())
-      .then(yaml => {
+      .then((r) => r.text())
+      .then((yaml) => {
         const newModel = MapModel.load(yaml);
         setHistory(new CommandHistory({ document: newModel.document, model: newModel }));
       })
-      .catch(err => console.error('Failed to load map:', err));
+      .catch((err) => console.error('Failed to load map:', err));
   }, []);
 
   useEffect(() => {
@@ -69,40 +69,44 @@ export function App() {
     }
   }, [commandValue, model]);
 
-  const shortcuts = useMemo(() => ({
-    'mod+1': () => setLeftPanelVisible(v => !v),
-    'mod+2': () => setRightPanelVisible(v => !v),
-    'mod+0': () => canvasHostRef.current?.resetZoom(),
-    'mod+k': () => commandBarRef.current?.focus(),
-    'mod+z': () => {
-      if (history) {
-        history.undo();
-        setHistory(new CommandHistory(history.currentState));
-      }
-    },
-    'mod+shift+z': () => {
-      if (history) {
-        history.redo();
-        setHistory(new CommandHistory(history.currentState));
-      }
-    },
-    'escape': () => setSelection(clearSelection()),
-  }), [history]);
+  const shortcuts = useMemo(
+    () => ({
+      'mod+1': () => setLeftPanelVisible((v) => !v),
+      'mod+2': () => setRightPanelVisible((v) => !v),
+      'mod+0': () => canvasHostRef.current?.resetZoom(),
+      'mod+k': () => commandBarRef.current?.focus(),
+      'mod+z': () => {
+        if (history) {
+          history.undo();
+          setHistory(new CommandHistory(history.currentState));
+        }
+      },
+      'mod+shift+z': () => {
+        if (history) {
+          history.redo();
+          setHistory(new CommandHistory(history.currentState));
+        }
+      },
+      escape: () => setSelection(clearSelection()),
+    }),
+    [history]
+  );
 
   useKeyboardShortcuts(shortcuts);
 
   const highlights = useMemo(() => {
     if (!model) return [];
-    
-    const previewHighlights: SceneHighlight[] = (preview && preview.hexIds.length > 0) 
-      ? [{ type: 'hex', hexIds: preview.hexIds, color: '#00D4FF', style: 'ghost' }]
-      : [];
+
+    const previewHighlights: SceneHighlight[] =
+      preview && preview.hexIds.length > 0
+        ? [{ type: 'hex', hexIds: preview.hexIds, color: '#00D4FF', style: 'ghost' }]
+        : [];
 
     return [
       ...highlightsForSelection(selection, model),
       ...highlightsForHover(hoverIndex, model),
       ...highlightsForCursor(cursorHex, model),
-      ...previewHighlights
+      ...previewHighlights,
     ];
   }, [selection, hoverIndex, cursorHex, model, preview]);
 
@@ -171,7 +175,18 @@ export function App() {
     const neighbor = Hex.hexNeighbor(cube, direction);
     const neighborId = Hex.hexId(neighbor);
     if (model.mesh.getHex(neighborId)) {
-      setSelection(selectHex(neighborId, Hex.formatHexLabel(neighbor, model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow)));
+      setSelection(
+        selectHex(
+          neighborId,
+          Hex.formatHexLabel(
+            neighbor,
+            model.grid.labelFormat,
+            model.grid.orientation,
+            model.grid.firstCol,
+            model.grid.firstRow
+          )
+        )
+      );
     }
   };
 
@@ -180,7 +195,7 @@ export function App() {
       // Direct multi-index selection (e.g., range from FeatureStack): set all at once
       setSelection({ type: 'feature', indices: [...indices].sort((a, b) => a - b) });
     } else {
-      setSelection(prev => selectFeature(indices[0], prev, modifier));
+      setSelection((prev) => selectFeature(indices[0], prev, modifier));
     }
     if (modifier === 'none' && indices.length === 1 && model) {
       const feature = model.features[indices[0]];
@@ -222,11 +237,11 @@ export function App() {
         />
       }
       canvas={
-        <CanvasHost 
-          ref={canvasHostRef} 
-          model={model} 
-          onCursorHex={setCursorHex} 
-          onZoomChange={setZoom} 
+        <CanvasHost
+          ref={canvasHostRef}
+          model={model}
+          onCursorHex={setCursorHex}
+          onZoomChange={setZoom}
           onHitTest={handleHit}
           onNavigate={handleNavigate}
           highlights={highlights}
@@ -243,7 +258,12 @@ export function App() {
       }
       statusBar={
         <StatusBar
-          cursor={cursorHex ?? (hoverIndex !== null && features[hoverIndex] ? features[hoverIndex].at.split(' ')[0] : '----')}
+          cursor={
+            cursorHex ??
+            (hoverIndex !== null && features[hoverIndex]
+              ? features[hoverIndex].at.split(' ')[0]
+              : '----')
+          }
           zoom={zoom}
           mapTitle={mapTitle}
           dirty={history?.isDirty ?? false}
@@ -251,4 +271,4 @@ export function App() {
       }
     />
   );
-}
+};

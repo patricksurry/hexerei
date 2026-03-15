@@ -42,7 +42,7 @@ describe('HexPath Preview', () => {
   it('returns segmentPath in path order for a sequential hex path', () => {
     const result = parseHexPathInput('0101 0201 0301', model);
     expect(result.segmentPath).toHaveLength(3);
-    result.segmentPath?.forEach(id => expect(id).toMatch(/^-?\d+,-?\d+,-?\d+$/));
+    result.segmentPath?.forEach((id) => expect(id).toMatch(/^-?\d+,-?\d+,-?\d+$/));
     expect(result.segmentPath![0]).not.toEqual(result.segmentPath![1]);
   });
 
@@ -63,8 +63,8 @@ describe('HexPath Preview', () => {
   it('segmentPath preserves traversal order and includes repeated hex visits', () => {
     // 0101 → 0201 → 0101: hexIds deduplicates to 2, but segmentPath should have 3
     const result = parseHexPathInput('0101 0201 0101', model);
-    expect(result.hexIds).toHaveLength(2);       // Set deduplication
-    expect(result.segmentPath).toHaveLength(3);  // traversal order with repeats
+    expect(result.hexIds).toHaveLength(2); // Set deduplication
+    expect(result.segmentPath).toHaveLength(3); // traversal order with repeats
     expect(result.segmentPath![0]).toEqual(result.segmentPath![2]); // 0101 at start and end
   });
 });

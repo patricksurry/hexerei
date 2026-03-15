@@ -1,12 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { ViewportState, screenToWorld, worldToScreen, panBy, zoomAt, fitExtent } from './viewport.js';
+import {
+  ViewportState,
+  screenToWorld,
+  worldToScreen,
+  panBy,
+  zoomAt,
+  fitExtent,
+} from './viewport.js';
 
 describe('Viewport', () => {
   const vp: ViewportState = {
     center: { x: 100, y: 100 },
     zoom: 2,
     width: 800,
-    height: 600
+    height: 600,
   };
 
   it('should round-trip coordinates', () => {
@@ -34,12 +41,12 @@ describe('Viewport', () => {
   it('zoomAt should preserve the world point under cursor', () => {
     const cursor = { x: 300, y: 200 };
     const worldBefore = screenToWorld(cursor, vp);
-    
+
     const factor = 1.5;
     const newVp = zoomAt(vp, cursor, factor);
-    
+
     expect(newVp.zoom).toBe(vp.zoom * factor);
-    
+
     const worldAfter = screenToWorld(cursor, newVp);
     expect(worldAfter.x).toBeCloseTo(worldBefore.x);
     expect(worldAfter.y).toBeCloseTo(worldBefore.y);
@@ -48,7 +55,7 @@ describe('Viewport', () => {
   it('fitExtent should calculate correct zoom and center', () => {
     const bounds = {
       min: { x: 0, y: 0 },
-      max: { x: 100, y: 100 }
+      max: { x: 100, y: 100 },
     };
     const newVp = fitExtent(bounds, 800, 600, 0);
     // world size 100x100. screen size 800x600.

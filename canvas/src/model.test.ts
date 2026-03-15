@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { MapModel } from './model.js';
 import { HexMapDocument } from '@hexmap/core';
+import { MapModel } from './model.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -34,12 +34,12 @@ describe('MapModel', () => {
 
   it('should build mesh with correct terrain', () => {
     const model = MapModel.load(MOCK_YAML);
-    const mesh = model.mesh;
-    
+    const { mesh } = model;
+
     // 0201 is forest
-    const id0201 = '2,0,-2'; 
+    const id0201 = '2,0,-2';
     expect(mesh.getHex(id0201)?.terrain).toBe('clear forest');
-    
+
     // 0101 is clear
     const id0101 = '1,1,-2';
     expect(mesh.getHex(id0101)?.terrain).toBe('clear');
@@ -77,19 +77,16 @@ describe('MapModel', () => {
 
   it('should support reverse feature mapping', () => {
     const model = MapModel.load(MOCK_YAML);
-    const hexIds = model.features[1].hexIds;
+    const { hexIds } = model.features[1];
     expect(hexIds).toContain('2,0,-2');
-    
+
     const features = model.featuresAtHex('2,0,-2');
     expect(features).toHaveLength(2);
     expect(features[1].label).toBe('Target');
   });
 
   describe('bfm.yaml RFC compliance', () => {
-    const yaml = readFileSync(
-      resolve(__dirname, '../../maps/definitions/bfm.yaml'),
-      'utf-8'
-    );
+    const yaml = readFileSync(resolve(__dirname, '../../maps/definitions/bfm.yaml'), 'utf-8');
 
     it('loads without error', () => {
       expect(() => MapModel.load(yaml)).not.toThrow();
@@ -97,13 +94,13 @@ describe('MapModel', () => {
 
     it('has no features with at="complex"', () => {
       const model = MapModel.load(yaml);
-      const complex = model.features.filter(f => f.at === 'complex');
+      const complex = model.features.filter((f) => f.at === 'complex');
       expect(complex).toHaveLength(0);
     });
 
     it('resolves railroad features to hex IDs', () => {
       const model = MapModel.load(yaml);
-      const rail = model.features.find(f => f.label === 'Northern Rail');
+      const rail = model.features.find((f) => f.label === 'Northern Rail');
       expect(rail).toBeDefined();
       expect(rail!.hexIds.length).toBeGreaterThan(0);
     });

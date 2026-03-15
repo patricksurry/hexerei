@@ -14,92 +14,98 @@ export interface CommandBarRef {
   blur: () => void;
 }
 
-export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(({
-  value = '',
-  onChange,
-  onClear,
-  onSubmit,
-  error,
-}, ref) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
+  ({ value = '', onChange, onClear, onSubmit, error }, ref) => {
+    const inputRef = useRef<HTMLInputElement>(null);
 
-  useImperativeHandle(ref, () => ({
-    focus: () => inputRef.current?.focus(),
-    blur: () => inputRef.current?.blur(),
-  }));
+    useImperativeHandle(ref, () => ({
+      focus: () => inputRef.current?.focus(),
+      blur: () => inputRef.current?.blur(),
+    }));
 
-  const getMode = (val: string) => {
-    if (val.startsWith('>')) return 'command';
-    if (val.startsWith('/')) return 'search';
-    return 'path';
-  };
+    const getMode = (val: string) => {
+      if (val.startsWith('>')) return 'command';
+      if (val.startsWith('/')) return 'search';
+      return 'path';
+    };
 
-  const mode = getMode(value);
+    const mode = getMode(value);
 
-  const renderTokens = () => {
-    // Simple tokenizer for HexPath
-    // Atoms (coordinates): accent-hex/edge/vertex
-    // Operators (+ - , ; !): text-secondary
-    // Keywords (@all): text-primary font-bold
-    
-    if (mode !== 'path') return value;
+    const renderTokens = () => {
+      // Simple tokenizer for HexPath
+      // Atoms (coordinates): accent-hex/edge/vertex
+      // Operators (+ - , ; !): text-secondary
+      // Keywords (@all): text-primary font-bold
 
-    const tokens = value.split(/(\s+|[,;!+-])/);
-    return tokens.map((token, i) => {
-      if (!token) return null;
-      if (/\s+/.test(token)) return <span key={i}>{token}</span>;
-      if ([',', ';', '!', '+', '-'].includes(token)) return <span key={i} style={{ color: 'var(--text-secondary)' }}>{token}</span>;
-      if (token === '@all') return <span key={i} style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>{token}</span>;
-      
-      // Determine atom type
-      let color = 'var(--accent-hex)';
-      if (token.includes('/')) color = 'var(--accent-edge)';
-      if (token.includes('.')) color = 'var(--accent-vertex)';
-      if (token.includes('@')) color = 'var(--accent-edge)'; // Approximate
+      if (mode !== 'path') return value;
 
-      return <span key={i} style={{ color }}>{token}</span>;
-    });
-  };
+      const tokens = value.split(/(\s+|[,;!+-])/);
+      return tokens.map((token, i) => {
+        if (!token) return null;
+        if (/\s+/.test(token)) return <span key={i}>{token}</span>;
+        if ([',', ';', '!', '+', '-'].includes(token))
+          return (
+            <span key={i} style={{ color: 'var(--text-secondary)' }}>
+              {token}
+            </span>
+          );
+        if (token === '@all')
+          return (
+            <span key={i} style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>
+              {token}
+            </span>
+          );
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClear?.();
-      inputRef.current?.blur();
-    } else if (e.key === 'Enter') {
-      onSubmit?.(value);
-    }
-  };
+        // Determine atom type
+        let color = 'var(--accent-hex)';
+        if (token.includes('/')) color = 'var(--accent-edge)';
+        if (token.includes('.')) color = 'var(--accent-vertex)';
+        if (token.includes('@')) color = 'var(--accent-edge)'; // Approximate
 
-  return (
-    <div className="command-bar-wrapper">
-      <div className={`command-bar ${error ? 'has-error' : ''}`}>
-        <div className={`mode-badge mode-${mode}`}>
-          {mode.toUpperCase()}
-        </div>
-        <div className="command-input-container">
-          <div className="command-input-overlay font-mono">
-            {renderTokens()}
+        return (
+          <span key={i} style={{ color }}>
+            {token}
+          </span>
+        );
+      });
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClear?.();
+        inputRef.current?.blur();
+      } else if (e.key === 'Enter') {
+        onSubmit?.(value);
+      }
+    };
+
+    return (
+      <div className="command-bar-wrapper">
+        <div className={`command-bar ${error ? 'has-error' : ''}`}>
+          <div className={`mode-badge mode-${mode}`}>{mode.toUpperCase()}</div>
+          <div className="command-input-container">
+            <div className="command-input-overlay font-mono">{renderTokens()}</div>
+            <input
+              ref={inputRef}
+              type="text"
+              role="combobox"
+              aria-label="command"
+              aria-expanded="false"
+              aria-haspopup="listbox"
+              autoComplete="off"
+              spellCheck="false"
+              value={value}
+              onChange={(e) => onChange?.(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="command-input font-mono"
+              placeholder="Enter HexPath, /search, or >command"
+            />
           </div>
-          <input
-            ref={inputRef}
-            type="text"
-            role="combobox"
-            aria-label="command"
-            aria-expanded="false"
-            aria-haspopup="listbox"
-            autoComplete="off"
-            spellCheck="false"
-            value={value}
-            onChange={(e) => onChange?.(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="command-input font-mono"
-            placeholder="Enter HexPath, /search, or >command"
-          />
         </div>
+        {error && <div className="command-error-message">{error}</div>}
       </div>
-      {error && <div className="command-error-message">{error}</div>}
-    </div>
-  );
-});
+    );
+  }
+);
 
 CommandBar.displayName = 'CommandBar';

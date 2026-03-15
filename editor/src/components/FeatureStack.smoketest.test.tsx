@@ -4,7 +4,15 @@ import { FeatureStack } from './FeatureStack';
 
 const MOCK_FEATURES: any[] = [
   { index: 0, at: '@all', terrain: 'clear', isBase: true, tags: [], hexIds: [] },
-  { index: 1, at: '0304', terrain: 'forest', label: 'Trenice Forest', isBase: false, tags: [], hexIds: [] }
+  {
+    index: 1,
+    at: '0304',
+    terrain: 'forest',
+    label: 'Trenice Forest',
+    isBase: false,
+    tags: [],
+    hexIds: [],
+  },
 ];
 
 describe('FeatureStack Smoketest', () => {

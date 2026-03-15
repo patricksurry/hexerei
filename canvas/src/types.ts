@@ -19,10 +19,9 @@ export interface FeatureItem {
   side?: 'both' | 'in' | 'out' | 'left' | 'right';
 }
 
-export type Selection = 
+export type Selection =
   | { type: 'none' }
   | { type: 'hex'; hexId: string; label: string }
   | { type: 'edge'; boundaryId: string; hexLabels: [string, string | null] }
   | { type: 'vertex'; vertexId: string }
   | { type: 'feature'; indices: number[] };
-

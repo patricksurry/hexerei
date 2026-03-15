@@ -1,8 +1,8 @@
 import { Hex } from '@hexmap/core';
 import { Point, ViewportState, worldToScreen } from './viewport.js';
 import { MapModel } from './model.js';
-const HEX_SIZE = 1;
 
+const HEX_SIZE = 1;
 
 export interface SceneHighlight {
   type: 'hex' | 'edge' | 'vertex';
@@ -21,15 +21,15 @@ export interface SceneOptions {
 
 export interface HexRenderItem {
   hexId: string;
-  corners: Point[];    // 6 screen-space points
-  center: Point;       // screen-space center
-  fill: string;        // terrain CSS color
-  label: string;       // coordinate label ("0507")
+  corners: Point[]; // 6 screen-space points
+  center: Point; // screen-space center
+  fill: string; // terrain CSS color
+  label: string; // coordinate label ("0507")
 }
 
 export interface HighlightRenderItem {
   hexId: string;
-  corners: Point[];    // 6 screen-space points
+  corners: Point[]; // 6 screen-space points
   color: string;
   style: 'select' | 'hover' | 'ghost';
 }
@@ -48,13 +48,13 @@ export interface VertexHighlightRenderItem {
 }
 
 export interface PathLineRenderItem {
-  points: Point[];   // screen-space centers in path order
+  points: Point[]; // screen-space centers in path order
   color: string;
 }
 
 export interface FeatureLabelRenderItem {
   text: string;
-  point: Point;    // screen-space centroid
+  point: Point; // screen-space centroid
 }
 
 export interface Scene {
@@ -77,7 +77,7 @@ export function buildScene(
   const segmentPath = options?.segmentPath ?? [];
   const hexagons: HexRenderItem[] = [];
   const orientation = Hex.orientationTop(model.grid.orientation);
-  
+
   // Padding for culling: 1.5x size to be safe
   const cullPadding = HEX_SIZE * 1.5 * viewport.zoom;
 
@@ -85,26 +85,32 @@ export function buildScene(
     const cube = Hex.hexFromId(area.id);
     const worldCenter = Hex.hexToPixel(cube, HEX_SIZE, orientation);
     const screenCenter = worldToScreen(worldCenter, viewport);
-    
+
     // Frustum culling
     if (
-      screenCenter.x < -cullPadding || 
+      screenCenter.x < -cullPadding ||
       screenCenter.x > viewport.width + cullPadding ||
-      screenCenter.y < -cullPadding || 
+      screenCenter.y < -cullPadding ||
       screenCenter.y > viewport.height + cullPadding
     ) {
       continue;
     }
-    
+
     const worldCorners = Hex.hexCorners(worldCenter, HEX_SIZE, orientation);
-    const screenCorners = worldCorners.map(p => worldToScreen(p, viewport));
-    
+    const screenCorners = worldCorners.map((p) => worldToScreen(p, viewport));
+
     hexagons.push({
       hexId: area.id,
       corners: screenCorners,
       center: screenCenter,
       fill: model.terrainColor(area.terrain),
-      label: Hex.formatHexLabel(Hex.hexFromId(area.id), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow)
+      label: Hex.formatHexLabel(
+        Hex.hexFromId(area.id),
+        model.grid.labelFormat,
+        model.grid.orientation,
+        model.grid.firstCol,
+        model.grid.firstRow
+      ),
     });
   }
 
@@ -118,45 +124,46 @@ export function buildScene(
         const cube = Hex.hexFromId(hexId);
         const worldCenter = Hex.hexToPixel(cube, HEX_SIZE, orientation);
         const worldCorners = Hex.hexCorners(worldCenter, HEX_SIZE, orientation);
-        const screenCorners = worldCorners.map(p => worldToScreen(p, viewport));
-        
+        const screenCorners = worldCorners.map((p) => worldToScreen(p, viewport));
+
         highlightItems.push({
           hexId,
           corners: screenCorners,
           color: hl.color,
-          style: hl.style
+          style: hl.style,
         });
       }
     } else if (hl.type === 'edge' && hl.boundaryId) {
       const [id1, id2] = hl.boundaryId.split('|');
       const h1 = Hex.hexFromId(id1);
       const c1 = Hex.hexToPixel(h1, HEX_SIZE, orientation);
-      
+
       // Find direction from h1 to h2 or VOID/dir
       let dir = 0;
       if (id2.startsWith('VOID/')) {
         dir = parseInt(id2.split('/')[1]);
       } else {
         const h2 = Hex.hexFromId(id2);
-        for(let i=0; i<6; i++) {
+        for (let i = 0; i < 6; i++) {
           if (Hex.hexId(Hex.hexNeighbor(h1, i)) === Hex.hexId(h2)) {
             dir = i;
             break;
           }
         }
       }
-      
+
       const corners = Hex.hexCorners(c1, HEX_SIZE, orientation);
       // Edge in direction d lies between corners (d+5)%6 and d for flat,
       // or (d+4)%6 and (d+5)%6 for pointy.
       const edgeStart = orientation === 'flat' ? (dir + 5) % 6 : (dir + 4) % 6;
       const p1 = worldToScreen(corners[edgeStart], viewport);
       const p2 = worldToScreen(corners[(edgeStart + 1) % 6], viewport);
-      
+
       edgeHighlights.push({
         boundaryId: hl.boundaryId,
-        p1, p2,
-        color: hl.color
+        p1,
+        p2,
+        color: hl.color,
       });
     } else if (hl.type === 'vertex' && hl.vertexId) {
       const ids = hl.vertexId.split('^');
@@ -164,33 +171,33 @@ export function buildScene(
       const h1 = Hex.hexFromId(ids[0]);
       const c1 = Hex.hexToPixel(h1, HEX_SIZE, orientation);
       const corners = Hex.hexCorners(c1, HEX_SIZE, orientation);
-      
+
       // We need to find which corner of h1 this vertex is.
       // It's the corner that is shared with both h2 and h3.
       const h2Id = ids[1];
       const h3Id = ids[2];
-      
+
       let cornerIdx = 0;
-      for(let i=0; i<6; i++) {
+      for (let i = 0; i < 6; i++) {
         const n1 = Hex.hexId(Hex.hexNeighbor(h1, i));
-        const n2 = Hex.hexId(Hex.hexNeighbor(h1, (i+1)%6));
+        const n2 = Hex.hexId(Hex.hexNeighbor(h1, (i + 1) % 6));
         if ((n1 === h2Id && n2 === h3Id) || (n1 === h3Id && n2 === h2Id)) {
           cornerIdx = i;
           break;
         }
       }
-      
+
       vertexHighlights.push({
         vertexId: hl.vertexId,
         point: worldToScreen(corners[cornerIdx], viewport),
-        color: hl.color
+        color: hl.color,
       });
     }
   }
 
   const pathLines: PathLineRenderItem[] = [];
   if (segmentPath.length > 1) {
-    const points = segmentPath.map(hexId => {
+    const points = segmentPath.map((hexId) => {
       const cube = Hex.hexFromId(hexId);
       const world = Hex.hexToPixel(cube, HEX_SIZE, orientation);
       return worldToScreen(world, viewport);
@@ -203,12 +210,16 @@ export function buildScene(
     if (!feature.label || feature.isBase || feature.hexIds.length === 0) continue;
 
     // Average screen-space center of all feature hexes
-    let sumX = 0, sumY = 0, count = 0;
+    let sumX = 0;
+    let sumY = 0;
+    let count = 0;
     for (const hexId of feature.hexIds) {
       const cube = Hex.hexFromId(hexId);
       const world = Hex.hexToPixel(cube, HEX_SIZE, orientation);
       const screen = worldToScreen(world, viewport);
-      sumX += screen.x; sumY += screen.y; count++;
+      sumX += screen.x;
+      sumY += screen.y;
+      count++;
     }
     if (count > 0) {
       featureLabels.push({ text: feature.label, point: { x: sumX / count, y: sumY / count } });
@@ -222,6 +233,6 @@ export function buildScene(
     edgeHighlights,
     vertexHighlights,
     pathLines,
-    featureLabels
+    featureLabels,
   };
 }

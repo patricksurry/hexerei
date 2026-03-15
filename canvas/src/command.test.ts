@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { HexMapDocument } from '@hexmap/core';
 import { executeCommand, MapCommand, MapState } from './command.js';
 import { MapModel } from './model.js';
-import { HexMapDocument } from '@hexmap/core';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -29,7 +29,10 @@ function makeState(): MapState {
 describe('executeCommand', () => {
   it('addFeature appends feature and inverse is deleteFeature', () => {
     const state = makeState();
-    const cmd: MapCommand = { type: 'addFeature', feature: { at: '0101', terrain: 'forest', label: 'New' } };
+    const cmd: MapCommand = {
+      type: 'addFeature',
+      feature: { at: '0101', terrain: 'forest', label: 'New' },
+    };
     const result = executeCommand(cmd, state);
     expect(result.state.model.features).toHaveLength(3);
     expect(result.state.model.features[2].label).toBe('New');
@@ -108,20 +111,30 @@ describe('executeCommand', () => {
 
   it('setTerrainType adds terrain definition', () => {
     const state = makeState();
-    const result = executeCommand({
-      type: 'setTerrainType', geometry: 'hex', key: 'swamp',
-      def: { style: { color: '#336633' } }
-    }, state);
-    expect(result.state.document.getTerrain().hex!['swamp']).toBeDefined();
+    const result = executeCommand(
+      {
+        type: 'setTerrainType',
+        geometry: 'hex',
+        key: 'swamp',
+        def: { style: { color: '#336633' } },
+      },
+      state
+    );
+    expect(result.state.document.getTerrain().hex!.swamp).toBeDefined();
     expect(result.inverse.type).toBe('deleteTerrainType');
   });
 
   it('deleteTerrainType removes terrain definition', () => {
     const state = makeState();
-    const result = executeCommand({
-      type: 'deleteTerrainType', geometry: 'hex', key: 'forest'
-    }, state);
-    expect(result.state.document.getTerrain().hex!['forest']).toBeUndefined();
+    const result = executeCommand(
+      {
+        type: 'deleteTerrainType',
+        geometry: 'hex',
+        key: 'forest',
+      },
+      state
+    );
+    expect(result.state.document.getTerrain().hex!.forest).toBeUndefined();
     expect(result.inverse.type).toBe('setTerrainType');
   });
 

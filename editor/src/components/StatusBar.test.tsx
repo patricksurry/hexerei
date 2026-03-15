@@ -17,7 +17,7 @@ test('displays map title', () => {
 });
 
 test('shows dirty indicator when modified', () => {
-  render(<StatusBar dirty={true} />);
+  render(<StatusBar dirty />);
   expect(screen.getByText(/modified/i)).toBeInTheDocument();
 });
 

@@ -1,12 +1,15 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { drawScene } from './draw.js';
-import { 
-  MapModel, 
-  ViewportState, 
-  panBy, zoomAt, hitTest, buildScene, SceneHighlight, HitResult
+import {
+  MapModel,
+  ViewportState,
+  panBy,
+  zoomAt,
+  hitTest,
+  buildScene,
+  SceneHighlight,
+  HitResult,
 } from '@hexmap/canvas';
-
-
+import { drawScene } from './draw.js';
 
 export interface CanvasHostRef {
   resetZoom: () => void;
@@ -26,32 +29,37 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
   ({ model, highlights, segmentPath, onZoomChange, onHitTest, onCursorHex, onNavigate }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    
+
     // Viewport state
     const viewportRef = useRef<ViewportState>({
       center: { x: 0, y: 0 },
       zoom: 1,
       width: 800,
-      height: 600
+      height: 600,
     });
 
     const isDragging = useRef(false);
-    const lastMouse = useRef<{x: number, y: number} | null>(null);
-    const dragStart = useRef<{x: number, y: number} | null>(null);
+    const lastMouse = useRef<{ x: number; y: number } | null>(null);
+    const dragStart = useRef<{ x: number; y: number } | null>(null);
 
     // Initial fit
     useEffect(() => {
       if (!model || !containerRef.current) return;
       const { clientWidth, clientHeight } = containerRef.current;
-      
+
       const centers = [];
       for (const hex of model.mesh.getAllHexes()) {
         centers.push(hex.id);
       }
-      
+
       if (centers.length > 0) {
         // Just mock fitExtent for now to keep it simple, real logic would compute bounds
-        viewportRef.current = { center: {x:0, y:0}, zoom: 20, width: clientWidth, height: clientHeight };
+        viewportRef.current = {
+          center: { x: 0, y: 0 },
+          zoom: 20,
+          width: clientWidth,
+          height: clientHeight,
+        };
         if (onZoomChange) onZoomChange(20);
         requestAnimationFrame(render);
       }
@@ -79,10 +87,14 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
         selectionGlow: 10,
         hoverGlow: 5,
         featureLabelColor: '#ffffff',
-        featureLabelShadow: '0px 2px 4px rgba(0,0,0,0.8)'
+        featureLabelShadow: '0px 2px 4px rgba(0,0,0,0.8)',
       };
 
-      const scene = buildScene(model, vp, { background: theme.background, highlights, segmentPath });
+      const scene = buildScene(model, vp, {
+        background: theme.background,
+        highlights,
+        segmentPath,
+      });
       drawScene(ctx, scene, { theme });
     };
 
@@ -93,14 +105,14 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
     const handlePointerDown = (e: React.PointerEvent) => {
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
-      
+
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       isDragging.current = true;
       lastMouse.current = { x, y };
       dragStart.current = { x, y };
-      
+
       if (e.currentTarget) {
         e.currentTarget.setPointerCapture(e.pointerId);
       }
@@ -130,10 +142,10 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       isDragging.current = false;
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect || !dragStart.current || !model || !onHitTest) return;
-      
+
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       const dist = Math.hypot(x - dragStart.current.x, y - dragStart.current.y);
       if (dist < 3) {
         const hit = hitTest({ x, y }, viewportRef.current, model);
@@ -146,11 +158,11 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       e.preventDefault();
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
-      
+
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
-      const factor = Math.pow(0.995, e.deltaY);
+
+      const factor = 0.995 ** e.deltaY;
       viewportRef.current = zoomAt(viewportRef.current, { x, y }, factor);
       if (onZoomChange) onZoomChange(viewportRef.current.zoom);
       requestAnimationFrame(render);
@@ -165,17 +177,23 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
 
     useImperativeHandle(ref, () => ({
       resetZoom: () => {
-         // Mock reset
-         if (onZoomChange) onZoomChange(20);
-         requestAnimationFrame(render);
-      }
+        // Mock reset
+        if (onZoomChange) onZoomChange(20);
+        requestAnimationFrame(render);
+      },
     }));
 
     return (
       <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', height: '100%', touchAction: 'none', display: 'block', cursor: isDragging.current ? 'grabbing' : 'grab' }}
+          style={{
+            width: '100%',
+            height: '100%',
+            touchAction: 'none',
+            display: 'block',
+            cursor: isDragging.current ? 'grabbing' : 'grab',
+          }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { hitTest } from './hit-test.js';
-import { MapModel } from './model.js';
 import { ViewportState, worldToScreen } from '@hexmap/canvas';
 import { Hex } from '@hexmap/core';
+import { hitTest } from './hit-test.js';
+import { MapModel } from './model.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -17,7 +17,7 @@ describe('hitTest', () => {
     center: { x: 0, y: 0 },
     zoom: 100,
     width: 800,
-    height: 600
+    height: 600,
   };
 
   it('should hit the correct neighbor for edge 0 (SE neighbor for flat-top)', () => {
@@ -25,27 +25,39 @@ describe('hitTest', () => {
     const centerCube = Hex.createHex(0, 0, 0);
     const centerPixel = Hex.hexToPixel(centerCube, 1, 'flat');
     const midpoints = Hex.hexEdgeMidpoints(centerPixel, 1, 'flat');
-    
+
     // Midpoint 0 is at 30 degrees (ESE) - between East (0) and South-East (60)
-    // For flat-top: 
+    // For flat-top:
     // direction 0 = NE
     // direction 1 = SE
     // Midpoint 0 should correspond to direction 1 (SE)
     const mp0 = midpoints[0];
     // Nudge slightly towards the center to ensure we're inside the intended hex logic
     const nudgedPt = {
-        x: mp0.x * 0.99 + centerPixel.x * 0.01,
-        y: mp0.y * 0.99 + centerPixel.y * 0.01
+      x: mp0.x * 0.99 + centerPixel.x * 0.01,
+      y: mp0.y * 0.99 + centerPixel.y * 0.01,
     };
     const screenPt = worldToScreen(nudgedPt, vp);
-    
+
     const hit = hitTest(screenPt, vp, model);
     expect(hit?.type).toBe('edge');
-    
+
     const neighborCube = Hex.hexNeighbor(centerCube, 1);
-    const expectedLabel = Hex.formatHexLabel(neighborCube, model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow);
-    const centerLabel = Hex.formatHexLabel(centerCube, model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow);
-    
+    const expectedLabel = Hex.formatHexLabel(
+      neighborCube,
+      model.grid.labelFormat,
+      model.grid.orientation,
+      model.grid.firstCol,
+      model.grid.firstRow
+    );
+    const centerLabel = Hex.formatHexLabel(
+      centerCube,
+      model.grid.labelFormat,
+      model.grid.orientation,
+      model.grid.firstCol,
+      model.grid.firstRow
+    );
+
     if (hit?.type === 'edge') {
       expect(hit.hexLabels).toContain(centerLabel);
       expect(hit.hexLabels).toContain(expectedLabel);

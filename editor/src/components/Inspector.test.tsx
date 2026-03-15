@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Inspector } from './Inspector';
 import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
+import { Inspector } from './Inspector';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -40,11 +40,11 @@ describe('Inspector', () => {
     const sel: Selection = { type: 'feature', indices: [1] };
     const dispatched: MapCommand[] = [];
     render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
-    
+
     const labelInput = screen.getByDisplayValue('Target');
     fireEvent.change(labelInput, { target: { value: 'Dark Forest' } });
     fireEvent.blur(labelInput);
-    
+
     expect(dispatched).toHaveLength(1);
     expect(dispatched[0].type).toBe('updateFeature');
     if (dispatched[0].type === 'updateFeature') {
@@ -57,10 +57,10 @@ describe('Inspector', () => {
     const sel: Selection = { type: 'feature', indices: [1] };
     const dispatched: MapCommand[] = [];
     render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
-    
+
     const deleteBtn = screen.getByText('Delete');
     fireEvent.click(deleteBtn);
-    
+
     expect(dispatched).toHaveLength(1);
     expect(dispatched[0].type).toBe('deleteFeature');
   });
@@ -71,10 +71,10 @@ describe('Inspector', () => {
     const sel: Selection = { type: 'hex', hexId, label: '0101' };
     const dispatched: MapCommand[] = [];
     render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
-    
+
     const addBtn = screen.getByText('+ Add Feature Here');
     fireEvent.click(addBtn);
-    
+
     expect(dispatched).toHaveLength(1);
     expect(dispatched[0].type).toBe('addFeature');
     if (dispatched[0].type === 'addFeature') {

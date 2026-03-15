@@ -1,6 +1,6 @@
+import { Hex } from '@hexmap/core';
 import { Selection } from './types.js';
 import { MapModel } from './model.js';
-import { Hex } from '@hexmap/core';
 import { SceneHighlight } from './scene.js'; // Will move to scene.ts soon
 
 export function clearSelection(): Selection {
@@ -21,7 +21,13 @@ export function selectVertex(vertexId: string): Selection {
 
 export function boundaryIdToHexPath(boundaryId: string, model: MapModel): string {
   const parts = Hex.parseBoundaryId(boundaryId);
-  const label1 = Hex.formatHexLabel(parts.hexA, model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow);
+  const label1 = Hex.formatHexLabel(
+    parts.hexA,
+    model.grid.labelFormat,
+    model.grid.orientation,
+    model.grid.firstCol,
+    model.grid.firstRow
+  );
   const top = Hex.orientationTop(model.grid.orientation);
 
   if (parts.hexB === null && parts.direction !== undefined) {
@@ -39,7 +45,13 @@ export function boundaryIdToHexPath(boundaryId: string, model: MapModel): string
 
 export function vertexIdToHexPath(vertexId: string, model: MapModel): string {
   const parts = Hex.parseVertexId(vertexId);
-  const label1 = Hex.formatHexLabel(parts[0], model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow);
+  const label1 = Hex.formatHexLabel(
+    parts[0],
+    model.grid.labelFormat,
+    model.grid.orientation,
+    model.grid.firstCol,
+    model.grid.firstRow
+  );
   for (let i = 0; i < 6; i++) {
     const n1 = Hex.hexId(Hex.hexNeighbor(parts[0], i));
     const n2 = Hex.hexId(Hex.hexNeighbor(parts[0], (i + 1) % 6));
@@ -64,7 +76,7 @@ export function selectFeature(
 
   if (modifier === 'cmd') {
     if (currentIndices.includes(index)) {
-      const next = currentIndices.filter(i => i !== index);
+      const next = currentIndices.filter((i) => i !== index);
       return next.length === 0 ? { type: 'none' } : { type: 'feature', indices: next };
     }
     return { type: 'feature', indices: [...currentIndices, index].sort((a, b) => a - b) };
@@ -76,7 +88,10 @@ export function selectFeature(
     const start = Math.min(last, index);
     const end = Math.max(last, index);
     const next = Array.from({ length: end - start + 1 }, (_, i) => start + i);
-    return { type: 'feature', indices: Array.from(new Set([...currentIndices, ...next])).sort((a, b) => a - b) };
+    return {
+      type: 'feature',
+      indices: Array.from(new Set([...currentIndices, ...next])).sort((a, b) => a - b),
+    };
   }
 
   return { type: 'feature', indices: [index] };
@@ -84,14 +99,11 @@ export function selectFeature(
 
 export function topmostFeatureAtHex(hexId: string, model: MapModel): number | null {
   const features = model.featuresAtHex(hexId);
-  const nonBase = features.filter(f => !f.isBase);
+  const nonBase = features.filter((f) => !f.isBase);
   return nonBase.length > 0 ? nonBase[0].index : null;
 }
 
-export function highlightsForSelection(
-  selection: Selection,
-  model: MapModel
-): SceneHighlight[] {
+export function highlightsForSelection(selection: Selection, model: MapModel): SceneHighlight[] {
   switch (selection.type) {
     case 'none':
       return [];
@@ -101,36 +113,49 @@ export function highlightsForSelection(
       const eParts = Hex.parseBoundaryId(selection.boundaryId);
       const hexIds = [Hex.hexId(eParts.hexA)];
       if (eParts.hexB) hexIds.push(Hex.hexId(eParts.hexB));
-      
+
       return [
-        { type: 'edge', boundaryId: selection.boundaryId, hexIds: [], color: '#FF44FF', style: 'select' },
-        { type: 'hex', hexIds, color: '#FF44FF', style: 'hover' } // Subtle background
+        {
+          type: 'edge',
+          boundaryId: selection.boundaryId,
+          hexIds: [],
+          color: '#FF44FF',
+          style: 'select',
+        },
+        { type: 'hex', hexIds, color: '#FF44FF', style: 'hover' }, // Subtle background
       ];
     case 'vertex':
       const vParts = Hex.parseVertexId(selection.vertexId).map(Hex.hexId);
       return [
-        { type: 'vertex', vertexId: selection.vertexId, hexIds: [], color: '#FFDD00', style: 'select' },
-        { type: 'hex', hexIds: vParts, color: '#FFDD00', style: 'hover' } // Subtle background
+        {
+          type: 'vertex',
+          vertexId: selection.vertexId,
+          hexIds: [],
+          color: '#FFDD00',
+          style: 'select',
+        },
+        { type: 'hex', hexIds: vParts, color: '#FFDD00', style: 'hover' }, // Subtle background
       ];
     case 'feature':
-      const featureHexIds = selection.indices.flatMap(idx => model.features[idx].hexIds);
-      return [{ type: 'hex', hexIds: Array.from(new Set(featureHexIds)), color: '#00D4FF', style: 'select' }];
+      const featureHexIds = selection.indices.flatMap((idx) => model.features[idx].hexIds);
+      return [
+        {
+          type: 'hex',
+          hexIds: Array.from(new Set(featureHexIds)),
+          color: '#00D4FF',
+          style: 'select',
+        },
+      ];
   }
 }
 
-export function highlightsForHover(
-  hoverIndex: number | null,
-  model: MapModel
-): SceneHighlight[] {
+export function highlightsForHover(hoverIndex: number | null, model: MapModel): SceneHighlight[] {
   if (hoverIndex === null) return [];
-  const hexIds = model.features[hoverIndex].hexIds;
+  const { hexIds } = model.features[hoverIndex];
   return [{ type: 'hex', hexIds, color: '#00D4FF', style: 'hover' }];
 }
 
-export function highlightsForCursor(
-  cursorHexId: string | null,
-  model: MapModel
-): SceneHighlight[] {
+export function highlightsForCursor(cursorHexId: string | null, model: MapModel): SceneHighlight[] {
   if (cursorHexId === null) return [];
   if (!model.mesh.getHex(cursorHexId)) return [];
   return [{ type: 'hex', hexIds: [cursorHexId], color: '#00D4FF', style: 'hover' }];

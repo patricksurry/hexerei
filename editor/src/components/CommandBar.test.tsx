@@ -13,7 +13,15 @@ test('calls onChange as user types', async () => {
   const onChange = vi.fn();
   const TestWrapper = () => {
     const [val, setVal] = useState('');
-    return <CommandBar value={val} onChange={(v) => { setVal(v); onChange(v); }} />;
+    return (
+      <CommandBar
+        value={val}
+        onChange={(v) => {
+          setVal(v);
+          onChange(v);
+        }}
+      />
+    );
   };
   render(<TestWrapper />);
   await userEvent.type(screen.getByRole('combobox'), '0101');

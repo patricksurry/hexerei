@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { HexMapDocument } from '@hexmap/core';
 import { CommandHistory } from './history.js';
 import { MapModel } from './model.js';
-import { HexMapDocument } from '@hexmap/core';
 import type { MapCommand } from './command.js';
 
 const MOCK_YAML = `

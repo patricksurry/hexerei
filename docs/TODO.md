@@ -1,4 +1,4 @@
-- [ ] implement authoring workflow
+- [ ] implement authoring workflow (^A done)
 
 - [ ] verify README/docs for each module
 
@@ -16,4 +16,4 @@
     - feature   side?: 'both' | 'in' | 'out' | 'left' | 'right';  // Edge features only
 
 
-- [ ] rfc folder cleanup - switch to Makefile: 
+- [x] rfc folder cleanup - switch to Makefile: 

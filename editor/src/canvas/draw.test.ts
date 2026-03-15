@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { Scene } from '@hexmap/canvas';
 import { drawScene } from './draw.js';
-import {  Scene  } from '@hexmap/canvas';
 
 describe('Canvas Drawing', () => {
   const mockCtx = {
@@ -36,19 +36,23 @@ describe('Canvas Drawing', () => {
       {
         hexId: '0,0,0',
         corners: [
-          { x: 10, y: 0 }, { x: 20, y: 10 }, { x: 10, y: 20 },
-          { x: 0, y: 20 }, { x: -10, y: 10 }, { x: 0, y: 0 }
+          { x: 10, y: 0 },
+          { x: 20, y: 10 },
+          { x: 10, y: 20 },
+          { x: 0, y: 20 },
+          { x: -10, y: 10 },
+          { x: 0, y: 0 },
         ],
         center: { x: 10, y: 10 },
         fill: '#ffffff',
-        label: '0101'
-      }
+        label: '0101',
+      },
     ],
     highlights: [],
     edgeHighlights: [],
     vertexHighlights: [],
     pathLines: [],
-    featureLabels: []
+    featureLabels: [],
   };
 
   it('should call fillRect with background from scene', () => {
@@ -57,8 +61,8 @@ describe('Canvas Drawing', () => {
   });
 
   it('should use background from theme if provided', () => {
-    drawScene(mockCtx, mockScene, { 
-      theme: { background: '#ABCDEF' } as any 
+    drawScene(mockCtx, mockScene, {
+      theme: { background: '#ABCDEF' } as any,
     });
     // This expects drawScene to set ctx.fillStyle = '#ABCDEF'
     // but the mock doesn't spy on setter directly, so we check if fillRect was called
@@ -88,19 +92,25 @@ describe('Canvas Drawing', () => {
   it('should draw labels near the top of the hex, not at center', () => {
     const sceneWithBigHex: Scene = {
       ...mockScene,
-      hexagons: [{
-        ...mockScene.hexagons[0],
-        // corners span 40px radius — well above labelMinZoom=12
-        corners: [
-          { x: 50, y: 10 }, { x: 90, y: 30 }, { x: 90, y: 70 },
-          { x: 50, y: 90 }, { x: 10, y: 70 }, { x: 10, y: 30 }
-        ],
-        center: { x: 50, y: 50 },
-        label: '0101'
-      }]
+      hexagons: [
+        {
+          ...mockScene.hexagons[0],
+          // corners span 40px radius — well above labelMinZoom=12
+          corners: [
+            { x: 50, y: 10 },
+            { x: 90, y: 30 },
+            { x: 90, y: 70 },
+            { x: 50, y: 90 },
+            { x: 10, y: 70 },
+            { x: 10, y: 30 },
+          ],
+          center: { x: 50, y: 50 },
+          label: '0101',
+        },
+      ],
     };
     drawScene(mockCtx, sceneWithBigHex, { labelMinZoom: 12 });
-    const calls = (mockCtx.fillText as any).mock.calls;
+    const { calls } = (mockCtx.fillText as any).mock;
     expect(calls).toHaveLength(1);
     const [_text, _x, labelY] = calls[0];
     // Label y should be above center (50) by a meaningful amount

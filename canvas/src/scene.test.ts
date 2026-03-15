@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { Hex } from '@hexmap/core';
 import { MapModel } from './model.js';
 import { ViewportState, worldToScreen } from './viewport.js';
 import { hitTest } from './hit-test.js';
-import { buildScene } from './scene.js';
-import { SceneHighlight } from './scene.js';
-import { Hex } from '@hexmap/core';
+import { buildScene, SceneHighlight } from './scene.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -29,7 +28,7 @@ describe('HitTest & Scene', () => {
     center: { x: 0, y: 0 },
     zoom: 100,
     width: 800,
-    height: 600
+    height: 600,
   };
 
   it('hexAtScreen should return correct label at center of hex', () => {
@@ -37,19 +36,22 @@ describe('HitTest & Scene', () => {
     const cube = Hex.offsetToCube(1, 1, 'flat-down');
     const worldCenter = Hex.hexToPixel(cube, 1); // 1=1
     const screen = worldToScreen(worldCenter, vp);
-    const hit = hitTest(screen, vp, model); const label = hit.type === 'hex' ? hit.label : null;
+    const hit = hitTest(screen, vp, model);
+    const label = hit.type === 'hex' ? hit.label : null;
     expect(label).toBe('0101');
-    
+
     // col 2, row 1 (CCRR 0201) in flat-down
     const cube2 = Hex.offsetToCube(2, 1, 'flat-down');
     const worldCenter2 = Hex.hexToPixel(cube2, 1);
     const screen2 = worldToScreen(worldCenter2, vp);
-    const hit2 = hitTest(screen2, vp, model); const label2 = hit2.type === 'hex' ? hit2.label : null;
+    const hit2 = hitTest(screen2, vp, model);
+    const label2 = hit2.type === 'hex' ? hit2.label : null;
     expect(label2).toBe('0201');
   });
 
   it('hexAtScreen should return null for far off-map point', () => {
-    const hit = hitTest({ x: 1000, y: 1000 }, vp, model); const label = hit.type === 'hex' ? hit.label : null;
+    const hit = hitTest({ x: 1000, y: 1000 }, vp, model);
+    const label = hit.type === 'hex' ? hit.label : null;
     expect(label).toBeNull();
   });
 
@@ -63,7 +65,7 @@ describe('HitTest & Scene', () => {
       center: { x: 100, y: 100 }, // far away
       zoom: 10,
       width: 20,
-      height: 20
+      height: 20,
     };
     const scene = buildScene(model, smallVp);
     expect(scene.hexagons).toHaveLength(0);
@@ -80,7 +82,7 @@ describe('HitTest & Scene', () => {
       boundaryId,
       hexIds: [],
       color: '#FF3DFF',
-      style: 'select'
+      style: 'select',
     };
     const scene = buildScene(model, vp, { background: '#141414', highlights: [hl] });
     expect(scene.edgeHighlights).toHaveLength(1);
@@ -107,7 +109,7 @@ describe('HitTest & Scene', () => {
       type: 'hex',
       hexIds: [Hex.hexId(Hex.offsetToCube(1, 1, 'flat-down'))],
       color: '#00D4FF',
-      style: 'select'
+      style: 'select',
     };
     const scene = buildScene(model, vp, { highlights: [hl] });
     expect(scene.highlights).toHaveLength(1);

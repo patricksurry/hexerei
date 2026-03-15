@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { HexMapDocument } from '@hexmap/core';
 import { CommandHistory } from './history.js';
 import { MapModel } from './model.js';
-import { HexMapDocument } from '@hexmap/core';
 import type { MapState, MapCommand } from './command.js';
 
 const MOCK_YAML = `
@@ -67,7 +67,10 @@ describe('CommandHistory', () => {
     const history = new CommandHistory(makeState());
     history.execute({ type: 'addFeature', feature: { at: '0101', terrain: 'forest' } });
     history.undo();
-    history.execute({ type: 'addFeature', feature: { at: '0201', terrain: 'clear', label: 'Other' } });
+    history.execute({
+      type: 'addFeature',
+      feature: { at: '0201', terrain: 'clear', label: 'Other' },
+    });
     expect(history.canRedo).toBe(false);
   });
 

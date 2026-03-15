@@ -14,38 +14,38 @@ grid:
 `;
 
 describe('HexMapDocument', () => {
-    it('should parse and round-trip essentially identical content', () => {
-        const doc = new HexMapDocument(SAMPLE_YAML);
-        expect(doc.toString()).toBe(SAMPLE_YAML);
-    });
+  it('should parse and round-trip essentially identical content', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML);
+    expect(doc.toString()).toBe(SAMPLE_YAML);
+  });
 
-    it('should allow modifying metadata while preserving structure', () => {
-        const doc = new HexMapDocument(SAMPLE_YAML);
-        doc.setMetadata('title', 'New Title');
+  it('should allow modifying metadata while preserving structure', () => {
+    const doc = new HexMapDocument(SAMPLE_YAML);
+    doc.setMetadata('title', 'New Title');
 
-        const output = doc.toString();
-        expect(output).toContain('title: "New Title"');
-        expect(output).toContain('# This comment should be preserved');
-        expect(output).toContain('id: "test-map"');
-    });
+    const output = doc.toString();
+    expect(output).toContain('title: "New Title"');
+    expect(output).toContain('# This comment should be preserved');
+    expect(output).toContain('id: "test-map"');
+  });
 
-    it('should create metadata if missing', () => {
-        const minimal = `hexmap: "1.0"\n`;
-        const doc = new HexMapDocument(minimal);
-        doc.setMetadata('designer', 'Me');
-        expect(doc.toString()).toContain('designer: Me');
-    });
+  it('should create metadata if missing', () => {
+    const minimal = `hexmap: "1.0"\n`;
+    const doc = new HexMapDocument(minimal);
+    doc.setMetadata('designer', 'Me');
+    expect(doc.toString()).toContain('designer: Me');
+  });
 });
 
 test('HexMapDocument typed methods', () => {
-    const doc = new HexMapDocument('hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: base\n');
-    doc.setMetadata('title', 'New Map');
-    expect(doc.getMetadata().title).toBe('New Map');
-    
-    expect(doc.getLayout().orientation).toBe('flat-down');
-    
-    const feature: Feature = { at: '0101', terrain: 'M' };
-    doc.addFeature(feature); // should not throw
+  const doc = new HexMapDocument('hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: base\n');
+  doc.setMetadata('title', 'New Map');
+  expect(doc.getMetadata().title).toBe('New Map');
+
+  expect(doc.getLayout().orientation).toBe('flat-down');
+
+  const feature: Feature = { at: '0101', terrain: 'M' };
+  doc.addFeature(feature); // should not throw
 });
 
 const SAMPLE_YAML_WITH_FEATURES = `
@@ -105,7 +105,7 @@ describe('HexMapDocument features mutation', () => {
 
   test('reorderFeature moves feature forward', () => {
     // Add a third feature so we can test non-adjacent forward move
-    const yaml = SAMPLE_YAML_WITH_FEATURES.trimEnd() + `
+    const yaml = `${SAMPLE_YAML_WITH_FEATURES.trimEnd()}
   - at: "0101"
     terrain: clear
     label: "Third"
@@ -118,9 +118,9 @@ describe('HexMapDocument features mutation', () => {
     // Insert at position 2: [0:forest, 1:Third, 2:@all]
     doc.reorderFeature(0, 2);
     const features = doc.getFeatures();
-    expect(features[0].terrain).toBe('forest');  // was index 1
-    expect(features[1].label).toBe('Third');     // was index 2
-    expect(features[2].at).toBe('@all');         // moved from index 0 to end
+    expect(features[0].terrain).toBe('forest'); // was index 1
+    expect(features[1].label).toBe('Third'); // was index 2
+    expect(features[2].at).toBe('@all'); // moved from index 0 to end
   });
 
   test('reorderFeature is a no-op when from === to', () => {
@@ -150,12 +150,16 @@ describe('HexMapDocument features mutation', () => {
   });
 
   test('getFeatures returns empty array when no features key', () => {
-    const doc = new HexMapDocument('hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: "0101"\n');
+    const doc = new HexMapDocument(
+      'hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: "0101"\n'
+    );
     expect(doc.getFeatures()).toEqual([]);
   });
 
   test('getTerrain returns empty object when no terrain key', () => {
-    const doc = new HexMapDocument('hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: "0101"\n');
+    const doc = new HexMapDocument(
+      'hexmap: "1.0"\nlayout:\n  orientation: flat-down\n  all: "0101"\n'
+    );
     expect(doc.getTerrain()).toEqual({});
   });
 
@@ -163,7 +167,7 @@ describe('HexMapDocument features mutation', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     // Should not throw
     doc.deleteTerrainType('hex', 'nonexistent');
-    expect(doc.getTerrain().hex!['clear']).toBeDefined();
+    expect(doc.getTerrain().hex!.clear).toBeDefined();
   });
 
   test('updateFeature with undefined value deletes the key', () => {
@@ -180,22 +184,22 @@ describe('HexMapDocument terrain mutation', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     const terrain = doc.getTerrain();
     expect(terrain.hex).toBeDefined();
-    expect(terrain.hex!['clear']).toBeDefined();
-    expect(terrain.hex!['clear'].style?.color).toBe('#ffffff');
+    expect(terrain.hex!.clear).toBeDefined();
+    expect(terrain.hex!.clear.style?.color).toBe('#ffffff');
   });
 
   test('setTerrainType adds a new terrain definition', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     doc.setTerrainType('hex', 'swamp', { style: { color: '#336633' } });
     const terrain = doc.getTerrain();
-    expect(terrain.hex!['swamp'].style?.color).toBe('#336633');
+    expect(terrain.hex!.swamp.style?.color).toBe('#336633');
   });
 
   test('deleteTerrainType removes a terrain definition', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     doc.deleteTerrainType('hex', 'forest');
     const terrain = doc.getTerrain();
-    expect(terrain.hex!['forest']).toBeUndefined();
-    expect(terrain.hex!['clear']).toBeDefined();
+    expect(terrain.hex!.forest).toBeUndefined();
+    expect(terrain.hex!.clear).toBeDefined();
   });
 });

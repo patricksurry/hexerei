@@ -1,9 +1,9 @@
-import { MapModel } from './model.js';
 import { HexPath, GeometryType } from '@hexmap/core';
+import { MapModel } from './model.js';
 
 export interface HexPathPreview {
   hexIds: string[];
-  segmentPath?: string[];   // ordered hex IDs for drawing center-to-center line
+  segmentPath?: string[]; // ordered hex IDs for drawing center-to-center line
   type: GeometryType;
   error?: {
     message: string;
@@ -23,7 +23,7 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
     labelFormat: model.grid.labelFormat,
     orientation: model.grid.orientation,
     firstCol: model.grid.firstCol,
-    firstRow: model.grid.firstRow
+    firstRow: model.grid.firstRow,
   });
 
   // I1: detect trailing separator before resolve() — avoids silent partial result
@@ -32,7 +32,10 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
       hexIds: [],
       segmentPath: [],
       type: 'hex',
-      error: { message: `Incomplete expression: '${input.trim()}'`, offset: input.trim().length - 1 }
+      error: {
+        message: `Incomplete expression: '${input.trim()}'`,
+        offset: input.trim().length - 1,
+      },
     };
   }
 
@@ -42,7 +45,7 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
       hexIds: result.type === 'hex' ? result.items : [],
       // I2: use path (traversal order, allows repeated visits) instead of items (Set)
       segmentPath: result.type === 'hex' ? (result.path ?? result.items) : [],
-      type: result.type
+      type: result.type,
     };
   } catch (e: any) {
     return {
@@ -51,8 +54,8 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
       type: 'hex',
       error: {
         message: e.message || 'Invalid expression',
-        offset: 0 // TODO: Enhance HexPath to report error offsets
-      }
+        offset: 0, // TODO: Enhance HexPath to report error offsets
+      },
     };
   }
 }

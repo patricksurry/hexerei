@@ -1,128 +1,128 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { HexRenderer } from './index';
 import { HexMapLoader } from '@hexmap/core';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as d3 from 'd3';
+import { HexRenderer } from './index';
 
 describe('HexRenderer (Headless)', () => {
-    let container: HTMLElement;
+  let container: HTMLElement;
 
-    beforeEach(() => {
-        container = document.createElement('div');
-        container.style.width = '800px';
-        container.style.height = '600px';
-        // Mock clientWidth/Height since JSDOM doesn't handle layout
-        Object.defineProperty(container, 'clientWidth', { value: 800 });
-        Object.defineProperty(container, 'clientHeight', { value: 600 });
+  beforeEach(() => {
+    container = document.createElement('div');
+    container.style.width = '800px';
+    container.style.height = '600px';
+    // Mock clientWidth/Height since JSDOM doesn't handle layout
+    Object.defineProperty(container, 'clientWidth', { value: 800 });
+    Object.defineProperty(container, 'clientHeight', { value: 600 });
+  });
+
+  it('should render Battle for Moscow map correctly', () => {
+    const mapPath = join(__dirname, '../../maps/definitions/battle-for-moscow.hexmap.yaml');
+    const mapSource = readFileSync(mapPath, 'utf-8');
+    const mesh = HexMapLoader.load(mapSource);
+
+    const renderer = new HexRenderer(mesh, {
+      element: container,
+      width: 800,
+      height: 600,
+      hexSize: 30,
     });
 
-    it('should render Battle for Moscow map correctly', () => {
-        const mapPath = join(__dirname, '../../maps/definitions/battle-for-moscow.hexmap.yaml');
-        const mapSource = readFileSync(mapPath, 'utf-8');
-        const mesh = HexMapLoader.load(mapSource);
+    const svg = container.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute('width')).toBe('800');
 
-        const renderer = new HexRenderer(mesh, {
-            element: container,
-            width: 800,
-            height: 600,
-            hexSize: 30
-        });
+    // Check grid group
+    const grid = container.querySelector('#grid');
+    expect(grid).not.toBeNull();
 
-        const svg = container.querySelector('svg');
-        expect(svg).not.toBeNull();
-        expect(svg?.getAttribute('width')).toBe('800');
+    // Check hex count
+    const paths = grid?.querySelectorAll('path');
+    expect(paths?.length).toBe(147);
+  });
 
-        // Check grid group
-        const grid = container.querySelector('#grid');
-        expect(grid).not.toBeNull();
+  it('should render labels with Offset coordinates', () => {
+    const mapPath = join(__dirname, '../../maps/definitions/battle-for-moscow.hexmap.yaml');
+    const mapSource = readFileSync(mapPath, 'utf-8');
+    const mesh = HexMapLoader.load(mapSource);
 
-        // Check hex count
-        const paths = grid?.querySelectorAll('path');
-        expect(paths?.length).toBe(147);
+    const renderer = new HexRenderer(mesh, {
+      element: container,
+      width: 800,
+      height: 600,
+      hexSize: 30,
     });
 
-    it('should render labels with Offset coordinates', () => {
-        const mapPath = join(__dirname, '../../maps/definitions/battle-for-moscow.hexmap.yaml');
-        const mapSource = readFileSync(mapPath, 'utf-8');
-        const mesh = HexMapLoader.load(mapSource);
+    const labels = container.querySelectorAll('#labels text');
+    expect(labels.length).toBe(147);
 
-        const renderer = new HexRenderer(mesh, {
-            element: container,
-            width: 800,
-            height: 600,
-            hexSize: 30
-        });
+    // Check content of first label (Should be "0101" or similar offset)
+    const content = Array.from(labels).map((l) => l.textContent);
+    expect(content).toContain('0101');
+  });
 
-        const labels = container.querySelectorAll('#labels text');
-        expect(labels.length).toBe(147);
+  it('should render terrain colors', () => {
+    const mapPath = join(__dirname, '../../maps/definitions/battle-for-moscow.hexmap.yaml');
+    const mapSource = readFileSync(mapPath, 'utf-8');
+    const mesh = HexMapLoader.load(mapSource);
 
-        // Check content of first label (Should be "0101" or similar offset)
-        const content = Array.from(labels).map(l => l.textContent);
-        expect(content).toContain('0101');
+    new HexRenderer(mesh, {
+      element: container,
+      width: 800,
+      height: 600,
+      hexSize: 30,
     });
 
-    it('should render terrain colors', () => {
-        const mapPath = join(__dirname, '../../maps/definitions/battle-for-moscow.hexmap.yaml');
-        const mapSource = readFileSync(mapPath, 'utf-8');
-        const mesh = HexMapLoader.load(mapSource);
+    const grid = container.querySelector('#grid');
+    const paths = grid?.querySelectorAll('path');
+    const fills = Array.from(paths || []).map((p) => p.getAttribute('fill'));
 
-        new HexRenderer(mesh, {
-            element: container,
-            width: 800,
-            height: 600,
-            hexSize: 30
-        });
+    expect(fills).toContain('#aaddaa'); // Forest
+    expect(fills).toContain('#888888'); // City (e.g. Smolensk)
+  });
 
-        const grid = container.querySelector('#grid');
-        const paths = grid?.querySelectorAll('path');
-        const fills = Array.from(paths || []).map(p => p.getAttribute('fill'));
-
-        expect(fills).toContain('#aaddaa'); // Forest
-        expect(fills).toContain('#888888'); // City (e.g. Smolensk)
+  it('should support highlights', () => {
+    const mesh = HexMapLoader.load('hexmap: "1.0"\nlayout:\n  all: "0101 - 0202 fill"');
+    const renderer = new HexRenderer(mesh, {
+      element: container,
+      width: 800,
+      height: 600,
+      hexSize: 30,
     });
 
-    it('should support highlights', () => {
-        const mesh = HexMapLoader.load('hexmap: "1.0"\nlayout:\n  all: "0101 - 0202 fill"');
-        const renderer = new HexRenderer(mesh, {
-            element: container,
-            width: 800,
-            height: 600,
-            hexSize: 30
-        });
+    const allIds = Array.from(mesh.getAllHexes()).map((h) => h.id);
+    renderer.highlight([allIds[0], allIds[1]]);
 
-        const allIds = Array.from(mesh.getAllHexes()).map(h => h.id);
-        renderer.highlight([allIds[0], allIds[1]]);
+    const highlights = container.querySelectorAll('#highlights path');
+    expect(highlights.length).toBe(2);
+    expect(highlights[0].getAttribute('fill')).toBe('rgba(255, 255, 0, 0.4)');
 
-        const highlights = container.querySelectorAll('#highlights path');
-        expect(highlights.length).toBe(2);
-        expect(highlights[0].getAttribute('fill')).toBe('rgba(255, 255, 0, 0.4)');
+    // Replace highlights
+    renderer.highlight([allIds[0]]);
+    expect(container.querySelectorAll('#highlights path').length).toBe(1);
+  });
 
-        // Replace highlights
-        renderer.highlight([allIds[0]]);
-        expect(container.querySelectorAll('#highlights path').length).toBe(1);
+  it('should update reactively', () => {
+    const mapSource = 'hexmap: "1.0"\nlayout:\n  all: "0101"';
+    const mesh = HexMapLoader.load(mapSource);
+    const renderer = new HexRenderer(mesh, {
+      element: container,
+      width: 800,
+      height: 600,
+      hexSize: 30,
     });
 
-    it('should update reactively', () => {
-        const mapSource = 'hexmap: "1.0"\nlayout:\n  all: "0101"';
-        const mesh = HexMapLoader.load(mapSource);
-        const renderer = new HexRenderer(mesh, {
-            element: container,
-            width: 800,
-            height: 600,
-            hexSize: 30
-        });
+    const grid = container.querySelector('#grid');
+    const initialFill = grid?.querySelector('path')?.getAttribute('fill');
+    expect(initialFill).toBe('#fff'); // unknown maps to #ffffff, but D3 might return #fff
 
-        const grid = container.querySelector('#grid');
-        const initialFill = grid?.querySelector('path')?.getAttribute('fill');
-        expect(initialFill).toBe('#fff'); // unknown maps to #ffffff, but D3 might return #fff
+    // Update mesh — get actual hex ID from the mesh
+    const areaId = Array.from(mesh.getAllHexes())[0].id;
+    mesh.updateHex(areaId, { terrain: 'forest' });
+    renderer.update(mesh);
 
-        // Update mesh — get actual hex ID from the mesh
-        const areaId = Array.from(mesh.getAllHexes())[0].id;
-        mesh.updateHex(areaId, { terrain: 'forest' });
-        renderer.update(mesh);
-
-        const updatedFill = grid?.querySelector('path')?.getAttribute('fill');
-        expect(updatedFill).toBe('#aaddaa'); // Forest
-    });
+    const updatedFill = grid?.querySelector('path')?.getAttribute('fill');
+    expect(updatedFill).toBe('#aaddaa'); // Forest
+  });
 });

@@ -9,24 +9,34 @@ interface InspectorProps {
   dispatch?: (command: MapCommand) => void;
 }
 
-export function Inspector({
-  selection,
-  model,
-  onSelectFeature,
-  dispatch,
-}: InspectorProps) {
-  if (!model) return <div className="inspector"><div className="inspector-content">Loading...</div></div>;
+export const Inspector = ({ selection, model, onSelectFeature, dispatch }: InspectorProps) => {
+  if (!model)
+    return (
+      <div className="inspector">
+        <div className="inspector-content">Loading...</div>
+      </div>
+    );
   const renderMetadata = () => (
     <div className="inspector-content">
       <section className="inspector-section">
-        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>MAP METADATA</h3>
+        <h3
+          className="inspector-header"
+          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+        >
+          MAP METADATA
+        </h3>
         <div className="inspector-row">
           <label>Title</label>
           <span>{model.metadata.title || 'Untitled Map'}</span>
         </div>
       </section>
       <section className="inspector-section">
-        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>LAYOUT</h3>
+        <h3
+          className="inspector-header"
+          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+        >
+          LAYOUT
+        </h3>
         <div className="inspector-row">
           <label>Orientation</label>
           <span>{model.grid.orientation}</span>
@@ -37,7 +47,12 @@ export function Inspector({
         </div>
       </section>
       <section className="inspector-section">
-        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>VOCABULARY</h3>
+        <h3
+          className="inspector-header"
+          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+        >
+          VOCABULARY
+        </h3>
         <p className="placeholder-text">Terrain vocabulary placeholder (Phase 5)</p>
       </section>
     </div>
@@ -49,31 +64,41 @@ export function Inspector({
     if (!feature) return <div className="inspector-content">Feature not found</div>;
 
     if (indices.length > 1) {
-        return (
-            <div className="inspector-content">
-                <section className="inspector-section">
-                    <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>MULTIPLE SELECTED</h3>
-                    <p className="placeholder-text">{indices.length} features selected</p>
-                </section>
-                <div className="inspector-actions">
-                    <button className="btn-danger" onClick={() => {
-                        // Delete in reverse order to preserve indices
-                        for (const idx of [...indices].sort((a, b) => b - a)) {
-                            dispatch?.({ type: 'deleteFeature', index: idx });
-                        }
-                    }}>Delete ({indices.length})</button>
-                </div>
-            </div>
-        );
+      return (
+        <div className="inspector-content">
+          <section className="inspector-section">
+            <h3
+              className="inspector-header"
+              style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+            >
+              MULTIPLE SELECTED
+            </h3>
+            <p className="placeholder-text">{indices.length} features selected</p>
+          </section>
+          <div className="inspector-actions">
+            <button
+              className="btn-danger"
+              onClick={() => {
+                // Delete in reverse order to preserve indices
+                for (const idx of [...indices].sort((a, b) => b - a)) {
+                  dispatch?.({ type: 'deleteFeature', index: idx });
+                }
+              }}
+            >
+              Delete ({indices.length})
+            </button>
+          </div>
+        </div>
+      );
     }
 
     const handleFieldBlur = (key: string, value: string | number | undefined) => {
-        const currentValue = (feature as any)[key];
-        // Normalize empty strings to undefined (clear the field), but preserve 0
-        const normalized = value === '' ? undefined : value;
-        if (normalized !== currentValue) {
-            dispatch?.({ type: 'updateFeature', index: featureIndex, changes: { [key]: normalized } });
-        }
+      const currentValue = (feature as any)[key];
+      // Normalize empty strings to undefined (clear the field), but preserve 0
+      const normalized = value === '' ? undefined : value;
+      if (normalized !== currentValue) {
+        dispatch?.({ type: 'updateFeature', index: featureIndex, changes: { [key]: normalized } });
+      }
     };
 
     const terrainKeys = Array.from(model.terrainDefs.keys());
@@ -81,75 +106,104 @@ export function Inspector({
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>FEATURE PROPERTIES</h3>
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            FEATURE PROPERTIES
+          </h3>
           <div className="inspector-row">
             <label>Label</label>
             <input
-                type="text"
-                className="inspector-input"
-                defaultValue={feature.label || ''}
-                key={`label-${featureIndex}-${feature.label}`}
-                onBlur={(e) => handleFieldBlur('label', e.target.value)}
+              type="text"
+              className="inspector-input"
+              defaultValue={feature.label || ''}
+              key={`label-${featureIndex}-${feature.label}`}
+              onBlur={(e) => handleFieldBlur('label', e.target.value)}
             />
           </div>
           <div className="inspector-row">
             <label>ID</label>
             <input
-                type="text"
-                className="inspector-input font-mono"
-                defaultValue={feature.id || ''}
-                key={`id-${featureIndex}-${feature.id}`}
-                onBlur={(e) => handleFieldBlur('id', e.target.value)}
+              type="text"
+              className="inspector-input font-mono"
+              defaultValue={feature.id || ''}
+              key={`id-${featureIndex}-${feature.id}`}
+              onBlur={(e) => handleFieldBlur('id', e.target.value)}
             />
           </div>
           <div className="inspector-row">
             <label>Terrain</label>
             <select
-                className="inspector-select"
-                defaultValue={feature.terrain}
-                key={`terrain-${featureIndex}-${feature.terrain}`}
-                onChange={(e) => handleFieldBlur('terrain', e.target.value)}
+              className="inspector-select"
+              defaultValue={feature.terrain}
+              key={`terrain-${featureIndex}-${feature.terrain}`}
+              onChange={(e) => handleFieldBlur('terrain', e.target.value)}
             >
-                <option value="">(none)</option>
-                {terrainKeys.map(key => (
-                    <option key={key} value={key}>{key}</option>
-                ))}
+              <option value="">(none)</option>
+              {terrainKeys.map((key) => (
+                <option key={key} value={key}>
+                  {key}
+                </option>
+              ))}
             </select>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>GEOMETRY</h3>
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            GEOMETRY
+          </h3>
           <div className="inspector-row">
             <label>At</label>
             <input
-                type="text"
-                className="inspector-input font-mono"
-                defaultValue={feature.at}
-                key={`at-${featureIndex}-${feature.at}`}
-                onBlur={(e) => handleFieldBlur('at', e.target.value)}
+              type="text"
+              className="inspector-input font-mono"
+              defaultValue={feature.at}
+              key={`at-${featureIndex}-${feature.at}`}
+              onBlur={(e) => handleFieldBlur('at', e.target.value)}
             />
           </div>
           <div className="inspector-row">
             <label>Elevation</label>
             <input
-                type="number"
-                className="inspector-input"
-                defaultValue={feature.elevation ?? ''}
-                key={`elevation-${featureIndex}-${feature.elevation}`}
-                onBlur={(e) => {
-                    const val = e.target.value ? Number(e.target.value) : undefined;
-                    handleFieldBlur('elevation', val as any);
-                }}
+              type="number"
+              className="inspector-input"
+              defaultValue={feature.elevation ?? ''}
+              key={`elevation-${featureIndex}-${feature.elevation}`}
+              onBlur={(e) => {
+                const val = e.target.value ? Number(e.target.value) : undefined;
+                handleFieldBlur('elevation', val as any);
+              }}
             />
           </div>
         </section>
         <div className="inspector-actions">
-            <button className="btn-secondary" onClick={() => {
-                const features = model.features;
-                const f = features[featureIndex];
-                dispatch?.({ type: 'addFeature', feature: { at: f.at, terrain: f.terrain, label: f.label ? f.label + ' (copy)' : undefined } });
-            }}>Duplicate</button>
-            <button className="btn-danger" onClick={() => dispatch?.({ type: 'deleteFeature', index: featureIndex })}>Delete</button>
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              const { features } = model;
+              const f = features[featureIndex];
+              dispatch?.({
+                type: 'addFeature',
+                feature: {
+                  at: f.at,
+                  terrain: f.terrain,
+                  label: f.label ? `${f.label} (copy)` : undefined,
+                },
+              });
+            }}
+          >
+            Duplicate
+          </button>
+          <button
+            className="btn-danger"
+            onClick={() => dispatch?.({ type: 'deleteFeature', index: featureIndex })}
+          >
+            Delete
+          </button>
         </div>
       </div>
     );
@@ -162,14 +216,24 @@ export function Inspector({
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>COORDINATE</h3>
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            COORDINATE
+          </h3>
           <div className="inspector-row">
             <label>Label</label>
             <span className="font-mono">{state.label}</span>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>TERRAIN</h3>
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            TERRAIN
+          </h3>
           <div className="inspector-row">
             <label>Name</label>
             <span>{state.terrain}</span>
@@ -177,17 +241,30 @@ export function Inspector({
           <div className="inspector-row">
             <label>Color</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '12px', height: '12px', background: state.terrainColor, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 0 4px rgba(0,0,0,0.5)' }} />
+              <div
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  background: state.terrainColor,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 0 4px rgba(0,0,0,0.5)',
+                }}
+              />
               <span className="font-mono">{state.terrainColor}</span>
             </div>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>CONTRIBUTING FEATURES</h3>
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            CONTRIBUTING FEATURES
+          </h3>
           <ul className="inspector-list">
             {state.contributingFeatures.map((f) => (
-              <li 
-                key={f.index} 
+              <li
+                key={f.index}
                 className="inspector-list-item clickable"
                 onClick={() => onSelectFeature?.(f.index)}
               >
@@ -197,17 +274,29 @@ export function Inspector({
           </ul>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>NEIGHBORS</h3>
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            NEIGHBORS
+          </h3>
           <div className="neighbor-grid">
             {state.neighborLabels.map((l) => (
-              <span key={l} className="font-mono">{l}</span>
+              <span key={l} className="font-mono">
+                {l}
+              </span>
             ))}
           </div>
         </section>
         <div className="inspector-actions">
-          <button className="btn-primary" onClick={() => {
+          <button
+            className="btn-primary"
+            onClick={() => {
               dispatch?.({ type: 'addFeature', feature: { at: state.label } });
-          }}>+ Add Feature Here</button>
+            }}
+          >
+            + Add Feature Here
+          </button>
         </div>
       </div>
     );
@@ -216,14 +305,24 @@ export function Inspector({
   const renderEdge = (boundaryId: string, hexLabels: [string, string | null]) => (
     <div className="inspector-content">
       <section className="inspector-section">
-        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>BOUNDARY</h3>
+        <h3
+          className="inspector-header"
+          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+        >
+          BOUNDARY
+        </h3>
         <div className="inspector-row">
           <label>ID</label>
           <span className="font-mono text-xs">{boundaryId}</span>
         </div>
       </section>
       <section className="inspector-section">
-        <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>ADJACENT HEXES</h3>
+        <h3
+          className="inspector-header"
+          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+        >
+          ADJACENT HEXES
+        </h3>
         <div className="inspector-row">
           <label>Hex A</label>
           <span className="font-mono">{hexLabels[0]}</span>
@@ -237,21 +336,43 @@ export function Inspector({
   );
 
   const renderVertex = (vertexId: string) => {
-    const meetingHexes = vertexId.split('^').map(id => Hex.formatHexLabel(Hex.hexFromId(id), model.grid.labelFormat, model.grid.orientation, model.grid.firstCol, model.grid.firstRow));
+    const meetingHexes = vertexId
+      .split('^')
+      .map((id) =>
+        Hex.formatHexLabel(
+          Hex.hexFromId(id),
+          model.grid.labelFormat,
+          model.grid.orientation,
+          model.grid.firstCol,
+          model.grid.firstRow
+        )
+      );
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>JUNCTION</h3>
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            JUNCTION
+          </h3>
           <div className="inspector-row">
             <label>ID</label>
             <span className="font-mono text-xs">{vertexId}</span>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-header" style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}>MEETING HEXES</h3>
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            MEETING HEXES
+          </h3>
           <ul className="inspector-list">
             {meetingHexes.map((l) => (
-              <li key={l} className="font-mono">{l}</li>
+              <li key={l} className="font-mono">
+                {l}
+              </li>
             ))}
           </ul>
         </section>
@@ -261,9 +382,7 @@ export function Inspector({
 
   return (
     <div className="inspector">
-      <div className="inspector-header">
-        INSPECTOR
-      </div>
+      <div className="inspector-header">INSPECTOR</div>
       {selection.type === 'none' && renderMetadata()}
       {selection.type === 'feature' && renderFeature(selection.indices)}
       {selection.type === 'hex' && renderHex(selection.hexId)}
@@ -271,4 +390,4 @@ export function Inspector({
       {selection.type === 'vertex' && renderVertex(selection.vertexId)}
     </div>
   );
-}
+};
