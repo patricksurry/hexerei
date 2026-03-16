@@ -17,6 +17,15 @@ export interface CommandBarRef {
 
 const SEARCH_KEYS = ['terrain', 'label', 'id', 'at', 'tags'];
 
+const COMMANDS = [
+  { label: 'export yaml', description: 'Download as YAML' },
+  { label: 'export json', description: 'Download as JSON' },
+  { label: 'zoom fit', description: 'Reset viewport' },
+  { label: 'clear', description: 'Clear selection' },
+  { label: 'theme sandtable', description: 'Sand table theme' },
+  { label: 'theme classic', description: 'Classic theme' },
+];
+
 export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
   ({ value = '', onChange, onClear, onSubmit, error, gotoSuggestions }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -36,6 +45,13 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
     const mode = getMode(value);
     const showKeyDropdown = mode === 'search' && !value.includes(':');
     const showGotoDropdown = mode === 'goto' && gotoSuggestions && gotoSuggestions.length > 0;
+
+    const commandQuery = mode === 'command' ? value.substring(1).trim().toLowerCase() : '';
+    const filteredCommands = mode === 'command' && commandQuery
+      ? COMMANDS.filter((c) => c.label.startsWith(commandQuery))
+      : COMMANDS;
+    const isExactMatch = filteredCommands.length === 1 && filteredCommands[0].label === commandQuery;
+    const showCommandDropdown = mode === 'command' && filteredCommands.length > 0 && !isExactMatch;
 
     const renderTokens = () => {
       // Simple tokenizer for HexPath
@@ -96,7 +112,7 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
               type="text"
               role="combobox"
               aria-label="command"
-              aria-expanded={showKeyDropdown || showGotoDropdown ? 'true' : 'false'}
+              aria-expanded={showKeyDropdown || showGotoDropdown || showCommandDropdown ? 'true' : 'false'}
               aria-haspopup="listbox"
               autoComplete="off"
               spellCheck="false"
@@ -134,6 +150,22 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
                 onClick={() => onSubmit?.(`@${s.label}`)}
               >
                 {s.label}
+              </li>
+            ))}
+          </ul>
+        )}
+        {showCommandDropdown && (
+          <ul className="command-dropdown" role="listbox">
+            {filteredCommands.map((cmd) => (
+              <li
+                key={cmd.label}
+                role="option"
+                aria-selected={false}
+                className="command-dropdown-item"
+                onClick={() => onChange?.(`>${cmd.label}`)}
+              >
+                <span>{cmd.label}</span>
+                <span className="command-hint">{cmd.description}</span>
               </li>
             ))}
           </ul>

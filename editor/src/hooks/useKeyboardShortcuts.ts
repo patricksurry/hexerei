@@ -28,7 +28,7 @@ export function useKeyboardShortcuts(shortcuts: ShortcutMap) {
           const isInput =
             event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
 
-          if (isInput && !['k', 'z', 'd'].includes(key)) {
+          if (isInput && !['k', 'z', 'd', 's'].includes(key)) {
             continue;
           }
 

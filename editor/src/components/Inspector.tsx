@@ -1,6 +1,14 @@
-import { Hex, Feature } from '@hexmap/core';
-import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
+import { Hex, Feature, TerrainTypeDef } from '@hexmap/core';
+import { Selection, MapModel, MapCommand, TerrainDef } from '@hexmap/canvas';
+import { useState } from 'react';
 import './Inspector.css';
+
+const buildDef = (def: TerrainDef): TerrainTypeDef => ({
+  type: def.type,
+  name: def.name !== def.key ? def.name : undefined,
+  style: { color: def.color },
+  properties: def.properties,
+});
 
 interface InspectorProps {
   selection: Selection;
@@ -10,6 +18,8 @@ interface InspectorProps {
 }
 
 export const Inspector = ({ selection, model, onSelectFeature, dispatch }: InspectorProps) => {
+  const [expandedTerrain, setExpandedTerrain] = useState<string | null>(null);
+
   if (!model)
     return (
       <div className="inspector">
@@ -27,7 +37,48 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
         </h3>
         <div className="inspector-row">
           <label>Title</label>
-          <span>{model.metadata.title || 'Untitled Map'}</span>
+          <input
+            type="text"
+            className="inspector-input"
+            defaultValue={model.metadata.title || ''}
+            key={`meta-title-${model.metadata.title}`}
+            onBlur={(e) => {
+              const value = e.target.value || undefined;
+              if (value !== (model.metadata.title || undefined)) {
+                dispatch?.({ type: 'setMetadata', key: 'title', value });
+              }
+            }}
+          />
+        </div>
+        <div className="inspector-row">
+          <label>Designer</label>
+          <input
+            type="text"
+            className="inspector-input"
+            defaultValue={model.metadata.designer || ''}
+            key={`meta-designer-${model.metadata.designer}`}
+            onBlur={(e) => {
+              const value = e.target.value || undefined;
+              if (value !== (model.metadata.designer || undefined)) {
+                dispatch?.({ type: 'setMetadata', key: 'designer', value });
+              }
+            }}
+          />
+        </div>
+        <div className="inspector-row">
+          <label>Description</label>
+          <input
+            type="text"
+            className="inspector-input"
+            defaultValue={model.metadata.description || ''}
+            key={`meta-description-${model.metadata.description}`}
+            onBlur={(e) => {
+              const value = e.target.value || undefined;
+              if (value !== (model.metadata.description || undefined)) {
+                dispatch?.({ type: 'setMetadata', key: 'description', value });
+              }
+            }}
+          />
         </div>
       </section>
       <section className="inspector-section">
@@ -39,11 +90,37 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
         </h3>
         <div className="inspector-row">
           <label>Orientation</label>
-          <span>{model.grid.orientation}</span>
+          <select
+            className="inspector-select"
+            defaultValue={model.grid.orientation}
+            key={`layout-orientation-${model.grid.orientation}`}
+            onChange={(e) => {
+              dispatch?.({ type: 'setLayout', key: 'orientation', value: e.target.value });
+            }}
+          >
+            <option value="flat-down">flat-down</option>
+            <option value="flat-up">flat-up</option>
+            <option value="pointy-right">pointy-right</option>
+            <option value="pointy-left">pointy-left</option>
+          </select>
         </div>
         <div className="inspector-row">
-          <label>Label</label>
-          <span>{model.grid.labelFormat}</span>
+          <label>Label Format</label>
+          <input
+            type="text"
+            className="inspector-input font-mono"
+            defaultValue={model.grid.labelFormat}
+            key={`layout-label-${model.grid.labelFormat}`}
+            onBlur={(e) => {
+              const value = e.target.value || undefined;
+              if (value !== model.grid.labelFormat) {
+                dispatch?.({ type: 'setLayout', key: 'label', value });
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
+          />
         </div>
       </section>
       <section className="inspector-section">
@@ -51,9 +128,155 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
           className="inspector-header"
           style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
         >
-          VOCABULARY
+          TERRAIN VOCABULARY
         </h3>
-        <p className="placeholder-text">Terrain vocabulary placeholder (Phase 5)</p>
+        <ul className="terrain-list">
+          {Array.from(model.terrainDefs.entries()).map(([key, def]) => (
+            <li key={key} className={`terrain-row ${expandedTerrain === key ? 'expanded' : ''}`}>
+              <div
+                className="terrain-row-header"
+                onClick={() => setExpandedTerrain(expandedTerrain === key ? null : key)}
+              >
+                <div className="terrain-color-chip" style={{ backgroundColor: def.color }} />
+                <span className="terrain-key">{key}</span>
+                {def.name !== key && <span className="terrain-name">{def.name}</span>}
+                <button
+                  className="btn-icon btn-danger-icon"
+                  aria-label="Delete terrain"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dispatch?.({
+                      type: 'deleteTerrainType',
+                      geometry: 'hex',
+                      key,
+                    });
+                    if (expandedTerrain === key) setExpandedTerrain(null);
+                  }}
+                >
+                  x
+                </button>
+              </div>
+              {expandedTerrain === key && (
+                <div className="terrain-edit-form">
+                  <div className="inspector-row">
+                    <label htmlFor={`terrain-key-${key}`}>Key</label>
+                    <input
+                      id={`terrain-key-${key}`}
+                      type="text"
+                      className="inspector-input"
+                      defaultValue={key}
+                      key={`tk-${key}`}
+                      onBlur={(e) => {
+                        const newKey = e.target.value.trim();
+                        if (newKey && newKey !== key) {
+                          dispatch?.({
+                            type: 'deleteTerrainType',
+                            geometry: 'hex',
+                            key,
+                          });
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry: 'hex',
+                            key: newKey,
+                            def: buildDef(def),
+                          });
+                          setExpandedTerrain(newKey);
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="inspector-row">
+                    <label htmlFor={`terrain-type-${key}`}>Type</label>
+                    <select
+                      id={`terrain-type-${key}`}
+                      className="inspector-select"
+                      defaultValue={def.type || 'base'}
+                      key={`tt-${key}-${def.type}`}
+                      onChange={(e) => {
+                        const newType = e.target.value as 'base' | 'modifier';
+                        if (newType !== def.type) {
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry: 'hex',
+                            key,
+                            def: {
+                              ...buildDef(def),
+                              type: newType,
+                            },
+                          });
+                        }
+                      }}
+                    >
+                      <option value="base">base</option>
+                      <option value="modifier">modifier</option>
+                    </select>
+                  </div>
+                  <div className="inspector-row">
+                    <label htmlFor={`terrain-color-${key}`}>Color</label>
+                    <input
+                      id={`terrain-color-${key}`}
+                      type="color"
+                      aria-label="Terrain color"
+                      defaultValue={def.color}
+                      key={`tc-${key}-${def.color}`}
+                      onBlur={(e) => {
+                        if (e.target.value !== def.color) {
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry: 'hex',
+                            key,
+                            def: {
+                              ...buildDef(def),
+                              style: { color: e.target.value },
+                            },
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="inspector-row">
+                    <label>Name</label>
+                    <input
+                      type="text"
+                      className="inspector-input"
+                      defaultValue={def.name}
+                      key={`tn-${key}-${def.name}`}
+                      onBlur={(e) => {
+                        const newName = e.target.value || undefined;
+                        if (newName !== def.name) {
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry: 'hex',
+                            key,
+                            def: { ...buildDef(def), name: newName },
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+        <button
+          className="btn-secondary"
+          style={{ marginTop: '12px', width: '100%' }}
+          onClick={() => {
+            let nextId = model.terrainDefs.size + 1;
+            while (model.terrainDefs.has(`terrain_${nextId}`)) {
+              nextId++;
+            }
+            dispatch?.({
+              type: 'setTerrainType',
+              geometry: 'hex',
+              key: `terrain_${nextId}`,
+              def: { style: { color: '#888888' } },
+            });
+          }}
+        >
+          + Add Terrain Type
+        </button>
       </section>
     </div>
   );

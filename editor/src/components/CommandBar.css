@@ -112,6 +112,8 @@
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
 }
 
 .command-dropdown-item:hover {
@@ -136,4 +138,10 @@
   border-top: none;
   z-index: 100;
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.command-hint {
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-left: auto;
 }
