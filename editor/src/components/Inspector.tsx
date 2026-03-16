@@ -1,6 +1,13 @@
-import { Hex, Feature } from '@hexmap/core';
-import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
+import { Hex, Feature, TerrainTypeDef } from '@hexmap/core';
+import { Selection, MapModel, MapCommand, TerrainDef } from '@hexmap/canvas';
+import { useState } from 'react';
 import './Inspector.css';
+
+const buildDef = (def: TerrainDef): TerrainTypeDef => ({
+  name: def.name !== def.key ? def.name : undefined,
+  style: { color: def.color },
+  properties: def.properties,
+});
 
 interface InspectorProps {
   selection: Selection;
@@ -10,6 +17,8 @@ interface InspectorProps {
 }
 
 export const Inspector = ({ selection, model, onSelectFeature, dispatch }: InspectorProps) => {
+  const [expandedTerrain, setExpandedTerrain] = useState<string | null>(null);
+
   if (!model)
     return (
       <div className="inspector">
@@ -122,26 +131,77 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
         </h3>
         <ul className="terrain-list">
           {Array.from(model.terrainDefs.entries()).map(([key, def]) => (
-            <li key={key} className="terrain-row">
+            <li key={key} className={`terrain-row ${expandedTerrain === key ? 'expanded' : ''}`}>
               <div
-                className="terrain-color-chip"
-                style={{ backgroundColor: def.color }}
-              />
-              <span className="terrain-key">{key}</span>
-              {def.name !== key && (
-                <span className="terrain-name">{def.name}</span>
-              )}
-              <button
-                className="btn-icon btn-danger-icon"
-                aria-label="Delete terrain"
-                onClick={() => dispatch?.({
-                  type: 'deleteTerrainType',
-                  geometry: 'hex',
-                  key,
-                })}
+                className="terrain-row-header"
+                onClick={() => setExpandedTerrain(expandedTerrain === key ? null : key)}
               >
-                x
-              </button>
+                <div className="terrain-color-chip" style={{ backgroundColor: def.color }} />
+                <span className="terrain-key">{key}</span>
+                {def.name !== key && <span className="terrain-name">{def.name}</span>}
+                <button
+                  className="btn-icon btn-danger-icon"
+                  aria-label="Delete terrain"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dispatch?.({
+                      type: 'deleteTerrainType',
+                      geometry: 'hex',
+                      key,
+                    });
+                    if (expandedTerrain === key) setExpandedTerrain(null);
+                  }}
+                >
+                  x
+                </button>
+              </div>
+              {expandedTerrain === key && (
+                <div className="terrain-edit-form">
+                  <div className="inspector-row">
+                    <label htmlFor={`terrain-color-${key}`}>Color</label>
+                    <input
+                      id={`terrain-color-${key}`}
+                      type="color"
+                      aria-label="Terrain color"
+                      defaultValue={def.color}
+                      key={`tc-${key}-${def.color}`}
+                      onBlur={(e) => {
+                        if (e.target.value !== def.color) {
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry: 'hex',
+                            key,
+                            def: {
+                              ...buildDef(def),
+                              style: { ...def.properties, color: e.target.value },
+                            },
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="inspector-row">
+                    <label>Name</label>
+                    <input
+                      type="text"
+                      className="inspector-input"
+                      defaultValue={def.name}
+                      key={`tn-${key}-${def.name}`}
+                      onBlur={(e) => {
+                        const newName = e.target.value || undefined;
+                        if (newName !== def.name) {
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry: 'hex',
+                            key,
+                            def: { ...buildDef(def), name: newName },
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </li>
           ))}
         </ul>

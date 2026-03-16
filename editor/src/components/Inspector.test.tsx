@@ -62,7 +62,9 @@ describe('Inspector', () => {
     // Find the delete button next to "forest"
     const forestRow = screen.getByText('forest').closest('.terrain-row');
     expect(forestRow).not.toBeNull();
-    const deleteBtn = within(forestRow as HTMLElement).getByRole('button', { name: /delete terrain/i });
+    const deleteBtn = within(forestRow as HTMLElement).getByRole('button', {
+      name: /delete terrain/i,
+    });
     fireEvent.click(deleteBtn);
 
     expect(dispatched).toHaveLength(1);
@@ -152,6 +154,29 @@ describe('Inspector', () => {
     expect(dispatched[0].type).toBe('addFeature');
     if (dispatched[0].type === 'addFeature') {
       expect(dispatched[0].feature.at).toBe('0101');
+    }
+  });
+
+  it('dispatches setTerrainType when terrain color is changed', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    // Click "clear" to expand
+    fireEvent.click(screen.getByText('clear'));
+
+    // Find the color input (type="color")
+    const colorInput = screen.getByLabelText('Terrain color');
+    fireEvent.change(colorInput, { target: { value: '#ff0000' } });
+    fireEvent.blur(colorInput);
+
+    expect(dispatched.length).toBeGreaterThanOrEqual(1);
+    const setCmd = dispatched.find((c) => c.type === 'setTerrainType');
+    expect(setCmd).toBeDefined();
+    if (setCmd?.type === 'setTerrainType') {
+      expect(setCmd.key).toBe('clear');
+      expect(setCmd.def.style?.color).toBe('#ff0000');
     }
   });
 });
