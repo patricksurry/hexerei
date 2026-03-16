@@ -50,7 +50,8 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
     const filteredCommands = mode === 'command' && commandQuery
       ? COMMANDS.filter((c) => c.label.startsWith(commandQuery))
       : COMMANDS;
-    const showCommandDropdown = mode === 'command' && filteredCommands.length > 0 && commandQuery.length < 20;
+    const isExactMatch = filteredCommands.length === 1 && filteredCommands[0].label === commandQuery;
+    const showCommandDropdown = mode === 'command' && filteredCommands.length > 0 && !isExactMatch;
 
     const renderTokens = () => {
       // Simple tokenizer for HexPath
