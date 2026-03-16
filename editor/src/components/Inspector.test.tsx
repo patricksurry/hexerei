@@ -20,11 +20,41 @@ features:
     label: "Target"
 `;
 
+const METADATA_YAML = `
+hexmap: "1.0"
+metadata:
+  title: "Test Map"
+  designer: "Test Designer"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    clear: { style: { color: "#ffffff" } }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+
 describe('Inspector', () => {
   it('renders placeholder when nothing selected', () => {
     const sel: Selection = { type: 'none' };
     render(<Inspector selection={sel} model={null} />);
     expect(screen.getByText(/Loading/i)).toBeDefined();
+  });
+
+  it('dispatches setMetadata when title is changed', () => {
+    const model = MapModel.load(METADATA_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    const titleInput = screen.getByDisplayValue('Test Map');
+    fireEvent.change(titleInput, { target: { value: 'New Title' } });
+    fireEvent.blur(titleInput);
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0]).toEqual({ type: 'setMetadata', key: 'title', value: 'New Title' });
   });
 
   it('renders editable form when feature is selected', () => {

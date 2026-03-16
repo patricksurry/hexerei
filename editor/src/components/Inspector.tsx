@@ -27,7 +27,48 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
         </h3>
         <div className="inspector-row">
           <label>Title</label>
-          <span>{model.metadata.title || 'Untitled Map'}</span>
+          <input
+            type="text"
+            className="inspector-input"
+            defaultValue={model.metadata.title || ''}
+            key={`meta-title-${model.metadata.title}`}
+            onBlur={(e) => {
+              const value = e.target.value || undefined;
+              if (value !== (model.metadata.title || undefined)) {
+                dispatch?.({ type: 'setMetadata', key: 'title', value });
+              }
+            }}
+          />
+        </div>
+        <div className="inspector-row">
+          <label>Designer</label>
+          <input
+            type="text"
+            className="inspector-input"
+            defaultValue={model.metadata.designer || ''}
+            key={`meta-designer-${model.metadata.designer}`}
+            onBlur={(e) => {
+              const value = e.target.value || undefined;
+              if (value !== (model.metadata.designer || undefined)) {
+                dispatch?.({ type: 'setMetadata', key: 'designer', value });
+              }
+            }}
+          />
+        </div>
+        <div className="inspector-row">
+          <label>Description</label>
+          <input
+            type="text"
+            className="inspector-input"
+            defaultValue={model.metadata.description || ''}
+            key={`meta-description-${model.metadata.description}`}
+            onBlur={(e) => {
+              const value = e.target.value || undefined;
+              if (value !== (model.metadata.description || undefined)) {
+                dispatch?.({ type: 'setMetadata', key: 'description', value });
+              }
+            }}
+          />
         </div>
       </section>
       <section className="inspector-section">
