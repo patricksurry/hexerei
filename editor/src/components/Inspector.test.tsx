@@ -57,6 +57,19 @@ describe('Inspector', () => {
     expect(dispatched[0]).toEqual({ type: 'setMetadata', key: 'title', value: 'New Title' });
   });
 
+  it('dispatches setLayout when orientation is changed', () => {
+    const model = MapModel.load(METADATA_YAML); // Note: METADATA_YAML was added to the test file in Task 1
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    const orientationSelect = screen.getByDisplayValue('flat-down');
+    fireEvent.change(orientationSelect, { target: { value: 'pointy-right' } });
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0]).toEqual({ type: 'setLayout', key: 'orientation', value: 'pointy-right' });
+  });
+
   it('renders editable form when feature is selected', () => {
     const model = MapModel.load(MOCK_YAML);
     const sel: Selection = { type: 'feature', indices: [1] };

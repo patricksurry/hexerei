@@ -80,11 +80,37 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
         </h3>
         <div className="inspector-row">
           <label>Orientation</label>
-          <span>{model.grid.orientation}</span>
+          <select
+            className="inspector-select"
+            defaultValue={model.grid.orientation}
+            key={`layout-orientation-${model.grid.orientation}`}
+            onChange={(e) => {
+              dispatch?.({ type: 'setLayout', key: 'orientation', value: e.target.value });
+            }}
+          >
+            <option value="flat-down">flat-down</option>
+            <option value="flat-up">flat-up</option>
+            <option value="pointy-right">pointy-right</option>
+            <option value="pointy-left">pointy-left</option>
+          </select>
         </div>
         <div className="inspector-row">
-          <label>Label</label>
-          <span>{model.grid.labelFormat}</span>
+          <label>Label Format</label>
+          <input
+            type="text"
+            className="inspector-input font-mono"
+            defaultValue={model.grid.labelFormat}
+            key={`layout-label-${model.grid.labelFormat}`}
+            onBlur={(e) => {
+              const value = e.target.value || undefined;
+              if (value !== model.grid.labelFormat) {
+                dispatch?.({ type: 'setLayout', key: 'label', value });
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
+          />
         </div>
       </section>
       <section className="inspector-section">

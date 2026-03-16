@@ -69,7 +69,7 @@ test('Cmd+2 toggles Inspector visibility', async () => {
 test('Cmd+K focuses the command bar', async () => {
   render(<App />);
   await userEvent.keyboard('{Meta>}k{/Meta}');
-  expect(screen.getByRole('combobox')).toHaveFocus();
+  expect(screen.getByRole('combobox', { name: /command/i })).toHaveFocus();
 });
 
 test('CommandHistory survives undo/redo cycle (regression)', () => {
