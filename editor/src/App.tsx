@@ -284,15 +284,11 @@ export const App = () => {
         const yaml = historyRef.current?.currentState.document.toString() ?? '';
         const title = model.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
         downloadFile(yaml, `${title}.hexmap.yaml`, 'text/yaml');
-        historyRef.current?.markSaved();
-        setHistoryVersion((v) => v + 1);
       } else if (cmd === 'export json') {
         const doc = historyRef.current?.currentState.document;
         const json = JSON.stringify(doc?.toJS() ?? {}, null, 2);
         const title = model.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
         downloadFile(json, `${title}.hexmap.json`, 'application/json');
-        historyRef.current?.markSaved();
-        setHistoryVersion((v) => v + 1);
       }
       setCommandValue('');
       return;
