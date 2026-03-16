@@ -120,28 +120,30 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
   // Mock HTMLAnchorElement click so it doesn't navigate or error
   const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
-  render(<App />);
+  try {
+    render(<App />);
 
-  // Wait for initial render and data fetch to complete
-  const orientationSelect = await screen.findByDisplayValue('flat-down');
-  
-  // 1. Initial state: not modified
-  expect(screen.queryByText('MODIFIED')).not.toBeInTheDocument();
+    // Wait for initial render and data fetch to complete
+    const orientationSelect = await screen.findByDisplayValue('flat-down');
+    
+    // 1. Initial state: not modified
+    expect(screen.queryByText('MODIFIED')).not.toBeInTheDocument();
 
-  // 2. Make a change (change layout orientation to trigger a history update)
-  await userEvent.selectOptions(orientationSelect, 'flat-up');
+    // 2. Make a change (change layout orientation to trigger a history update)
+    await userEvent.selectOptions(orientationSelect, 'flat-up');
 
-  // Verify MODIFIED appears
-  expect(await screen.findByText('MODIFIED')).toBeVisible();
+    // Verify MODIFIED appears
+    expect(await screen.findByText('MODIFIED')).toBeVisible();
 
-  // 3. Press Cmd+S (since we mocked userAgent to 'Mac' in beforeEach, metaKey represents mod)
-  await userEvent.keyboard('{Meta>}s{/Meta}');
+    // 3. Press Cmd+S (since we mocked userAgent to 'Mac' in beforeEach, metaKey represents mod)
+    await userEvent.keyboard('{Meta>}s{/Meta}');
 
-  // 4. MODIFIED should disappear
-  expect(screen.queryByText('MODIFIED')).not.toBeInTheDocument();
-
-  // Cleanup mocks
-  window.URL.createObjectURL = originalCreateObjectURL;
-  window.URL.revokeObjectURL = originalRevokeObjectURL;
-  clickSpy.mockRestore();
+    // 4. MODIFIED should disappear
+    expect(screen.queryByText('MODIFIED')).not.toBeInTheDocument();
+  } finally {
+    // Cleanup mocks
+    window.URL.createObjectURL = originalCreateObjectURL;
+    window.URL.revokeObjectURL = originalRevokeObjectURL;
+    clickSpy.mockRestore();
+  }
 });
