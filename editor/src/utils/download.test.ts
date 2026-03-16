@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, MockInstance } from 'v
 import { downloadFile } from './download';
 
 describe('downloadFile', () => {
-  let clickSpy: ReturnType<typeof vi.fn>;
-  let createElementSpy: MockInstance;
+  let clickSpy: MockInstance;
   let revokeObjectURLSpy: MockInstance;
 
   beforeEach(() => {
@@ -15,12 +14,7 @@ describe('downloadFile', () => {
       URL.revokeObjectURL = vi.fn();
     }
 
-    clickSpy = vi.fn();
-    createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue({
-      click: clickSpy,
-      set href(_v: string) { /* noop */ },
-      set download(_v: string) { /* noop */ },
-    } as unknown as HTMLAnchorElement);
+    clickSpy = vi.spyOn(window.HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
   });
@@ -31,7 +25,6 @@ describe('downloadFile', () => {
 
   it('creates a blob and triggers download', () => {
     downloadFile('hello', 'test.yaml', 'text/yaml');
-    expect(createElementSpy).toHaveBeenCalledWith('a');
     expect(clickSpy).toHaveBeenCalled();
     expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:mock');
   });
