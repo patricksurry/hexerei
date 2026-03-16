@@ -179,4 +179,51 @@ describe('Inspector', () => {
       expect(setCmd.def.style?.color).toBe('#ff0000');
     }
   });
+
+  it('dispatches deleteTerrainType and setTerrainType when key is changed', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    // Click "clear" to expand
+    fireEvent.click(screen.getByText('clear'));
+
+    const keyInput = screen.getByLabelText('Key');
+    fireEvent.change(keyInput, { target: { value: 'clear_new' } });
+    fireEvent.blur(keyInput);
+
+    expect(dispatched).toHaveLength(2);
+    expect(dispatched[0]).toEqual({
+      type: 'deleteTerrainType',
+      geometry: 'hex',
+      key: 'clear',
+    });
+    expect(dispatched[1]).toEqual({
+      type: 'setTerrainType',
+      geometry: 'hex',
+      key: 'clear_new',
+      def: expect.objectContaining({ style: { color: '#ffffff' } }),
+    });
+  });
+
+  it('dispatches setTerrainType when type is changed', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    fireEvent.click(screen.getByText('clear'));
+
+    const typeSelect = screen.getByLabelText('Type');
+    fireEvent.change(typeSelect, { target: { value: 'modifier' } });
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0]).toEqual({
+      type: 'setTerrainType',
+      geometry: 'hex',
+      key: 'clear',
+      def: expect.objectContaining({ type: 'modifier' }),
+    });
+  });
 });

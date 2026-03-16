@@ -4,6 +4,7 @@ import { useState } from 'react';
 import './Inspector.css';
 
 const buildDef = (def: TerrainDef): TerrainTypeDef => ({
+  type: def.type,
   name: def.name !== def.key ? def.name : undefined,
   style: { color: def.color },
   properties: def.properties,
@@ -158,6 +159,59 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
               {expandedTerrain === key && (
                 <div className="terrain-edit-form">
                   <div className="inspector-row">
+                    <label htmlFor={`terrain-key-${key}`}>Key</label>
+                    <input
+                      id={`terrain-key-${key}`}
+                      type="text"
+                      className="inspector-input"
+                      defaultValue={key}
+                      key={`tk-${key}`}
+                      onBlur={(e) => {
+                        const newKey = e.target.value.trim();
+                        if (newKey && newKey !== key) {
+                          dispatch?.({
+                            type: 'deleteTerrainType',
+                            geometry: 'hex',
+                            key,
+                          });
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry: 'hex',
+                            key: newKey,
+                            def: buildDef(def),
+                          });
+                          setExpandedTerrain(newKey);
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="inspector-row">
+                    <label htmlFor={`terrain-type-${key}`}>Type</label>
+                    <select
+                      id={`terrain-type-${key}`}
+                      className="inspector-select"
+                      defaultValue={def.type || 'base'}
+                      key={`tt-${key}-${def.type}`}
+                      onChange={(e) => {
+                        const newType = e.target.value as 'base' | 'modifier';
+                        if (newType !== def.type) {
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry: 'hex',
+                            key,
+                            def: {
+                              ...buildDef(def),
+                              type: newType,
+                            },
+                          });
+                        }
+                      }}
+                    >
+                      <option value="base">base</option>
+                      <option value="modifier">modifier</option>
+                    </select>
+                  </div>
+                  <div className="inspector-row">
                     <label htmlFor={`terrain-color-${key}`}>Color</label>
                     <input
                       id={`terrain-color-${key}`}
@@ -173,7 +227,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
                             key,
                             def: {
                               ...buildDef(def),
-                              style: { ...def.properties, color: e.target.value },
+                              style: { color: e.target.value },
                             },
                           });
                         }
