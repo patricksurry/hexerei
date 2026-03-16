@@ -21,6 +21,7 @@ import {
   boundaryIdToHexPath,
   vertexIdToHexPath,
 } from '@hexmap/canvas';
+import { downloadFile } from './utils/download';
 import { AppLayout } from './layout/AppLayout';
 import { CommandBar, CommandBarRef } from './components/CommandBar';
 import { FeatureStack } from './components/FeatureStack';
@@ -136,14 +137,22 @@ export const App = () => {
           document.querySelector('.inspector input, .inspector select'),
         ].filter(Boolean) as HTMLElement[];
 
-        const activeZone = zones.findIndex((z) =>
-          z === document.activeElement || z.contains(document.activeElement)
+        const activeZone = zones.findIndex(
+          (z) => z === document.activeElement || z.contains(document.activeElement)
         );
         const nextIdx = (activeZone + 1) % zones.length;
         zones[nextIdx]?.focus();
       },
       delete: deleteSelected,
       backspace: deleteSelected,
+      'mod+s': () => {
+        const yaml = historyRef.current?.currentState.document.toString() ?? '';
+        const currentModel = historyRef.current?.currentState.model;
+        const title = currentModel?.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
+        downloadFile(yaml, `${title}.hexmap.yaml`, 'text/yaml');
+        historyRef.current?.markSaved();
+        setHistoryVersion((v) => v + 1);
+      },
       'mod+d': () => {
         const sel = selectionRef.current;
         const currentModel = historyRef.current?.currentState.model;
@@ -229,9 +238,10 @@ export const App = () => {
         .map((f) => ({ label: f.label!, index: f.index }));
     }
     return model.features
-      .filter((f) =>
-        (f.label ?? '').toLowerCase().includes(query) ||
-        (f.id ?? '').toLowerCase().includes(query)
+      .filter(
+        (f) =>
+          (f.label ?? '').toLowerCase().includes(query) ||
+          (f.id ?? '').toLowerCase().includes(query)
       )
       .filter((f) => f.label || f.id)
       .map((f) => ({ label: f.label ?? f.id ?? `Feature ${f.index}`, index: f.index }));
@@ -270,6 +280,19 @@ export const App = () => {
         setTheme('sandtable');
       } else if (cmd === 'theme classic') {
         setTheme('classic');
+      } else if (cmd === 'export yaml' || cmd === 'export') {
+        const yaml = historyRef.current?.currentState.document.toString() ?? '';
+        const title = model.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
+        downloadFile(yaml, `${title}.hexmap.yaml`, 'text/yaml');
+        historyRef.current?.markSaved();
+        setHistoryVersion((v) => v + 1);
+      } else if (cmd === 'export json') {
+        const doc = historyRef.current?.currentState.document;
+        const json = JSON.stringify(doc?.toJS() ?? {}, null, 2);
+        const title = model.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
+        downloadFile(json, `${title}.hexmap.json`, 'application/json');
+        historyRef.current?.markSaved();
+        setHistoryVersion((v) => v + 1);
       }
       setCommandValue('');
       return;
@@ -280,9 +303,8 @@ export const App = () => {
     if (value.startsWith('@')) {
       const query = value.substring(1).toLowerCase();
       if (!model) return;
-      const match = model.features.find((f) =>
-        (f.label ?? '').toLowerCase() === query ||
-        (f.id ?? '').toLowerCase() === query
+      const match = model.features.find(
+        (f) => (f.label ?? '').toLowerCase() === query || (f.id ?? '').toLowerCase() === query
       );
       if (match) {
         handleSelectFeature([match.index]);
