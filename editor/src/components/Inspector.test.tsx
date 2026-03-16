@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
 import { Inspector } from './Inspector';
 
@@ -61,9 +61,9 @@ describe('Inspector', () => {
 
     // Find the delete button next to "forest"
     const forestRow = screen.getByText('forest').closest('.terrain-row');
-    const deleteBtn = forestRow?.querySelector('button[aria-label="Delete terrain"]');
-    expect(deleteBtn).toBeDefined();
-    fireEvent.click(deleteBtn!);
+    expect(forestRow).not.toBeNull();
+    const deleteBtn = within(forestRow as HTMLElement).getByRole('button', { name: /delete terrain/i });
+    fireEvent.click(deleteBtn);
 
     expect(dispatched).toHaveLength(1);
     expect(dispatched[0]).toEqual({

@@ -148,12 +148,18 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
         <button
           className="btn-secondary"
           style={{ marginTop: '12px', width: '100%' }}
-          onClick={() => dispatch?.({
-            type: 'setTerrainType',
-            geometry: 'hex',
-            key: `terrain_${model.terrainDefs.size + 1}`,
-            def: { style: { color: '#888888' } },
-          })}
+          onClick={() => {
+            let nextId = model.terrainDefs.size + 1;
+            while (model.terrainDefs.has(`terrain_${nextId}`)) {
+              nextId++;
+            }
+            dispatch?.({
+              type: 'setTerrainType',
+              geometry: 'hex',
+              key: `terrain_${nextId}`,
+              def: { style: { color: '#888888' } },
+            });
+          }}
         >
           + Add Terrain Type
         </button>
