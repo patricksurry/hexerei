@@ -118,9 +118,45 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
           className="inspector-header"
           style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
         >
-          VOCABULARY
+          TERRAIN VOCABULARY
         </h3>
-        <p className="placeholder-text">Terrain vocabulary placeholder (Phase 5)</p>
+        <ul className="terrain-list">
+          {Array.from(model.terrainDefs.entries()).map(([key, def]) => (
+            <li key={key} className="terrain-row">
+              <div
+                className="terrain-color-chip"
+                style={{ backgroundColor: def.color }}
+              />
+              <span className="terrain-key">{key}</span>
+              {def.name !== key && (
+                <span className="terrain-name">{def.name}</span>
+              )}
+              <button
+                className="btn-icon btn-danger-icon"
+                aria-label="Delete terrain"
+                onClick={() => dispatch?.({
+                  type: 'deleteTerrainType',
+                  geometry: 'hex',
+                  key,
+                })}
+              >
+                x
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button
+          className="btn-secondary"
+          style={{ marginTop: '12px', width: '100%' }}
+          onClick={() => dispatch?.({
+            type: 'setTerrainType',
+            geometry: 'hex',
+            key: `terrain_${model.terrainDefs.size + 1}`,
+            def: { style: { color: '#888888' } },
+          })}
+        >
+          + Add Terrain Type
+        </button>
       </section>
     </div>
   );

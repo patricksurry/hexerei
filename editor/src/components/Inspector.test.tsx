@@ -43,6 +43,36 @@ describe('Inspector', () => {
     expect(screen.getByText(/Loading/i)).toBeDefined();
   });
 
+  it('shows terrain types when nothing is selected', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    render(<Inspector selection={sel} model={model} />);
+
+    // MOCK_YAML defines "clear" and "forest" terrain types
+    expect(screen.getByText('clear')).toBeDefined();
+    expect(screen.getByText('forest')).toBeDefined();
+  });
+
+  it('dispatches deleteTerrainType when delete button is clicked', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    // Find the delete button next to "forest"
+    const forestRow = screen.getByText('forest').closest('.terrain-row');
+    const deleteBtn = forestRow?.querySelector('button[aria-label="Delete terrain"]');
+    expect(deleteBtn).toBeDefined();
+    fireEvent.click(deleteBtn!);
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0]).toEqual({
+      type: 'deleteTerrainType',
+      geometry: 'hex',
+      key: 'forest',
+    });
+  });
+
   it('dispatches setMetadata when title is changed', () => {
     const model = MapModel.load(METADATA_YAML);
     const sel: Selection = { type: 'none' };
