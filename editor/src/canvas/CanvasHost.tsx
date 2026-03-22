@@ -76,7 +76,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       const sceneHighlights = [...(highlights || [])];
       
       if (paintTerrainKey && paintTerrainColor && lastMouse.current) {
-        const hit = hitTest(lastMouse.current, vp, model);
+        const hit = hitTest(lastMouse.current, vp, model, { includeOffBoard: true });
         if (hit.type === 'hex') {
           sceneHighlights.push({ type: 'hex', hexIds: [hit.hexId], color: paintTerrainColor, style: 'ghost' });
         }
@@ -170,6 +170,14 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
         viewportRef.current = panBy(viewportRef.current, { x: dx, y: dy });
         lastMouse.current = { x, y };
         requestAnimationFrame(render);
+      } else if (paintTerrainKey) {
+        lastMouse.current = screen;
+        requestAnimationFrame(render);
+        if (model && onCursorHex) {
+          const result = hitTest(screen, viewportRef.current, model, { includeOffBoard: true });
+          const label = result && result.type === 'hex' ? result.label : null;
+          onCursorHex(label);
+        }
       } else if (model && onCursorHex) {
         const result = hitTest(screen, viewportRef.current, model);
         const label = result && result.type === 'hex' ? result.label : null;
@@ -187,7 +195,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
 
       const dist = Math.hypot(x - dragStart.current.x, y - dragStart.current.y);
       if (dist < 3) {
-        const hit = hitTest({ x, y }, viewportRef.current, model);
+        const hit = hitTest({ x, y }, viewportRef.current, model, paintTerrainKey ? { includeOffBoard: true } : undefined);
         
         if (paintTerrainKey) {
           if (onPaintClick) onPaintClick(hit, e.shiftKey);

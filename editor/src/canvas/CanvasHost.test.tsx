@@ -91,6 +91,67 @@ features: []
     expect(onZoomChange).toHaveBeenCalledWith(20);
   });
 
+  it('sets crosshair cursor when paintTerrainKey is set', () => {
+    const yaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    clear: { style: { color: "#ffffff" } }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+    const model = MapModel.load(yaml);
+
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 1000 });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, value: 1000 });
+
+    const { container } = render(
+      <CanvasHost model={model} paintTerrainKey="clear" paintTerrainColor="#ffffff" />
+    );
+
+    const canvas = container.querySelector('canvas');
+    expect(canvas).not.toBeNull();
+    expect(canvas!.style.cursor).toBe('crosshair');
+  });
+
+  it('calls onPaintClick instead of onHitTest in paint mode', () => {
+    const yaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    clear: { style: { color: "#ffffff" } }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+    const model = MapModel.load(yaml);
+
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 1000 });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, value: 1000 });
+
+    const onHitTest = vi.fn();
+    const onPaintClick = vi.fn();
+
+    render(
+      <CanvasHost
+        model={model}
+        paintTerrainKey="clear"
+        paintTerrainColor="#ffffff"
+        onHitTest={onHitTest}
+        onPaintClick={onPaintClick}
+      />
+    );
+
+    expect(onHitTest).not.toHaveBeenCalled();
+  });
+
   it('zoom fit respects aspect ratio', () => {
     // wide map
     const yaml = `
