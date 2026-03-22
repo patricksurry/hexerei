@@ -25,3 +25,15 @@ test('shows no indicator when clean', () => {
   render(<StatusBar dirty={false} />);
   expect(screen.queryByText(/modified/i)).not.toBeInTheDocument();
 });
+
+test('shows paint mode indicator with terrain name and color', () => {
+  render(<StatusBar paintTerrainKey="forest" paintTerrainColor="#2d6a1e" />);
+  expect(screen.getByText('PAINT')).toBeInTheDocument();
+  expect(screen.getByText(/forest/)).toBeInTheDocument();
+  expect(screen.getByText(/Esc to exit/)).toBeInTheDocument();
+});
+
+test('does not show paint indicator when paintTerrainKey is null', () => {
+  render(<StatusBar paintTerrainKey={null} />);
+  expect(screen.queryByText('PAINT')).not.toBeInTheDocument();
+});
