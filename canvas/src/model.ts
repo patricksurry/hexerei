@@ -53,8 +53,8 @@ export class MapModel {
     const layoutData = layout as unknown as Record<string, unknown>;
 
     const orientation = layout.orientation || 'flat-down';
-    const firstCol = 1; // Assuming default for now
-    const firstRow = 1; // Assuming default for now
+    const firstCol = 0; // Default to 0 for backward compatibility; YAML can override via layout.coordinates.first
+    const firstRow = 0; // Default to 0 for backward compatibility; YAML can override via layout.coordinates.first
     const labelFormat = layout.label || 'XXYY';
 
     this._grid = {
