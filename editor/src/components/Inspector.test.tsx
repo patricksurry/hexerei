@@ -239,4 +239,59 @@ describe('Inspector', () => {
       def: expect.objectContaining({ type: 'modifier' }),
     });
   });
+
+  it('calls onPaintActivate when terrain color chip is clicked', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const onPaintActivate = vi.fn();
+    render(
+      <Inspector
+        selection={sel}
+        model={model}
+        onPaintActivate={onPaintActivate}
+      />
+    );
+
+    const clearChip = document.querySelector('.terrain-color-chip') as HTMLElement;
+    expect(clearChip).not.toBeNull();
+    fireEvent.click(clearChip);
+
+    expect(onPaintActivate).toHaveBeenCalledWith('clear');
+  });
+
+  it('calls onPaintActivate(null) when active terrain chip is clicked again', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const onPaintActivate = vi.fn();
+    render(
+      <Inspector
+        selection={sel}
+        model={model}
+        paintTerrainKey="clear"
+        onPaintActivate={onPaintActivate}
+      />
+    );
+
+    const clearChip = document.querySelector('.terrain-color-chip.active') as HTMLElement;
+    expect(clearChip).not.toBeNull();
+    fireEvent.click(clearChip);
+
+    expect(onPaintActivate).toHaveBeenCalledWith(null);
+  });
+
+  it('applies paint-active class to active terrain row', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    render(
+      <Inspector
+        selection={sel}
+        model={model}
+        paintTerrainKey="clear"
+      />
+    );
+
+    const activeRow = document.querySelector('.terrain-row.paint-active');
+    expect(activeRow).not.toBeNull();
+    expect(activeRow!.textContent).toContain('clear');
+  });
 });
