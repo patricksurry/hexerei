@@ -163,3 +163,22 @@ test('escape key clears paint mode before selection', async () => {
   // Testing this requires a full integration test with the Inspector or mocking.
   // We'll leave this to manual testing since it's hard to trigger without mock props.
 });
+
+test('>open command triggers file input click', async () => {
+  render(<App />);
+
+  // Close initial dialog by clicking Create
+  const createBtn = await screen.findByRole('button', { name: /create/i });
+  await userEvent.click(createBtn);
+
+  // Spy on file input click
+  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+  expect(fileInput).not.toBeNull();
+  const clickSpy = vi.spyOn(fileInput, 'click');
+
+  const input = screen.getByRole('combobox', { name: /command/i });
+  await userEvent.type(input, '>open{enter}');
+
+  expect(clickSpy).toHaveBeenCalled();
+  clickSpy.mockRestore();
+});
