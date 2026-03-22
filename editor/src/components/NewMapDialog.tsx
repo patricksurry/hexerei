@@ -6,12 +6,21 @@ interface NewMapDialogProps {
   onCancel: () => void;
 }
 
+const TERRAIN_COLORS: Record<string, string> = {
+  clear: '#d4c87a',
+  forest: '#2d6a1e',
+  rough: '#8b7355',
+  urban: '#888888',
+  water: '#4a8fc7',
+  mountain: '#6b4226',
+};
+
 export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCancel }) => {
   const [width, setWidth] = useState(10);
   const [height, setHeight] = useState(10);
   const [orientation, setOrientation] = useState<'flat-down' | 'flat-up' | 'pointy-right' | 'pointy-left'>('flat-down');
   const [origin, setOrigin] = useState<'top-left' | 'bottom-left' | 'top-right' | 'bottom-right'>('top-left');
-  
+
   const PALETTES: Record<string, { label: string; terrain: string[] }> = {
     'standard': {
       label: 'Standard Wargame',
@@ -85,18 +94,18 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
     yaml += `terrain:\n  hex:\n`;
     if (selectedPalette.terrain.length > 0) {
       for (const t of selectedPalette.terrain) {
-        yaml += `    ${t}: { style: { color: "#cccccc" } }\n`; // Placeholder styles
+        yaml += `    ${t}: { style: { color: "${TERRAIN_COLORS[t] || '#cccccc'}" } }\n`;
       }
     } else {
       yaml += `    clear: { style: { color: "#ffffff" } }\n`;
     }
 
-    yaml += `features:\n`;
     if (baseTerrain !== 'none') {
+      yaml += `features:\n`;
       yaml += `  - at: "@all"\n`;
       yaml += `    terrain: ${baseTerrain}\n`;
     } else {
-      yaml += `  []\n`;
+      yaml += `features: []\n`;
     }
 
     onCreateMap(yaml);

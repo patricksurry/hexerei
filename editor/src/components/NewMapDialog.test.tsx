@@ -43,6 +43,35 @@ describe('NewMapDialog', () => {
     expect(yaml).toContain('all: "0505 - 0105 - 0101 - 0501 fill"');
   });
 
+  it('generates valid YAML when base terrain is none', () => {
+    const onCreateMap = vi.fn();
+    render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    const baseTerrainSelect = screen.getByLabelText('Base Terrain:');
+    fireEvent.change(baseTerrainSelect, { target: { value: 'none' } });
+
+    fireEvent.click(screen.getByText('Create'));
+    const yaml = onCreateMap.mock.calls[0][0];
+
+    expect(yaml).toContain('features: []');
+    expect(yaml).not.toMatch(/features:\n\s+\[\]/);
+  });
+
+  it('generates distinct colors for standard wargame terrain', () => {
+    const onCreateMap = vi.fn();
+    render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    fireEvent.click(screen.getByText('Create'));
+    const yaml = onCreateMap.mock.calls[0][0];
+
+    const colorMatches = [...yaml.matchAll(/color: "(#[0-9a-f]{6})"/gi)];
+    const colors = colorMatches.map((m: RegExpMatchArray) => m[1]);
+    const uniqueColors = new Set(colors);
+
+    expect(colors.length).toBeGreaterThanOrEqual(6);
+    expect(uniqueColors.size).toBe(colors.length);
+  });
+
   it('updates base terrain dropdown when palette changes', () => {
     render(<NewMapDialog onCreateMap={() => {}} onCancel={() => {}} />);
     
