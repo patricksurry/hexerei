@@ -1,7 +1,7 @@
 // Redefined HitResult
 export type HitResult =
   | { type: 'none' }
-  | { type: 'hex'; hexId: string; label: string }
+  | { type: 'hex'; hexId: string; label: string; offBoard?: boolean }
   | { type: 'edge'; boundaryId: string; hexLabels: [string, string | null] }
   | { type: 'vertex'; vertexId: string };
 

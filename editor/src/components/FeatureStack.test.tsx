@@ -1,4 +1,4 @@
-import { describe, it, expect, test } from 'vitest';
+import { describe, it, expect, test, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { MapCommand, FeatureItem } from '@hexmap/canvas';
 import { FeatureStack } from './FeatureStack';
@@ -51,5 +51,38 @@ describe('FeatureStack', () => {
     ] as FeatureItem[];
     render(<FeatureStack features={features} filteredIndices={[1, 2]} terrainColor={() => '#000'} />);
     expect(screen.getByText('2 of 3 features')).toBeDefined();
+  });
+
+  test('renders features in reverse visual order', () => {
+    const features = [
+      { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [], label: 'Base' },
+      { index: 1, terrain: 'forest', at: '0201', isBase: false, hexIds: [], tags: [], label: 'Top' },
+    ] as FeatureItem[];
+    render(<FeatureStack features={features} filteredIndices={null} terrainColor={() => '#000'} />);
+    const items = screen.getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    // Top should be first visually
+    expect(items[0].textContent).toContain('Top');
+    expect(items[1].textContent).toContain('Base');
+  });
+
+  test('click on top visual item dispatches onSelect with the correct last data index', () => {
+    const features = [
+      { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [], label: 'Base' },
+      { index: 1, terrain: 'forest', at: '0201', isBase: false, hexIds: [], tags: [], label: 'Top' },
+    ] as FeatureItem[];
+    const onSelect = vi.fn();
+    render(
+      <FeatureStack 
+        features={features} 
+        filteredIndices={null} 
+        terrainColor={() => '#000'} 
+        onSelect={onSelect}
+      />
+    );
+    const items = screen.getAllByRole('listitem');
+    // Click the first visual item ('Top', index 1)
+    fireEvent.click(items[0]);
+    expect(onSelect).toHaveBeenCalledWith([1], 'none');
   });
 });

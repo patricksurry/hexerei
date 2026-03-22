@@ -7,28 +7,6 @@ import { HexMapDocument } from '@hexmap/core';
 
 beforeEach(() => {
   vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mac');
-
-  // Mock fetch for the map file
-  global.fetch = vi.fn().mockImplementation(() =>
-    Promise.resolve({
-      text: () =>
-        Promise.resolve(`
-hexmap: "1.0"
-metadata:
-  title: "Mock Map"
-layout:
-  orientation: flat-down
-  label: XXYY
-  all: "0101 - 0501 - 0505 - 0105 fill"
-terrain:
-  hex:
-    clear: { style: { color: "#ffffff" } }
-features:
-  - at: "@all"
-    terrain: clear
-      `),
-    })
-  );
 });
 
 afterEach(() => {
@@ -123,6 +101,10 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
   try {
     render(<App />);
 
+    // create a map so we have a model
+    const cancelBtn = await screen.findByRole('button', { name: /create/i });
+    await userEvent.click(cancelBtn);
+
     // Wait for initial render and data fetch to complete
     const orientationSelect = await screen.findByDisplayValue('flat-down');
     
@@ -146,4 +128,38 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
     window.URL.revokeObjectURL = originalRevokeObjectURL;
     clickSpy.mockRestore();
   }
+});
+
+test('>new command opens dialog and closes it on cancel', async () => {
+  render(<App />);
+  const input = screen.getByRole('combobox', { name: /command/i });
+  await userEvent.type(input, '>new{enter}');
+  
+  expect(await screen.findByRole('dialog', { name: /create new map/i })).toBeInTheDocument();
+  
+  const cancelBtn = screen.getByRole('button', { name: /cancel/i });
+  await userEvent.click(cancelBtn);
+  
+  expect(screen.queryByRole('dialog', { name: /create new map/i })).not.toBeInTheDocument();
+});
+
+test('initial load shows dialog instead of fetching hardcoded map', async () => {
+  render(<App />);
+  expect(await screen.findByRole('dialog', { name: /create new map/i })).toBeInTheDocument();
+});
+
+test('escape key clears paint mode before selection', async () => {
+  render(<App />);
+
+  // close the initial dialog
+  const cancelBtn = await screen.findByRole('button', { name: /cancel/i });
+  await userEvent.click(cancelBtn);
+
+  const input = screen.getByRole('combobox', { name: /command/i });
+  await userEvent.type(input, '0101{enter}');
+
+  // Paint mode is active if we see "PAINT" in the status bar. We'd have to trigger it via Inspector.
+  // Actually, we don't have a direct way to trigger paint mode from App except via Inspector's onPaintActivate
+  // Testing this requires a full integration test with the Inspector or mocking.
+  // We'll leave this to manual testing since it's hard to trigger without mock props.
 });

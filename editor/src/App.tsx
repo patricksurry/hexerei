@@ -27,6 +27,7 @@ import { CommandBar, CommandBarRef } from './components/CommandBar';
 import { FeatureStack } from './components/FeatureStack';
 import { Inspector } from './components/Inspector';
 import { StatusBar } from './components/StatusBar';
+import { NewMapDialog } from './components/NewMapDialog';
 import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useHybridFocus } from './hooks/useHybridFocus';
@@ -47,6 +48,13 @@ export const App = () => {
   const [zoom, setZoom] = useState(0);
   const [preview, setPreview] = useState<HexPathPreview | null>(null);
   const [theme, setTheme] = useState<'sandtable' | 'classic'>('sandtable');
+  const [showNewMapDialog, setShowNewMapDialog] = useState(false);
+  const [paintState, setPaintState] = useState<{
+    terrainKey: string;
+    lockedGeometry: 'hex' | 'edge' | 'vertex' | null;
+    targetFeatureIndex: number | null;
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const commandBarRef = useRef<CommandBarRef>(null);
   const canvasHostRef = useRef<CanvasHostRef>(null);
@@ -56,6 +64,8 @@ export const App = () => {
   selectionRef.current = selection;
   const commandValueRef = useRef(commandValue);
   commandValueRef.current = commandValue;
+  const paintStateRef = useRef(paintState);
+  paintStateRef.current = paintState;
 
   useEffect(() => {
     // Apply theme class to root element
@@ -64,14 +74,10 @@ export const App = () => {
   }, [theme]);
 
   useEffect(() => {
-    fetch('/maps/battle-for-moscow.hexmap.yaml')
-      .then((r) => r.text())
-      .then((yaml) => {
-        const newModel = MapModel.load(yaml);
-        historyRef.current = new CommandHistory({ document: newModel.document, model: newModel });
-        setHistoryVersion((v) => v + 1);
-      })
-      .catch((err) => console.error('Failed to load map:', err));
+    // Only show the new map dialog if there is no map loaded and it's the initial load
+    if (!historyRef.current) {
+      setShowNewMapDialog(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -106,6 +112,8 @@ export const App = () => {
 
   const shortcuts = useMemo(
     () => ({
+      'mod+n': () => setShowNewMapDialog(true),
+      'mod+o': () => fileInputRef.current?.click(),
       'mod+1': () => setLeftPanelVisible((v) => !v),
       'mod+2': () => setRightPanelVisible((v) => !v),
       'mod+0': () => canvasHostRef.current?.resetZoom(),
@@ -123,7 +131,9 @@ export const App = () => {
         }
       },
       escape: () => {
-        if (commandValueRef.current) {
+        if (paintStateRef.current) {
+          setPaintState(null);
+        } else if (commandValueRef.current) {
           setCommandValue('');
           commandBarRef.current?.blur();
         } else {
@@ -247,6 +257,57 @@ export const App = () => {
       .map((f) => ({ label: f.label ?? f.id ?? `Feature ${f.index}`, index: f.index }));
   }, [commandValue, model]);
 
+  const handlePaintClick = (hit: HitResult, shiftKey: boolean) => {
+    if (!paintState || !model || hit.type === 'none') return;
+    
+    // Geometry lock check
+    if (paintState.lockedGeometry && paintState.lockedGeometry !== hit.type) {
+      // In a real app we'd flash an error on the status bar
+      return;
+    }
+
+    // Lock geometry on first click
+    const newLockedGeometry = paintState.lockedGeometry || hit.type;
+    if (!paintState.lockedGeometry) {
+      setPaintState({ ...paintState, lockedGeometry: newLockedGeometry });
+    }
+
+    // Build token
+    let atomId = '';
+    if (hit.type === 'hex') atomId = hit.label;
+    else if (hit.type === 'edge') atomId = boundaryIdToHexPath(hit.boundaryId, model);
+    else if (hit.type === 'vertex') atomId = vertexIdToHexPath(hit.vertexId, model);
+
+    const token = shiftKey ? `- ${atomId}` : atomId;
+
+    // Find or create feature
+    let targetIndex = paintState.targetFeatureIndex;
+    
+    if (targetIndex === null) {
+      // Search from top to bottom
+      for (let i = model.features.length - 1; i >= 0; i--) {
+        if (model.features[i].terrain === paintState.terrainKey) {
+          targetIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (targetIndex !== null) {
+      const feature = model.features[targetIndex];
+      const newAt = feature.at ? `${feature.at} ${token}` : token;
+      dispatch({ type: 'updateFeature', index: targetIndex, changes: { at: newAt } });
+      if (paintState.targetFeatureIndex !== targetIndex) {
+        setPaintState({ ...paintState, lockedGeometry: newLockedGeometry, targetFeatureIndex: targetIndex });
+      }
+    } else {
+      // Create new feature
+      dispatch({ type: 'addFeature', feature: { at: token, terrain: paintState.terrainKey } });
+      // The new feature will be at model.features.length
+      setPaintState({ ...paintState, lockedGeometry: newLockedGeometry, targetFeatureIndex: model.features.length });
+    }
+  };
+
   const handleHit = (result: HitResult) => {
     if (!result || result.type === 'none') {
       setSelection(clearSelection());
@@ -268,7 +329,23 @@ export const App = () => {
   };
 
   const handleCommandSubmit = (value: string) => {
-    if (!model || !value.trim()) return;
+    if (!value.trim()) return;
+    
+    // Commands that work without a model
+    if (value.startsWith('>')) {
+      const cmd = value.substring(1).trim().toLowerCase();
+      if (cmd === 'new') {
+        setShowNewMapDialog(true);
+        setCommandValue('');
+        return;
+      } else if (cmd === 'open') {
+        fileInputRef.current?.click();
+        setCommandValue('');
+        return;
+      }
+    }
+
+    if (!model) return;
 
     if (value.startsWith('>')) {
       const cmd = value.substring(1).trim().toLowerCase();
@@ -321,6 +398,28 @@ export const App = () => {
     setCommandValue('');
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      try {
+        const newModel = MapModel.load(text);
+        historyRef.current = new CommandHistory({ document: newModel.document, model: newModel });
+        setHistoryVersion((v) => v + 1);
+        setSelection(clearSelection());
+      } catch (err) {
+        console.error('Failed to parse map file:', err);
+      }
+    };
+    reader.readAsText(file);
+    
+    // Clear input so the same file can be selected again
+    e.target.value = '';
+  };
+
   const handleNavigate = (directionName: string) => {
     if (!model || selection.type !== 'hex') return;
     const direction = Hex.directionIndex(directionName, Hex.orientationTop(model.grid.orientation));
@@ -366,64 +465,99 @@ export const App = () => {
   const mapTitle = model?.metadata?.title ?? 'Untitled';
 
   return (
-    <AppLayout
-      leftPanelVisible={leftPanelVisible}
-      rightPanelVisible={rightPanelVisible}
-      commandBar={
-        <CommandBar
-          ref={commandBarRef}
-          value={commandValue}
-          onChange={setCommandValue}
-          onClear={() => setCommandValue('')}
-          onSubmit={handleCommandSubmit}
-          error={preview?.error?.message}
-          gotoSuggestions={gotoSuggestions}
+    <>
+      <AppLayout
+        leftPanelVisible={leftPanelVisible}
+        rightPanelVisible={rightPanelVisible}
+        commandBar={
+          <CommandBar
+            ref={commandBarRef}
+            value={commandValue}
+            onChange={setCommandValue}
+            onClear={() => setCommandValue('')}
+            onSubmit={handleCommandSubmit}
+            error={preview?.error?.message}
+            gotoSuggestions={gotoSuggestions}
+          />
+        }
+        leftPanel={
+          <FeatureStack
+            features={features}
+            filteredIndices={filteredIndices}
+            selectedIndices={stackSelectedIndices}
+            terrainColor={(t) => model?.terrainColor(t) ?? '#888'}
+            onSelect={handleSelectFeature}
+            onHover={setHoverIndex}
+            dispatch={dispatch}
+          />
+        }
+        canvas={
+          <CanvasHost
+            ref={canvasHostRef}
+            model={model}
+            onCursorHex={setCursorHex}
+            onZoomChange={setZoom}
+            onHitTest={handleHit}
+            onNavigate={handleNavigate}
+            highlights={highlights}
+            segmentPath={preview?.segmentPath ?? []}
+            paintTerrainKey={paintState?.terrainKey ?? null}
+            paintTerrainColor={paintState ? model?.terrainColor(paintState.terrainKey) : null}
+            onPaintClick={handlePaintClick}
+          />
+        }
+        rightPanel={
+          <Inspector
+            selection={selection}
+            model={model}
+            onSelectFeature={(idx) => handleSelectFeature([idx])}
+            dispatch={dispatch}
+            paintTerrainKey={paintState?.terrainKey ?? null}
+            onPaintActivate={(key) => setPaintState(key ? { terrainKey: key, lockedGeometry: null, targetFeatureIndex: null } : null)}
+          />
+        }
+        statusBar={
+          <StatusBar
+            cursor={
+              cursorHex ??
+              (hoverIndex !== null && features[hoverIndex]
+                ? features[hoverIndex].at.split(' ')[0]
+                : '----')
+            }
+            zoom={zoom}
+            mapTitle={mapTitle}
+            dirty={history?.isDirty ?? false}
+            paintTerrainKey={paintState?.terrainKey ?? null}
+            paintTerrainColor={paintState ? model?.terrainColor(paintState.terrainKey) : null}
+          />
+        }
+      />
+
+      {showNewMapDialog && (
+        <NewMapDialog
+          onCreateMap={(yaml) => {
+            try {
+              const newModel = MapModel.load(yaml);
+              historyRef.current = new CommandHistory({ document: newModel.document, model: newModel });
+              setHistoryVersion((v) => v + 1);
+              setSelection(clearSelection());
+              setShowNewMapDialog(false);
+            } catch (err) {
+              console.error('Failed to create map:', err);
+              // In a real app we'd show an error state in the dialog
+            }
+          }}
+          onCancel={() => setShowNewMapDialog(false)}
         />
-      }
-      leftPanel={
-        <FeatureStack
-          features={features}
-          filteredIndices={filteredIndices}
-          selectedIndices={stackSelectedIndices}
-          terrainColor={(t) => model?.terrainColor(t) ?? '#888'}
-          onSelect={handleSelectFeature}
-          onHover={setHoverIndex}
-          dispatch={dispatch}
-        />
-      }
-      canvas={
-        <CanvasHost
-          ref={canvasHostRef}
-          model={model}
-          onCursorHex={setCursorHex}
-          onZoomChange={setZoom}
-          onHitTest={handleHit}
-          onNavigate={handleNavigate}
-          highlights={highlights}
-          segmentPath={preview?.segmentPath ?? []}
-        />
-      }
-      rightPanel={
-        <Inspector
-          selection={selection}
-          model={model}
-          onSelectFeature={(idx) => handleSelectFeature([idx])}
-          dispatch={dispatch}
-        />
-      }
-      statusBar={
-        <StatusBar
-          cursor={
-            cursorHex ??
-            (hoverIndex !== null && features[hoverIndex]
-              ? features[hoverIndex].at.split(' ')[0]
-              : '----')
-          }
-          zoom={zoom}
-          mapTitle={mapTitle}
-          dirty={history?.isDirty ?? false}
-        />
-      }
-    />
+      )}
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        accept=".yaml,.yml,.json"
+        onChange={handleFileChange}
+      />
+    </>
   );
 };

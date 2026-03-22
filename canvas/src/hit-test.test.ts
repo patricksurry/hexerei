@@ -61,4 +61,30 @@ describe('hitTest', () => {
       expect.unreachable('Expected edge hit');
     }
   });
+
+  it('detects off-board hexes for paint mode', () => {
+    // 0202 is on board. 0303 is off board but might not be a direct neighbor depending on orientation.
+    // 0302 is definitely a neighbor of 0202.
+    // In flat-down: (col, row) -> 0202 is col 2, row 2. 
+    // Wait, the easiest way to test is to take 0000 and find a neighbor not on the board.
+    // Let's use 0000, and find a neighbor at direction 3 (West) which is off the board.
+    const onBoardHexCube = Hex.createHex(0, 0, 0); // 0000
+    const offBoardAdjCube = Hex.hexNeighbor(onBoardHexCube, 3); // neighbor in direction 3
+    const offBoardAdjPixel = Hex.hexToPixel(offBoardAdjCube, 1, 'flat');
+    
+    // Create viewport to convert pixel back and test
+    const vp: ViewportState = {
+      center: { x: 0, y: 0 },
+      zoom: 100, // Zoom = pixels per hex unit (since HEX_SIZE=1 in hit-test)
+      width: 800,
+      height: 600,
+    };
+    const offBoardAdjScreenPt = worldToScreen(offBoardAdjPixel, vp);
+
+    const hit = hitTest(offBoardAdjScreenPt, vp, model);
+    expect(hit?.type).toBe('hex');
+    if (hit?.type === 'hex') {
+      expect(hit.offBoard).toBe(true);
+    }
+  });
 });

@@ -15,9 +15,11 @@ interface InspectorProps {
   model: MapModel | null;
   onSelectFeature?: (index: number) => void;
   dispatch?: (command: MapCommand) => void;
+  paintTerrainKey?: string | null;
+  onPaintActivate?: (key: string | null) => void;
 }
 
-export const Inspector = ({ selection, model, onSelectFeature, dispatch }: InspectorProps) => {
+export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTerrainKey, onPaintActivate }: InspectorProps) => {
   const [expandedTerrain, setExpandedTerrain] = useState<string | null>(null);
 
   if (!model)
@@ -132,12 +134,20 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch }: Inspe
         </h3>
         <ul className="terrain-list">
           {Array.from(model.terrainDefs.entries()).map(([key, def]) => (
-            <li key={key} className={`terrain-row ${expandedTerrain === key ? 'expanded' : ''}`}>
+            <li key={key} className={`terrain-row ${expandedTerrain === key ? 'expanded' : ''} ${paintTerrainKey === key ? 'paint-active' : ''}`}>
               <div
                 className="terrain-row-header"
                 onClick={() => setExpandedTerrain(expandedTerrain === key ? null : key)}
               >
-                <div className="terrain-color-chip" style={{ backgroundColor: def.color }} />
+                <div 
+                  className={`terrain-color-chip ${paintTerrainKey === key ? 'active' : ''}`} 
+                  style={{ backgroundColor: def.color }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPaintActivate?.(paintTerrainKey === key ? null : key);
+                  }}
+                  title="Click to paint with this terrain"
+                />
                 <span className="terrain-key">{key}</span>
                 {def.name !== key && <span className="terrain-name">{def.name}</span>}
                 <button

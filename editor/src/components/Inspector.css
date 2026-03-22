@@ -168,3 +168,21 @@
   color: var(--color-error);
   opacity: 1;
 }
+
+.terrain-color-chip {
+  transition: all 0.1s ease;
+  cursor: pointer;
+}
+
+.terrain-color-chip:hover {
+  transform: scale(1.1);
+}
+
+.terrain-color-chip.active {
+  box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 4px var(--accent-hex);
+  transform: scale(1.2);
+}
+
+.terrain-row.paint-active .terrain-row-header {
+  background-color: rgba(255, 255, 255, 0.05);
+}

@@ -18,6 +18,8 @@ export interface CommandBarRef {
 const SEARCH_KEYS = ['terrain', 'label', 'id', 'at', 'tags'];
 
 const COMMANDS = [
+  { label: 'new', description: 'Create new map' },
+  { label: 'open', description: 'Open map file' },
   { label: 'export yaml', description: 'Download as YAML' },
   { label: 'export json', description: 'Download as JSON' },
   { label: 'zoom fit', description: 'Reset viewport' },

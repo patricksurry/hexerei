@@ -67,17 +67,13 @@ export function hitTest(screenPt: Point, viewport: ViewportState, model: MapMode
           Hex.formatHexLabel(
             Hex.hexFromId(id),
             model.grid.labelFormat,
-            model.grid.orientation,
-            model.grid.firstCol,
-            model.grid.firstRow
+            model.grid.orientation
           ),
           hasNeighbor
             ? Hex.formatHexLabel(
                 Hex.hexFromId(nId),
                 model.grid.labelFormat,
-                model.grid.orientation,
-                model.grid.firstCol,
-                model.grid.firstRow
+                model.grid.orientation
               )
             : null,
         ],
@@ -92,11 +88,26 @@ export function hitTest(screenPt: Point, viewport: ViewportState, model: MapMode
       label: Hex.formatHexLabel(
         Hex.hexFromId(id),
         model.grid.labelFormat,
-        model.grid.orientation,
-        model.grid.firstCol,
-        model.grid.firstRow
+        model.grid.orientation
       ),
     };
+  } else {
+    // Check neighbors for paint mode off-board hits
+    for (let dir = 0; dir < 6; dir++) {
+      const neighborId = Hex.hexId(Hex.hexNeighbor(cube, dir));
+      if (model.mesh.getHex(neighborId)) {
+        return {
+          type: 'hex',
+          hexId: id,
+          label: Hex.formatHexLabel(
+            Hex.hexFromId(id),
+            model.grid.labelFormat,
+            model.grid.orientation
+          ),
+          offBoard: true,
+        };
+      }
+    }
   }
 
   return { type: 'none' };

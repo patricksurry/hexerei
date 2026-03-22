@@ -29,6 +29,8 @@ export const FeatureStack = ({
     ? features.filter((f) => filteredIndices.includes(f.index))
     : features;
 
+  const displayFeatures = [...visibleFeatures].reverse();
+
   return (
     <div className="feature-stack">
       <div className="feature-stack-header">
@@ -44,7 +46,7 @@ export const FeatureStack = ({
         </button>
       </div>
       <ul className="feature-list" role="listbox" tabIndex={0}>
-        {visibleFeatures.map((feature) => {
+        {displayFeatures.map((feature) => {
           const isSelected = selectedIndices.includes(feature.index);
           const label =
             feature.label ||
