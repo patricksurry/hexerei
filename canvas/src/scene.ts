@@ -103,7 +103,7 @@ export function buildScene(
       hexId: area.id,
       corners: screenCorners,
       center: screenCenter,
-      fill: model.terrainColor(area.terrain),
+      fill: model.terrainColor('hex', area.terrain),
       label: Hex.formatHexLabel(
         Hex.hexFromId(area.id),
         model.grid.labelFormat,

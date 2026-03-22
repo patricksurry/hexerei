@@ -14,8 +14,12 @@ export interface TerrainDef {
   key: string;
   name: string;
   color: string;
+  type?: 'base' | 'modifier';
+  onesided?: boolean;
   properties?: Record<string, unknown>;
 }
+
+export type GeometryType = 'hex' | 'edge' | 'vertex';
 
 export interface ComputedHexState {
   hexId: string;
@@ -34,7 +38,7 @@ export class MapModel {
 
   private _grid: GridConfig;
 
-  private _terrainDefs: Map<string, TerrainDef>;
+  private _terrainDefs: Map<GeometryType, Map<string, TerrainDef>>;
 
   private _features: FeatureItem[];
 
@@ -66,17 +70,23 @@ export class MapModel {
       labelFormat,
     };
 
-    // Terrain definitions
-    this._terrainDefs = new Map();
+    // Terrain definitions — geometry-scoped
+    this._terrainDefs = new Map<GeometryType, Map<string, TerrainDef>>();
     const terrainVocab = doc.getTerrain();
-    const hexTerrain = terrainVocab.hex ?? {};
-    for (const [key, def] of Object.entries(hexTerrain)) {
-      this._terrainDefs.set(key, {
-        key,
-        name: def.name ?? key,
-        color: def.style?.color ?? '#888888',
-        properties: def.properties,
-      });
+    for (const geom of ['hex', 'edge', 'vertex'] as const) {
+      const defs = new Map<string, TerrainDef>();
+      const section = terrainVocab[geom] ?? {};
+      for (const [key, def] of Object.entries(section)) {
+        defs.set(key, {
+          key,
+          name: def.name ?? key,
+          color: def.style?.color ?? '#888888',
+          type: def.type,
+          onesided: def.onesided,
+          properties: def.properties,
+        });
+      }
+      this._terrainDefs.set(geom, defs);
     }
 
     // Use provided mesh or load it from doc
@@ -163,8 +173,8 @@ export class MapModel {
     return this._grid;
   }
 
-  get terrainDefs(): Map<string, TerrainDef> {
-    return this._terrainDefs;
+  terrainDefs(geometry: GeometryType): Map<string, TerrainDef> {
+    return this._terrainDefs.get(geometry) ?? new Map();
   }
 
   get features(): readonly FeatureItem[] {
@@ -205,7 +215,7 @@ export class MapModel {
         this._grid.firstRow
       ),
       terrain,
-      terrainColor: this.terrainColor(terrain),
+      terrainColor: this.terrainColor('hex', terrain),
       elevation: hex.elevation,
       contributingFeatures: this.featuresAtHex(hexId),
       neighborLabels,
@@ -216,12 +226,12 @@ export class MapModel {
     return this._hexToFeatures.get(hexId) ?? [];
   }
 
-  terrainColor(terrainString: string): string {
+  terrainColor(geometry: GeometryType, terrainString: string): string {
     if (!terrainString) return '#555555'; // neutral fallback — no terrain assigned
     const parts = terrainString.split(/\s+/);
     const terrain = parts[parts.length - 1];
 
-    const def = this._terrainDefs.get(terrain);
+    const def = this._terrainDefs.get(geometry)?.get(terrain);
     if (def) return def.color;
 
     if (terrain === 'unknown') return '#888888';

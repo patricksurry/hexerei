@@ -131,7 +131,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
           TERRAIN VOCABULARY
         </h3>
         <ul className="terrain-list">
-          {Array.from(model.terrainDefs.entries()).map(([key, def]) => (
+          {Array.from(model.terrainDefs('hex').entries()).map(([key, def]) => (
             <li key={key} className={`terrain-row ${expandedTerrain === key ? 'expanded' : ''} ${paintTerrainKey === key ? 'paint-active' : ''}`}>
               <div
                 className="terrain-row-header"
@@ -271,8 +271,8 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
           className="btn-secondary"
           style={{ marginTop: '12px', width: '100%' }}
           onClick={() => {
-            let nextId = model.terrainDefs.size + 1;
-            while (model.terrainDefs.has(`terrain_${nextId}`)) {
+            let nextId = model.terrainDefs('hex').size + 1;
+            while (model.terrainDefs('hex').has(`terrain_${nextId}`)) {
               nextId++;
             }
             dispatch?.({
@@ -332,7 +332,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
       }
     };
 
-    const terrainKeys = Array.from(model.terrainDefs.keys());
+    const terrainKeys = Array.from(model.terrainDefs('hex').keys());
 
     return (
       <div className="inspector-content">

@@ -485,7 +485,7 @@ export const App = () => {
             features={features}
             filteredIndices={filteredIndices}
             selectedIndices={stackSelectedIndices}
-            terrainColor={(t) => model?.terrainColor(t) ?? '#888'}
+            terrainColor={(t) => model?.terrainColor('hex', t) ?? '#888'}
             onSelect={handleSelectFeature}
             onHover={setHoverIndex}
             dispatch={dispatch}
@@ -502,7 +502,7 @@ export const App = () => {
             highlights={highlights}
             segmentPath={preview?.segmentPath ?? []}
             paintTerrainKey={paintState?.terrainKey ?? null}
-            paintTerrainColor={paintState ? model?.terrainColor(paintState.terrainKey) : null}
+            paintTerrainColor={paintState ? model?.terrainColor('hex', paintState.terrainKey) : null}
             onPaintClick={handlePaintClick}
           />
         }
@@ -528,7 +528,7 @@ export const App = () => {
             mapTitle={mapTitle}
             dirty={history?.isDirty ?? false}
             paintTerrainKey={paintState?.terrainKey ?? null}
-            paintTerrainColor={paintState ? model?.terrainColor(paintState.terrainKey) : null}
+            paintTerrainColor={paintState ? model?.terrainColor('hex', paintState.terrainKey) : null}
           />
         }
       />

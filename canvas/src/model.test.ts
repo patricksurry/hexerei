@@ -26,6 +26,34 @@ features:
     label: "Target"
 `;
 
+const MULTI_GEOM_YAML = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 - 0301 - 0303 - 0103 fill"
+terrain:
+  hex:
+    clear:
+      style: { color: "#ffffff" }
+    forest:
+      style: { color: "#00ff00" }
+    road:
+      style: { color: "#996633" }
+      properties: { path: true }
+  edge:
+    river:
+      style: { color: "#0044cc" }
+    cliff:
+      onesided: true
+      style: { color: "#663300" }
+  vertex:
+    bridge:
+      style: { color: "#888888" }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+
 describe('MapModel', () => {
   it('should load metadata', () => {
     const model = MapModel.load(MOCK_YAML);
@@ -47,14 +75,14 @@ describe('MapModel', () => {
 
   it('should return terrain colors', () => {
     const model = MapModel.load(MOCK_YAML);
-    expect(model.terrainColor('clear')).toBe('#ffffff');
-    expect(model.terrainColor('clear forest')).toBe('#00ff00');
+    expect(model.terrainColor('hex', 'clear')).toBe('#ffffff');
+    expect(model.terrainColor('hex', 'clear forest')).toBe('#00ff00');
   });
 
   // S2: empty terrain string must return a visible fallback, not transparent
   it('terrainColor for empty string returns a visible fallback color', () => {
     const model = MapModel.load(MOCK_YAML);
-    const color = model.terrainColor('');
+    const color = model.terrainColor('hex', '');
     expect(color).not.toBe('transparent');
     expect(color).not.toBe('rgba(0,0,0,0)');
   });
@@ -125,5 +153,48 @@ describe('MapModel', () => {
     const model = MapModel.fromDocument(doc);
     expect(model.features).toHaveLength(3);
     expect(model.features[2].label).toBe('New');
+  });
+
+  describe('geometry-scoped terrain', () => {
+    it('loads hex terrain definitions', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      expect(model.terrainDefs('hex').get('clear')).toBeDefined();
+      expect(model.terrainDefs('hex').get('forest')).toBeDefined();
+      expect(model.terrainDefs('hex').get('road')).toBeDefined();
+    });
+
+    it('loads edge terrain definitions', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      expect(model.terrainDefs('edge').get('river')).toBeDefined();
+      expect(model.terrainDefs('edge').get('cliff')).toBeDefined();
+    });
+
+    it('loads vertex terrain definitions', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      expect(model.terrainDefs('vertex').get('bridge')).toBeDefined();
+    });
+
+    it('terrainColor resolves with geometry scope', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      expect(model.terrainColor('hex', 'clear')).toBe('#ffffff');
+      expect(model.terrainColor('edge', 'river')).toBe('#0044cc');
+      expect(model.terrainColor('vertex', 'bridge')).toBe('#888888');
+    });
+
+    it('terrainColor falls back for unknown terrain', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      const color = model.terrainColor('hex', 'unknown_terrain');
+      expect(color).toMatch(/^(#|hsl)/);
+    });
+
+    it('preserves onesided property on terrain def', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      expect(model.terrainDefs('edge').get('cliff')?.onesided).toBe(true);
+    });
+
+    it('preserves path property in properties', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      expect(model.terrainDefs('hex').get('road')?.properties?.path).toBe(true);
+    });
   });
 });
