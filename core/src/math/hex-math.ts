@@ -356,6 +356,41 @@ export function formatHexLabel(
   }
 }
 
+export function parseHexLabel(
+  label: string,
+  labelFormat: string,
+  orientation: Orientation,
+  firstCol: number = 0,
+  firstRow: number = 0,
+): Cube {
+  let col: number;
+  let row: number;
+
+  switch (labelFormat) {
+    case 'XX.YY': {
+      const parts = label.split('.');
+      col = parseInt(parts[0], 10);
+      row = parseInt(parts[1], 10);
+      break;
+    }
+    case 'AYY': {
+      col = label.charCodeAt(0) - 64;
+      row = parseInt(label.slice(1), 10);
+      break;
+    }
+    case 'XXYY':
+    default: {
+      const colStr = label.slice(0, -2);
+      const rowStr = label.slice(-2);
+      col = parseInt(colStr, 10);
+      row = parseInt(rowStr, 10);
+      break;
+    }
+  }
+
+  return offsetToCube(col - firstCol, row - firstRow, orientation);
+}
+
 export function vertexPoint(
   hex: Cube,
   corner: number,

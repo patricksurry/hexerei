@@ -5,6 +5,7 @@ import {
   parseVertexId,
   hexId,
   formatHexLabel,
+  parseHexLabel,
   createHex,
   edgeEndpoints,
   vertexPoint,
@@ -52,6 +53,42 @@ describe('Hex Math', () => {
     it('unknown format falls back to XXYY', () => {
       const hex = createHex(0, 0, 0);
       expect(formatHexLabel(hex, 'ZZZZ', 'flat-down', 1, 1)).toBe('0101');
+    });
+  });
+
+  describe('Label Parsing', () => {
+    it('round-trips XXYY', () => {
+      const hex = createHex(2, -1, -1);
+      const label = formatHexLabel(hex, 'XXYY', 'flat-down', 1, 1);
+      const parsed = parseHexLabel(label, 'XXYY', 'flat-down', 1, 1);
+      expect(parsed.q).toBe(hex.q);
+      expect(parsed.r).toBe(hex.r);
+      expect(parsed.s).toBe(hex.s);
+    });
+
+    it('round-trips XX.YY', () => {
+      const hex = createHex(2, -1, -1);
+      const label = formatHexLabel(hex, 'XX.YY', 'flat-down', 1, 1);
+      const parsed = parseHexLabel(label, 'XX.YY', 'flat-down', 1, 1);
+      expect(parsed.q).toBe(hex.q);
+      expect(parsed.r).toBe(hex.r);
+    });
+
+    it('round-trips AYY', () => {
+      const hex = createHex(2, -1, -1);
+      const label = formatHexLabel(hex, 'AYY', 'flat-down', 1, 1);
+      const parsed = parseHexLabel(label, 'AYY', 'flat-down', 1, 1);
+      expect(parsed.q).toBe(hex.q);
+      expect(parsed.r).toBe(hex.r);
+    });
+
+    it('parses with first=[0,0]', () => {
+      const hex = createHex(0, 0, 0);
+      const label = formatHexLabel(hex, 'XXYY', 'flat-down', 0, 0);
+      expect(label).toBe('0000');
+      const parsed = parseHexLabel('0000', 'XXYY', 'flat-down', 0, 0);
+      expect(parsed.q).toBe(0);
+      expect(parsed.r).toBe(0);
     });
   });
 
