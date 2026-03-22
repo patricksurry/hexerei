@@ -72,6 +72,62 @@ describe('NewMapDialog', () => {
     expect(uniqueColors.size).toBe(colors.length);
   });
 
+  it('generates YAML with XX.YY label format', () => {
+    const onCreateMap = vi.fn();
+    render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    const labelSelect = screen.getByLabelText('Label Format:');
+    fireEvent.change(labelSelect, { target: { value: 'XX.YY' } });
+
+    fireEvent.click(screen.getByText('Create'));
+    const yaml = onCreateMap.mock.calls[0][0];
+
+    expect(yaml).toContain('label: XX.YY');
+    expect(yaml).toContain('01.01');
+    expect(yaml).toContain('10.01');
+    expect(yaml).toContain('10.10');
+    expect(yaml).toContain('01.10');
+  });
+
+  it('generates YAML with AYY label format', () => {
+    const onCreateMap = vi.fn();
+    render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    const labelSelect = screen.getByLabelText('Label Format:');
+    fireEvent.change(labelSelect, { target: { value: 'AYY' } });
+
+    const widthInput = screen.getByLabelText('Width:');
+    fireEvent.change(widthInput, { target: { value: '5' } });
+    const heightInput = screen.getByLabelText('Height:');
+    fireEvent.change(heightInput, { target: { value: '5' } });
+
+    fireEvent.click(screen.getByText('Create'));
+    const yaml = onCreateMap.mock.calls[0][0];
+
+    expect(yaml).toContain('label: AYY');
+    expect(yaml).toContain('A01');
+    expect(yaml).toContain('E01');
+    expect(yaml).toContain('E05');
+    expect(yaml).toContain('A05');
+  });
+
+  it('generates YAML with custom first values', () => {
+    const onCreateMap = vi.fn();
+    render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    const firstColInput = screen.getByLabelText('First Column:');
+    fireEvent.change(firstColInput, { target: { value: '0' } });
+    const firstRowInput = screen.getByLabelText('First Row:');
+    fireEvent.change(firstRowInput, { target: { value: '0' } });
+
+    fireEvent.click(screen.getByText('Create'));
+    const yaml = onCreateMap.mock.calls[0][0];
+
+    expect(yaml).toContain('first: [0, 0]');
+    expect(yaml).toContain('0000');
+    expect(yaml).toContain('0909');
+  });
+
   it('updates base terrain dropdown when palette changes', () => {
     render(<NewMapDialog onCreateMap={() => {}} onCancel={() => {}} />);
     

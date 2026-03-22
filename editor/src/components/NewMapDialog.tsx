@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Hex } from '@hexmap/core';
 import './NewMapDialog.css';
 
 interface NewMapDialogProps {
@@ -20,6 +21,9 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
   const [height, setHeight] = useState(10);
   const [orientation, setOrientation] = useState<'flat-down' | 'flat-up' | 'pointy-right' | 'pointy-left'>('flat-down');
   const [origin, setOrigin] = useState<'top-left' | 'bottom-left' | 'top-right' | 'bottom-right'>('top-left');
+  const [labelFormat, setLabelFormat] = useState<string>('XXYY');
+  const [firstCol, setFirstCol] = useState(1);
+  const [firstRow, setFirstRow] = useState(1);
 
   const PALETTES: Record<string, { label: string; terrain: string[] }> = {
     'standard': {
@@ -53,34 +57,32 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
   };
 
   const handleCreate = () => {
-    // Determine the corner hexes based on origin and dimensions
-    // Hex map usually uses 1-based indexing for labels if label format is XXYY.
-    // Let's assume standard XXYY format for labels where XX is col, YY is row.
-    // X goes from 1 to width, Y goes from 1 to height.
-    let startX = 1, endX = width;
-    let startY = 1, endY = height;
-    
+    let startCol = 0, endCol = width - 1;
+    let startRow = 0, endRow = height - 1;
+
     if (origin.includes('right')) {
-      startX = width;
-      endX = 1;
+      startCol = width - 1;
+      endCol = 0;
     }
-    
+
     if (origin.includes('bottom')) {
-      startY = height;
-      endY = 1;
+      startRow = height - 1;
+      endRow = 0;
     }
 
-    const formatHex = (x: number, y: number) => {
-      // Very basic formatting for XXYY
-      const xx = Math.abs(x).toString().padStart(2, '0');
-      const yy = Math.abs(y).toString().padStart(2, '0');
-      return `${xx}${yy}`;
-    };
+    const labelHex = (col: number, row: number) =>
+      Hex.formatHexLabel(
+        Hex.offsetToCube(col, row, orientation),
+        labelFormat,
+        orientation,
+        firstCol,
+        firstRow,
+      );
 
-    const c1 = formatHex(startX, startY);
-    const c2 = formatHex(endX, startY);
-    const c3 = formatHex(endX, endY);
-    const c4 = formatHex(startX, endY);
+    const c1 = labelHex(startCol, startRow);
+    const c2 = labelHex(endCol, startRow);
+    const c3 = labelHex(endCol, endRow);
+    const c4 = labelHex(startCol, endRow);
 
     const allPath = `${c1} - ${c2} - ${c3} - ${c4} fill`;
 
@@ -88,9 +90,12 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
     yaml += `metadata:\n  title: "New Map"\n`;
     yaml += `layout:\n`;
     yaml += `  orientation: ${orientation}\n`;
-    yaml += `  label: XXYY\n`;
+    yaml += `  label: ${labelFormat}\n`;
+    if (firstCol !== 1 || firstRow !== 1) {
+      yaml += `  first: [${firstCol}, ${firstRow}]\n`;
+    }
     yaml += `  all: "${allPath}"\n`;
-    
+
     yaml += `terrain:\n  hex:\n`;
     if (selectedPalette.terrain.length > 0) {
       for (const t of selectedPalette.terrain) {
@@ -148,6 +153,28 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
               <option value="top-right">Top-Right</option>
               <option value="bottom-right">Bottom-Right</option>
             </select>
+          </label>
+        </div>
+
+        <div className="dialog-row">
+          <label>
+            Label Format:
+            <select value={labelFormat} onChange={e => setLabelFormat(e.target.value)}>
+              <option value="XXYY">XXYY (0304)</option>
+              <option value="XX.YY">XX.YY (03.04)</option>
+              <option value="AYY">AYY (C04)</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="dialog-row">
+          <label>
+            First Column:
+            <input type="number" min="0" max="99" value={firstCol} onChange={e => setFirstCol(Number(e.target.value))} />
+          </label>
+          <label>
+            First Row:
+            <input type="number" min="0" max="99" value={firstRow} onChange={e => setFirstRow(Number(e.target.value))} />
           </label>
         </div>
 
