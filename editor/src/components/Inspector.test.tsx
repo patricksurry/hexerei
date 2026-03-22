@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
 import { Inspector } from './Inspector';
@@ -205,6 +205,19 @@ describe('Inspector', () => {
       key: 'clear_new',
       def: expect.objectContaining({ style: { color: '#ffffff' } }),
     });
+  });
+
+  it('dispatches setLayout when label format dropdown changes', () => {
+    const model = MapModel.load(METADATA_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    const labelSelect = screen.getByDisplayValue('XXYY');
+    fireEvent.change(labelSelect, { target: { value: 'XX.YY' } });
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0]).toEqual({ type: 'setLayout', key: 'label', value: 'XX.YY' });
   });
 
   it('dispatches setTerrainType when type is changed', () => {

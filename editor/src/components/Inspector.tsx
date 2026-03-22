@@ -108,21 +108,19 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
         </div>
         <div className="inspector-row">
           <label>Label Format</label>
-          <input
-            type="text"
+          <select
             className="inspector-input font-mono"
-            defaultValue={model.grid.labelFormat}
-            key={`layout-label-${model.grid.labelFormat}`}
-            onBlur={(e) => {
-              const value = e.target.value || undefined;
-              if (value !== model.grid.labelFormat) {
-                dispatch?.({ type: 'setLayout', key: 'label', value });
+            value={model.grid.labelFormat}
+            onChange={(e) => {
+              if (e.target.value !== model.grid.labelFormat) {
+                dispatch?.({ type: 'setLayout', key: 'label', value: e.target.value });
               }
             }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') e.currentTarget.blur();
-            }}
-          />
+          >
+            <option value="XXYY">XXYY</option>
+            <option value="XX.YY">XX.YY</option>
+            <option value="AYY">AYY</option>
+          </select>
         </div>
       </section>
       <section className="inspector-section">
