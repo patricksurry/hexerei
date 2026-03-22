@@ -334,11 +334,26 @@ export function parseVertexId(id: string): Cube[] {
   return parts.map(hexFromId);
 }
 
-export function formatHexLabel(hex: Cube, _labelFormat: string, orientation: Orientation): string {
+export function formatHexLabel(
+  hex: Cube,
+  labelFormat: string,
+  orientation: Orientation,
+  firstCol: number = 0,
+  firstRow: number = 0,
+): string {
   const offset = cubeToOffset(hex, orientation);
-  const colStr = String(offset.x).padStart(2, '0');
-  const rowStr = String(offset.y).padStart(2, '0');
-  return `${colStr}${rowStr}`;
+  const col = offset.x + firstCol;
+  const row = offset.y + firstRow;
+
+  switch (labelFormat) {
+    case 'XX.YY':
+      return `${String(col).padStart(2, '0')}.${String(row).padStart(2, '0')}`;
+    case 'AYY':
+      return `${String.fromCharCode(64 + col)}${String(row).padStart(2, '0')}`;
+    case 'XXYY':
+    default:
+      return `${String(col).padStart(2, '0')}${String(row).padStart(2, '0')}`;
+  }
 }
 
 export function vertexPoint(

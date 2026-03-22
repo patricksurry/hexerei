@@ -23,9 +23,35 @@ describe('Hex Math', () => {
   });
 
   describe('Label Formatting', () => {
-    it('formatHexLabel formats correctly', () => {
-      const c = createHex(1, -2, 1);
-      expect(formatHexLabel(c, 'XXYY', 'flat-down', 1, 1)).toBeTruthy();
+    it('XXYY format with first=[1,1]', () => {
+      const hex = createHex(0, 0, 0);
+      expect(formatHexLabel(hex, 'XXYY', 'flat-down', 1, 1)).toBe('0101');
+    });
+
+    it('XXYY format with first=[0,0] (default)', () => {
+      const hex = createHex(0, 0, 0);
+      expect(formatHexLabel(hex, 'XXYY', 'flat-down', 0, 0)).toBe('0000');
+      expect(formatHexLabel(hex, 'XXYY', 'flat-down')).toBe('0000');
+    });
+
+    it('XX.YY format', () => {
+      const hex = createHex(0, 0, 0);
+      expect(formatHexLabel(hex, 'XX.YY', 'flat-down', 1, 1)).toBe('01.01');
+    });
+
+    it('AYY format', () => {
+      const hex = createHex(0, 0, 0);
+      expect(formatHexLabel(hex, 'AYY', 'flat-down', 1, 1)).toBe('A01');
+    });
+
+    it('AYY format column 3', () => {
+      const hex = createHex(2, -1, -1);
+      expect(formatHexLabel(hex, 'AYY', 'flat-down', 1, 1)).toBe('C01');
+    });
+
+    it('unknown format falls back to XXYY', () => {
+      const hex = createHex(0, 0, 0);
+      expect(formatHexLabel(hex, 'ZZZZ', 'flat-down', 1, 1)).toBe('0101');
     });
   });
 
