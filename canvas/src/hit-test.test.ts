@@ -81,9 +81,34 @@ describe('hitTest', () => {
     };
     const offBoardAdjScreenPt = worldToScreen(offBoardAdjPixel, vp);
 
-    const hit = hitTest(offBoardAdjScreenPt, vp, model);
+    const hit = hitTest(offBoardAdjScreenPt, vp, model, { includeOffBoard: true });
     expect(hit?.type).toBe('hex');
     if (hit?.type === 'hex') {
+      expect(hit.offBoard).toBe(true);
+    }
+  });
+
+  it('returns none for off-board hex when includeOffBoard is false', () => {
+    const onBoardHexCube = Hex.createHex(0, 0, 0);
+    const offBoardAdjCube = Hex.hexNeighbor(onBoardHexCube, 3);
+    const offBoardAdjPixel = Hex.hexToPixel(offBoardAdjCube, 1, 'flat');
+    const vp: ViewportState = { center: { x: 0, y: 0 }, zoom: 100, width: 800, height: 600 };
+    const offBoardAdjScreenPt = worldToScreen(offBoardAdjPixel, vp);
+
+    const hit = hitTest(offBoardAdjScreenPt, vp, model);
+    expect(hit.type).toBe('none');
+  });
+
+  it('returns off-board hex when includeOffBoard is true', () => {
+    const onBoardHexCube = Hex.createHex(0, 0, 0);
+    const offBoardAdjCube = Hex.hexNeighbor(onBoardHexCube, 3);
+    const offBoardAdjPixel = Hex.hexToPixel(offBoardAdjCube, 1, 'flat');
+    const vp: ViewportState = { center: { x: 0, y: 0 }, zoom: 100, width: 800, height: 600 };
+    const offBoardAdjScreenPt = worldToScreen(offBoardAdjPixel, vp);
+
+    const hit = hitTest(offBoardAdjScreenPt, vp, model, { includeOffBoard: true });
+    expect(hit.type).toBe('hex');
+    if (hit.type === 'hex') {
       expect(hit.offBoard).toBe(true);
     }
   });

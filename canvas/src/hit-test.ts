@@ -6,7 +6,11 @@ import { HitResult } from './types.js';
 
 const HEX_SIZE = 1;
 
-export function hitTest(screenPt: Point, viewport: ViewportState, model: MapModel): HitResult {
+export interface HitTestOptions {
+  includeOffBoard?: boolean;
+}
+
+export function hitTest(screenPt: Point, viewport: ViewportState, model: MapModel, options?: HitTestOptions): HitResult {
   const orientation = Hex.orientationTop(model.grid.orientation);
   const worldPt = screenToWorld(screenPt, viewport);
   const cube = Hex.pixelToHex(worldPt, HEX_SIZE, orientation);
@@ -91,7 +95,7 @@ export function hitTest(screenPt: Point, viewport: ViewportState, model: MapMode
         model.grid.orientation
       ),
     };
-  } else {
+  } else if (options?.includeOffBoard) {
     // Check neighbors for paint mode off-board hits
     for (let dir = 0; dir < 6; dir++) {
       const neighborId = Hex.hexId(Hex.hexNeighbor(cube, dir));
