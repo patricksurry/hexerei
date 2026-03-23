@@ -141,4 +141,24 @@ describe('NewMapDialog', () => {
     expect(baseTerrainSelect.options.length).toBe(1);
     expect(baseTerrainSelect.value).toBe('none');
   });
+
+  it('Standard Wargame palette generates edge terrain in YAML', () => {
+    let createdYaml = '';
+    render(<NewMapDialog onCreateMap={(yaml) => { createdYaml = yaml; }} onCancel={() => {}} />);
+
+    fireEvent.click(screen.getByText('Create'));
+
+    expect(createdYaml).toContain('edge:');
+    expect(createdYaml).toContain('river:');
+  });
+
+  it('Standard Wargame palette generates path terrain in YAML', () => {
+    let createdYaml = '';
+    render(<NewMapDialog onCreateMap={(yaml) => { createdYaml = yaml; }} onCancel={() => {}} />);
+
+    fireEvent.click(screen.getByText('Create'));
+
+    expect(createdYaml).toContain('road:');
+    expect(createdYaml).toContain('path: true');
+  });
 });

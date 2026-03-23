@@ -14,6 +14,9 @@ const TERRAIN_COLORS: Record<string, string> = {
   urban: '#888888',
   water: '#4a8fc7',
   mountain: '#6b4226',
+  river: '#0044cc',
+  cliff: '#663300',
+  road: '#996633',
 };
 
 export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCancel }) => {
@@ -25,10 +28,17 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
   const [firstCol, setFirstCol] = useState(1);
   const [firstRow, setFirstRow] = useState(1);
 
-  const PALETTES: Record<string, { label: string; terrain: string[] }> = {
+  const PALETTES: Record<string, {
+    label: string;
+    terrain: string[];
+    edgeTerrain?: string[];
+    pathTerrain?: string[];
+  }> = {
     'standard': {
       label: 'Standard Wargame',
-      terrain: ['clear', 'forest', 'rough', 'urban', 'water', 'mountain']
+      terrain: ['clear', 'forest', 'rough', 'urban', 'water', 'mountain'],
+      edgeTerrain: ['river', 'cliff'],
+      pathTerrain: ['road'],
     },
     'blank': {
       label: 'Blank',
@@ -103,6 +113,22 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
       }
     } else {
       yaml += `    clear: { style: { color: "#ffffff" } }\n`;
+    }
+
+    // Path terrain goes under terrain.hex with path: true property
+    if (selectedPalette.pathTerrain?.length) {
+      for (const t of selectedPalette.pathTerrain) {
+        yaml += `    ${t}: { style: { color: "${TERRAIN_COLORS[t] || '#cccccc'}" }, properties: { path: true } }\n`;
+      }
+    }
+
+    // Edge terrain is a separate section under terrain
+    if (selectedPalette.edgeTerrain?.length) {
+      yaml += `  edge:\n`;
+      for (const t of selectedPalette.edgeTerrain) {
+        const extra = t === 'cliff' ? ', onesided: true' : '';
+        yaml += `    ${t}: { style: { color: "${TERRAIN_COLORS[t] || '#cccccc'}" }${extra} }\n`;
+      }
     }
 
     if (baseTerrain !== 'none') {
