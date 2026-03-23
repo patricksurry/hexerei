@@ -53,6 +53,9 @@ describe('Canvas Drawing', () => {
     vertexHighlights: [],
     pathLines: [],
     featureLabels: [],
+    edgeTerrain: [],
+    vertexTerrain: [],
+    pathTerrain: [],
   };
 
   it('should call fillRect with background from scene', () => {
@@ -108,6 +111,9 @@ describe('Canvas Drawing', () => {
           label: '0101',
         },
       ],
+      edgeTerrain: [],
+      vertexTerrain: [],
+      pathTerrain: [],
     };
     drawScene(mockCtx, sceneWithBigHex, { labelMinZoom: 12 });
     const { calls } = (mockCtx.fillText as any).mock;

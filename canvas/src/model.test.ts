@@ -1,8 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { HexMapDocument } from '@hexmap/core';
 import { MapModel } from './model.js';
+import { buildScene } from './scene.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -76,6 +80,35 @@ features:
     terrain: river
   - at: "0202.N"
     terrain: bridge
+`;
+
+const RENDER_YAML = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 - 0301 - 0303 - 0103 fill"
+terrain:
+  hex:
+    clear:
+      style: { color: "#ffffff" }
+    road:
+      style: { color: "#996633" }
+      properties: { path: true }
+  edge:
+    river:
+      style: { color: "#0044cc" }
+  vertex:
+    bridge:
+      style: { color: "#888888" }
+features:
+  - at: "@all"
+    terrain: clear
+  - at: "0201/N 0201/NE"
+    terrain: river
+  - at: "0202.N"
+    terrain: bridge
+  - at: "0101 - 0201"
+    terrain: road
 `;
 
 describe('MapModel', () => {
@@ -263,6 +296,45 @@ describe('MapModel', () => {
       const features = model.featuresAtVertex(firstVertexId);
       expect(features.length).toBe(1);
       expect(features[0].terrain).toBe('bridge');
+    });
+  });
+
+  describe('buildScene with multi-geometry terrain', () => {
+    const viewport = { center: { x: 0, y: 0 }, zoom: 40, width: 800, height: 600 };
+
+    it('produces edgeTerrain items for edge features', () => {
+      const model = MapModel.load(RENDER_YAML);
+      const scene = buildScene(model, viewport);
+      expect(scene.edgeTerrain.length).toBe(2); // 2 edge segments
+    });
+
+    it('produces vertexTerrain items for vertex features', () => {
+      const model = MapModel.load(RENDER_YAML);
+      const scene = buildScene(model, viewport);
+      expect(scene.vertexTerrain.length).toBe(1);
+    });
+
+    it('produces pathTerrain items for hex terrain with path: true', () => {
+      const model = MapModel.load(RENDER_YAML);
+      const scene = buildScene(model, viewport);
+      expect(scene.pathTerrain.length).toBeGreaterThan(0);
+    });
+
+    it('edge terrain items have p1, p2, color', () => {
+      const model = MapModel.load(RENDER_YAML);
+      const scene = buildScene(model, viewport);
+      const edge = scene.edgeTerrain[0];
+      expect(edge.p1).toBeDefined();
+      expect(edge.p2).toBeDefined();
+      expect(edge.color).toBe('#0044cc');
+    });
+
+    it('vertex terrain items have point, color', () => {
+      const model = MapModel.load(RENDER_YAML);
+      const scene = buildScene(model, viewport);
+      const vtx = scene.vertexTerrain[0];
+      expect(vtx.point).toBeDefined();
+      expect(vtx.color).toBe('#888888');
     });
   });
 });

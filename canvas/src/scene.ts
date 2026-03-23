@@ -57,6 +57,26 @@ export interface FeatureLabelRenderItem {
   point: Point; // screen-space centroid
 }
 
+export interface EdgeTerrainRenderItem {
+  edgeId: string;
+  p1: Point;
+  p2: Point;
+  color: string;
+  onesided?: boolean;
+  activeHexCenter?: Point; // screen-space center of the "active" hex (for onesided markers)
+}
+
+export interface VertexTerrainRenderItem {
+  vertexId: string;
+  point: Point;
+  color: string;
+}
+
+export interface PathTerrainRenderItem {
+  points: Point[]; // screen-space hex centers in segment order
+  color: string;
+}
+
 export interface Scene {
   background: string;
   hexagons: HexRenderItem[];
@@ -65,6 +85,9 @@ export interface Scene {
   vertexHighlights: VertexHighlightRenderItem[];
   pathLines: PathLineRenderItem[];
   featureLabels: FeatureLabelRenderItem[];
+  edgeTerrain: EdgeTerrainRenderItem[];
+  vertexTerrain: VertexTerrainRenderItem[];
+  pathTerrain: PathTerrainRenderItem[];
 }
 
 export function buildScene(
@@ -205,6 +228,93 @@ export function buildScene(
     pathLines.push({ points, color: '#00D4FF' });
   }
 
+  // Edge terrain
+  const edgeTerrain: EdgeTerrainRenderItem[] = [];
+  for (const feature of model.features) {
+    if (feature.geometryType !== 'edge' || !feature.terrain) continue;
+    const color = model.terrainColor('edge', feature.terrain);
+    const onesided = model.terrainDefs('edge').get(feature.terrain)?.onesided;
+    for (const edgeId of feature.edgeIds) {
+      const [id1, id2] = edgeId.split('|');
+      const h1 = Hex.hexFromId(id1);
+      const c1 = Hex.hexToPixel(h1, HEX_SIZE, orientation);
+
+      let dir = 0;
+      if (id2.startsWith('VOID/')) {
+        dir = parseInt(id2.split('/')[1]);
+      } else {
+        const h2 = Hex.hexFromId(id2);
+        for (let i = 0; i < 6; i++) {
+          if (Hex.hexId(Hex.hexNeighbor(h1, i)) === Hex.hexId(h2)) {
+            dir = i;
+            break;
+          }
+        }
+      }
+
+      const corners = Hex.hexCorners(c1, HEX_SIZE, orientation);
+      const edgeStart = orientation === 'flat' ? (dir + 5) % 6 : (dir + 4) % 6;
+      const p1 = worldToScreen(corners[edgeStart], viewport);
+      const p2 = worldToScreen(corners[(edgeStart + 1) % 6], viewport);
+      const item: EdgeTerrainRenderItem = { edgeId, p1, p2, color };
+      if (onesided) {
+        item.onesided = true;
+        item.activeHexCenter = worldToScreen(c1, viewport);
+      }
+      edgeTerrain.push(item);
+    }
+  }
+
+  // Vertex terrain
+  const vertexTerrain: VertexTerrainRenderItem[] = [];
+  for (const feature of model.features) {
+    if (feature.geometryType !== 'vertex' || !feature.terrain) continue;
+    const color = model.terrainColor('vertex', feature.terrain);
+    for (const vertexId of feature.vertexIds) {
+      const ids = vertexId.split('^');
+      const h1 = Hex.hexFromId(ids[0]);
+      const c1 = Hex.hexToPixel(h1, HEX_SIZE, orientation);
+      const corners = Hex.hexCorners(c1, HEX_SIZE, orientation);
+      const h2Id = ids[1];
+      const h3Id = ids[2];
+
+      let cornerIdx = 0;
+      for (let i = 0; i < 6; i++) {
+        const n1 = Hex.hexId(Hex.hexNeighbor(h1, i));
+        const n2 = Hex.hexId(Hex.hexNeighbor(h1, (i + 1) % 6));
+        if ((n1 === h2Id && n2 === h3Id) || (n1 === h3Id && n2 === h2Id)) {
+          cornerIdx = i;
+          break;
+        }
+      }
+      vertexTerrain.push({
+        vertexId,
+        point: worldToScreen(corners[cornerIdx], viewport),
+        color,
+      });
+    }
+  }
+
+  // Path terrain (hex features with path: true)
+  const pathTerrain: PathTerrainRenderItem[] = [];
+  for (const feature of model.features) {
+    if (feature.geometryType !== 'hex' || !feature.terrain) continue;
+    const def = model.terrainDefs('hex').get(feature.terrain);
+    if (!def?.properties?.path) continue;
+    const color = model.terrainColor('hex', feature.terrain);
+
+    const segments = feature.segments ?? [feature.hexIds];
+    for (const segment of segments) {
+      if (segment.length < 2) continue;
+      const points = segment.map((hexId) => {
+        const cube = Hex.hexFromId(hexId);
+        const world = Hex.hexToPixel(cube, HEX_SIZE, orientation);
+        return worldToScreen(world, viewport);
+      });
+      pathTerrain.push({ points, color });
+    }
+  }
+
   const featureLabels: FeatureLabelRenderItem[] = [];
   for (const feature of model.features) {
     if (!feature.label || feature.isBase || feature.hexIds.length === 0) continue;
@@ -234,5 +344,8 @@ export function buildScene(
     vertexHighlights,
     pathLines,
     featureLabels,
+    edgeTerrain,
+    vertexTerrain,
+    pathTerrain,
   };
 }

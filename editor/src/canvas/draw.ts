@@ -71,6 +71,60 @@ export function drawScene(
     ctx.stroke();
   }
 
+  // Draw edge terrain
+  for (const edge of scene.edgeTerrain) {
+    ctx.beginPath();
+    ctx.moveTo(edge.p1.x, edge.p1.y);
+    ctx.lineTo(edge.p2.x, edge.p2.y);
+    ctx.strokeStyle = edge.color;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Onesided marker: small tick toward the active hex
+    if (edge.onesided && edge.activeHexCenter) {
+      const mx = (edge.p1.x + edge.p2.x) / 2;
+      const my = (edge.p1.y + edge.p2.y) / 2;
+      const dx = edge.activeHexCenter.x - mx;
+      const dy = edge.activeHexCenter.y - my;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len > 0) {
+        const tickLen = 6;
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx + (dx / len) * tickLen, my + (dy / len) * tickLen);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw path terrain
+  for (const path of scene.pathTerrain) {
+    if (path.points.length < 2) continue;
+    ctx.beginPath();
+    ctx.moveTo(path.points[0].x, path.points[0].y);
+    for (let i = 1; i < path.points.length; i++) {
+      ctx.lineTo(path.points[i].x, path.points[i].y);
+    }
+    ctx.strokeStyle = path.color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+
+  // Draw vertex terrain
+  for (const vtx of scene.vertexTerrain) {
+    ctx.beginPath();
+    ctx.arc(vtx.point.x, vtx.point.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = vtx.color;
+    ctx.fill();
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
   // Draw highlights
   for (const hl of scene.highlights) {
     ctx.beginPath();
