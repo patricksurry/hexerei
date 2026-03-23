@@ -46,6 +46,10 @@ export class MapModel {
 
   private _hexToFeatures: Map<string, FeatureItem[]>;
 
+  private _edgeToFeatures: Map<string, FeatureItem[]> = new Map();
+
+  private _vertexToFeatures: Map<string, FeatureItem[]> = new Map();
+
   private _yaml: string = '';
 
   private constructor(doc: HexMapDocument, mesh: HexMesh) {
@@ -101,14 +105,28 @@ export class MapModel {
     });
 
     this._hexToFeatures = new Map<string, FeatureItem[]>();
+    this._edgeToFeatures = new Map<string, FeatureItem[]>();
+    this._vertexToFeatures = new Map<string, FeatureItem[]>();
+
     const featureList = doc.getFeatures();
     this._features = featureList.map((f, idx) => {
       let hexIds: string[] = [];
+      let edgeIds: string[] = [];
+      let vertexIds: string[] = [];
+      let segments: string[][] | undefined;
+      let geometryType: 'hex' | 'edge' | 'vertex' = 'hex';
+
       if (f.at) {
         try {
           const result = meshHexPath.resolve(f.at);
+          geometryType = result.type;
+          segments = result.segments;
           if (result.type === 'hex') {
             hexIds = result.items;
+          } else if (result.type === 'edge') {
+            edgeIds = result.items;
+          } else if (result.type === 'vertex') {
+            vertexIds = result.items;
           }
         } catch (e) {
           console.warn(`MapModel: Failed to resolve feature at index ${idx}`, e);
@@ -123,18 +141,34 @@ export class MapModel {
         tags: typeof f.tags === 'string' ? f.tags.split(/\s+/).filter(Boolean) : [],
         at: typeof f.at === 'string' ? f.at : 'complex',
         isBase: f.at === '@all',
+        geometryType,
         hexIds,
+        edgeIds,
+        vertexIds,
+        segments,
         elevation: f.elevation,
         properties: f.properties,
         side: f.side,
       };
 
-      // Populate reverse index
+      // Populate reverse indexes
       for (const hid of hexIds) {
         if (!this._hexToFeatures.has(hid)) {
           this._hexToFeatures.set(hid, []);
         }
         this._hexToFeatures.get(hid)!.push(featureItem);
+      }
+      for (const eid of edgeIds) {
+        if (!this._edgeToFeatures.has(eid)) {
+          this._edgeToFeatures.set(eid, []);
+        }
+        this._edgeToFeatures.get(eid)!.push(featureItem);
+      }
+      for (const vid of vertexIds) {
+        if (!this._vertexToFeatures.has(vid)) {
+          this._vertexToFeatures.set(vid, []);
+        }
+        this._vertexToFeatures.get(vid)!.push(featureItem);
       }
 
       return featureItem;
@@ -224,6 +258,14 @@ export class MapModel {
 
   featuresAtHex(hexId: string): FeatureItem[] {
     return this._hexToFeatures.get(hexId) ?? [];
+  }
+
+  featuresAtEdge(edgeId: string): FeatureItem[] {
+    return this._edgeToFeatures.get(edgeId) ?? [];
+  }
+
+  featuresAtVertex(vertexId: string): FeatureItem[] {
+    return this._vertexToFeatures.get(vertexId) ?? [];
   }
 
   terrainColor(geometry: GeometryType, terrainString: string): string {

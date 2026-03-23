@@ -13,7 +13,11 @@ export interface FeatureItem {
   tags: string[];
   at: string;
   isBase: boolean;
+  geometryType: 'hex' | 'edge' | 'vertex';
   hexIds: string[];
+  edgeIds: string[];
+  vertexIds: string[];
+  segments?: string[][]; // from HexPathResult.segments, for path rendering
   elevation?: number;
   properties?: Record<string, unknown>;
   side?: 'both' | 'in' | 'out' | 'left' | 'right';

@@ -54,6 +54,30 @@ features:
     terrain: clear
 `;
 
+const EDGE_FEATURE_YAML = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 - 0301 - 0303 - 0103 fill"
+terrain:
+  hex:
+    clear:
+      style: { color: "#ffffff" }
+  edge:
+    river:
+      style: { color: "#0044cc" }
+  vertex:
+    bridge:
+      style: { color: "#888888" }
+features:
+  - at: "@all"
+    terrain: clear
+  - at: "0201/N 0201/NE"
+    terrain: river
+  - at: "0202.N"
+    terrain: bridge
+`;
+
 describe('MapModel', () => {
   it('should load metadata', () => {
     const model = MapModel.load(MOCK_YAML);
@@ -195,6 +219,50 @@ describe('MapModel', () => {
     it('preserves path property in properties', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
       expect(model.terrainDefs('hex').get('road')?.properties?.path).toBe(true);
+    });
+  });
+
+  describe('edge/vertex feature resolution', () => {
+    it('resolves edge features with edgeIds', () => {
+      const model = MapModel.load(EDGE_FEATURE_YAML);
+      const riverFeature = model.features.find((f) => f.terrain === 'river');
+      expect(riverFeature).toBeDefined();
+      expect(riverFeature!.geometryType).toBe('edge');
+      expect(riverFeature!.edgeIds.length).toBe(2);
+    });
+
+    it('resolves vertex features with vertexIds', () => {
+      const model = MapModel.load(EDGE_FEATURE_YAML);
+      const bridgeFeature = model.features.find((f) => f.terrain === 'bridge');
+      expect(bridgeFeature).toBeDefined();
+      expect(bridgeFeature!.geometryType).toBe('vertex');
+      expect(bridgeFeature!.vertexIds.length).toBe(1);
+    });
+
+    it('hex features have geometryType hex', () => {
+      const model = MapModel.load(EDGE_FEATURE_YAML);
+      const clearFeature = model.features[0];
+      // @ts-ignore
+      expect(clearFeature.geometryType).toBe('hex');
+      expect(clearFeature.hexIds.length).toBeGreaterThan(0);
+    });
+
+    it('populates edge reverse index', () => {
+      const model = MapModel.load(EDGE_FEATURE_YAML);
+      const riverFeature = model.features.find((f) => f.terrain === 'river');
+      const firstEdgeId = riverFeature!.edgeIds[0];
+      const features = model.featuresAtEdge(firstEdgeId);
+      expect(features.length).toBe(1);
+      expect(features[0].terrain).toBe('river');
+    });
+
+    it('populates vertex reverse index', () => {
+      const model = MapModel.load(EDGE_FEATURE_YAML);
+      const bridgeFeature = model.features.find((f) => f.terrain === 'bridge');
+      const firstVertexId = bridgeFeature!.vertexIds[0];
+      const features = model.featuresAtVertex(firstVertexId);
+      expect(features.length).toBe(1);
+      expect(features[0].terrain).toBe('bridge');
     });
   });
 });
