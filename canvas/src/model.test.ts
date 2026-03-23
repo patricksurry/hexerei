@@ -275,7 +275,6 @@ describe('MapModel', () => {
     it('hex features have geometryType hex', () => {
       const model = MapModel.load(EDGE_FEATURE_YAML);
       const clearFeature = model.features[0];
-      // @ts-ignore
       expect(clearFeature.geometryType).toBe('hex');
       expect(clearFeature.hexIds.length).toBeGreaterThan(0);
     });
@@ -335,6 +334,58 @@ describe('MapModel', () => {
       const vtx = scene.vertexTerrain[0];
       expect(vtx.point).toBeDefined();
       expect(vtx.color).toBe('#888888');
+    });
+  });
+
+  describe('Multi-geometry integration', () => {
+    it('verifies full round-trip: YAML -> model -> scene', () => {
+      const yaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 - 0303 fill"
+terrain:
+  hex:
+    clear: { style: { color: "#fff" } }
+    road: { style: { color: "#963" }, properties: { path: true } }
+  edge:
+    river: { style: { color: "#04c" } }
+  vertex:
+    bridge: { style: { color: "#888" } }
+features:
+  - at: "@all"
+    terrain: clear
+  - at: "0101 - 0201"
+    terrain: road
+  - at: "0101/NE 0201/NE"
+    terrain: river
+  - at: "0101.1"
+    terrain: bridge
+`;
+      const model = MapModel.load(yaml);
+      const viewport = { center: { x: 0, y: 0 }, zoom: 40, width: 800, height: 600 };
+      const scene = buildScene(model, viewport);
+
+      // Verify Model loaded everything
+      expect(model.terrainDefs('hex').has('road')).toBe(true);
+      expect(model.terrainDefs('edge').has('river')).toBe(true);
+      expect(model.terrainDefs('vertex').has('bridge')).toBe(true);
+
+      expect(model.features).toHaveLength(4);
+      expect(model.features[1].geometryType).toBe('hex');
+      expect(model.features[2].geometryType).toBe('edge');
+      expect(model.features[3].geometryType).toBe('vertex');
+
+      // Verify Scene has items for all three
+      expect(scene.hexagons.length).toBeGreaterThan(0);
+      expect(scene.pathTerrain).toHaveLength(1);
+      expect(scene.edgeTerrain.length).toBe(2);
+      expect(scene.vertexTerrain).toHaveLength(1);
+
+      // Verify colors
+      expect(scene.pathTerrain[0].color).toBe('#963');
+      expect(scene.edgeTerrain[0].color).toBe('#04c');
+      expect(scene.vertexTerrain[0].color).toBe('#888');
     });
   });
 });
