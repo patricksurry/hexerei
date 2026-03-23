@@ -140,6 +140,35 @@ features:
     expect(scene.featureLabels[0].text).toBe('Smolensk');
   });
 
+  it('buildScene accepts edge highlight without hexIds', () => {
+    const cube1 = Hex.offsetToCube(1, 1, 'flat-down');
+    const cube2 = Hex.offsetToCube(2, 1, 'flat-down');
+    const boundaryId = Hex.getCanonicalBoundaryId(cube1, cube2, 0);
+    const hl: SceneHighlight = {
+      type: 'edge',
+      boundaryId,
+      color: '#FF3DFF',
+      style: 'ghost',
+    };
+    const scene = buildScene(model, vp, { highlights: [hl] });
+    expect(scene.edgeHighlights).toHaveLength(1);
+  });
+
+  it('buildScene accepts vertex highlight without hexIds', () => {
+    const h1 = Hex.offsetToCube(1, 1, 'flat-down');
+    const h2 = Hex.hexNeighbor(h1, 0);
+    const h3 = Hex.hexNeighbor(h1, 1);
+    const vertexId = [Hex.hexId(h1), Hex.hexId(h2), Hex.hexId(h3)].join('^');
+    const hl: SceneHighlight = {
+      type: 'vertex',
+      vertexId,
+      color: '#FFDD00',
+      style: 'ghost',
+    };
+    const scene = buildScene(model, vp, { highlights: [hl] });
+    expect(scene.vertexHighlights).toHaveLength(1);
+  });
+
   it('dim highlight style is accepted', () => {
     const hl: SceneHighlight = {
       type: 'hex',

@@ -6,7 +6,7 @@ const HEX_SIZE = 1;
 
 export interface SceneHighlight {
   type: 'hex' | 'edge' | 'vertex';
-  hexIds: string[];
+  hexIds?: string[];
   boundaryId?: string;
   vertexId?: string;
   color: string;
@@ -143,7 +143,7 @@ export function buildScene(
 
   for (const hl of highlights) {
     if (hl.type === 'hex') {
-      for (const hexId of hl.hexIds) {
+      for (const hexId of hl.hexIds ?? []) {
         const cube = Hex.hexFromId(hexId);
         const worldCenter = Hex.hexToPixel(cube, HEX_SIZE, orientation);
         const worldCorners = Hex.hexCorners(worldCenter, HEX_SIZE, orientation);

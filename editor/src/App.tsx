@@ -18,6 +18,8 @@ import {
   highlightsForHover,
   highlightsForCursor,
   topmostFeatureAtHex,
+  topmostFeatureAtEdge,
+  topmostFeatureAtVertex,
   boundaryIdToHexPath,
   vertexIdToHexPath,
 } from '@hexmap/canvas';
@@ -494,7 +496,7 @@ export const App = () => {
             features={features}
             filteredIndices={filteredIndices}
             selectedIndices={stackSelectedIndices}
-            terrainColor={(t) => model?.terrainColor('hex', t) ?? '#888'}
+            terrainColor={(t, geo) => model?.terrainColor(geo as 'hex' | 'edge' | 'vertex', t) ?? '#888'}
             onSelect={handleSelectFeature}
             onHover={setHoverIndex}
             dispatch={dispatch}
@@ -523,6 +525,7 @@ export const App = () => {
             onSelectFeature={(idx) => handleSelectFeature([idx])}
             dispatch={dispatch}
             paintTerrainKey={paintState?.terrainKey ?? null}
+            paintGeometry={paintState?.geometry ?? null}
             onPaintActivate={(key, geometry) =>
               setPaintState(
                 key && geometry

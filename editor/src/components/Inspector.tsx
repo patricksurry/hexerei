@@ -1,5 +1,5 @@
 import { Hex, Feature, TerrainTypeDef } from '@hexmap/core';
-import { Selection, MapModel, MapCommand, TerrainDef } from '@hexmap/canvas';
+import { Selection, MapModel, MapCommand, TerrainDef, boundaryIdToHexPath, vertexIdToHexPath } from '@hexmap/canvas';
 import { useState } from 'react';
 import './Inspector.css';
 
@@ -16,10 +16,11 @@ interface InspectorProps {
   onSelectFeature?: (index: number) => void;
   dispatch?: (command: MapCommand) => void;
   paintTerrainKey?: string | null;
+  paintGeometry?: 'hex' | 'edge' | 'vertex' | null;
   onPaintActivate?: (key: string | null, geometry?: 'hex' | 'edge' | 'vertex') => void;
 }
 
-export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTerrainKey, onPaintActivate }: InspectorProps) => {
+export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTerrainKey, paintGeometry, onPaintActivate }: InspectorProps) => {
   const [expandedTerrain, setExpandedTerrain] = useState<{
     key: string;
     geometry: 'hex' | 'edge' | 'vertex';
@@ -47,7 +48,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
       <ul className="terrain-list">
         {Array.from(defs.entries()).map(([key, def]) => {
           const isExpanded = expandedTerrain?.key === key && expandedTerrain?.geometry === geometry;
-          const isPaintActive = paintTerrainKey === key; // TODO: handle geometry match in paintState
+          const isPaintActive = paintTerrainKey === key && (!paintGeometry || paintGeometry === geometry);
 
           return (
             <li

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
+import { Hex } from '@hexmap/core';
 import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
 import { Inspector } from './Inspector';
 
@@ -363,6 +364,81 @@ describe('Inspector', () => {
       expect(dispatched[0].type).toBe('setTerrainType');
       // @ts-ignore
       expect(dispatched[0].geometry).toBe('edge');
+    });
+
+    it('isPaintActive only highlights matching geometry (not same-name key in different section)', () => {
+      // If hex and edge both have a key with the same name, only the one matching
+      // the current paint geometry should be highlighted.
+      const yaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    river: { style: { color: "#0000ff" } }
+  edge:
+    river: { style: { color: "#0044cc" } }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+      const model = MapModel.load(yaml);
+      const sel: Selection = { type: 'none' };
+      render(
+        <Inspector
+          selection={sel}
+          model={model}
+          paintTerrainKey="river"
+          paintGeometry="edge"
+        />
+      );
+
+      // There should be exactly 1 paint-active row (edge's river), not 2
+      const activeRows = document.querySelectorAll('.terrain-row.paint-active');
+      expect(activeRows).toHaveLength(1);
+    });
+
+    it('edge view "Add Feature Here" dispatches addFeature with edge path', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      const cube1 = Hex.offsetToCube(1, 1, 'flat-down');
+      const cube2 = Hex.offsetToCube(2, 1, 'flat-down');
+      const boundaryId = Hex.getCanonicalBoundaryId(cube1, cube2, 0);
+      const sel: Selection = { type: 'edge', boundaryId, hexLabels: ['0101', '0201'] };
+      const dispatched: MapCommand[] = [];
+      render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+      const addBtn = screen.getByText('+ Add Feature Here');
+      fireEvent.click(addBtn);
+
+      expect(dispatched).toHaveLength(1);
+      expect(dispatched[0].type).toBe('addFeature');
+      if (dispatched[0].type === 'addFeature') {
+        // Should be a hex-path edge expression like "0101/NE"
+        expect(dispatched[0].feature.at).toMatch(/\d{4}\/[A-Z]+/);
+      }
+    });
+
+    it('vertex view "Add Feature Here" dispatches addFeature with vertex path', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      // Create a valid vertex ID from three adjacent hexes
+      const h1 = Hex.offsetToCube(1, 1, 'flat-down');
+      const h2 = Hex.hexNeighbor(h1, 0);
+      const h3 = Hex.hexNeighbor(h1, 1);
+      const vertexId = [Hex.hexId(h1), Hex.hexId(h2), Hex.hexId(h3)].join('^');
+      const sel: Selection = { type: 'vertex', vertexId };
+      const dispatched: MapCommand[] = [];
+      render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+      const addBtn = screen.getByText('+ Add Feature Here');
+      fireEvent.click(addBtn);
+
+      expect(dispatched).toHaveLength(1);
+      expect(dispatched[0].type).toBe('addFeature');
+      if (dispatched[0].type === 'addFeature') {
+        // Should be a hex-path vertex expression like "0101.0"
+        expect(dispatched[0].feature.at).toMatch(/\d{4}\.\d/);
+      }
     });
 
     it('activates paint with geometry when edge terrain chip is clicked', () => {

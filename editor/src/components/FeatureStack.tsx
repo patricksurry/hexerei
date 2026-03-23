@@ -5,7 +5,7 @@ interface FeatureStackProps {
   features: FeatureItem[];
   filteredIndices?: number[] | null; // null = no filter, [] = nothing matches
   selectedIndices?: number[];
-  terrainColor?: (terrain: string) => string;
+  terrainColor?: (terrain: string, geometry: string) => string;
   onSelect?: (indices: number[], modifier: 'none' | 'shift' | 'cmd') => void;
   onHover?: (index: number | null) => void;
   dispatch?: (command: MapCommand) => void;
@@ -20,8 +20,8 @@ export const FeatureStack = ({
   onHover,
   dispatch,
 }: FeatureStackProps) => {
-  const getTerrainColor = (terrain: string) => {
-    if (terrainColor) return terrainColor(terrain);
+  const getTerrainColor = (terrain: string, geometry: string) => {
+    if (terrainColor) return terrainColor(terrain, geometry);
     return 'var(--text-muted)';
   };
 
@@ -73,7 +73,7 @@ export const FeatureStack = ({
               {/* <div className="feature-drag-handle">⋮⋮</div> */}
               <div
                 className="feature-color-chip"
-                style={{ backgroundColor: getTerrainColor(feature.terrain) }}
+                style={{ backgroundColor: getTerrainColor(feature.terrain, feature.geometryType) }}
               />
               <div className="feature-info">
                 <div className="feature-label truncate">{label}</div>
