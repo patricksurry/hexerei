@@ -1,343 +1,171 @@
 # Multi-Geometry Terrain Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
-**Goal:** Implement full support for edge, vertex, and path terrain geometries across the editor stack, including data flow, inspector UI, and canvas rendering.
+**Goal:** Extend the editor to load, display, paint, and render edge and vertex terrain types from the RFC's `terrain.edge` and `terrain.vertex` vocabulary sections, and support hex terrain with `path: true` rendering.
 
-**Architecture:** Extend `MapModel` to handle geometry-scoped terrain keys (e.g., `edge:river`). Introduce `ComputedEdgeState`, `ComputedVertexState`, and `ComputedPathState` evaluated in document order. Update the `Inspector` to group terrain by geometry and trigger geometry-aware paint modes. Enhance `CanvasHost` to render these features in layered passes (hexes -> edges -> paths -> vertices -> labels) and support path painting.
+**Architecture:** The model layer gains geometry-scoped terrain storage (`Map<GeometryType, Map<string, TerrainDef>>`) and per-geometry reverse indices. The Inspector splits its terrain vocabulary UI into three sections (Hex, Edge, Vertex). The scene builder and renderer gain dedicated edge/vertex/path rendering passes. Paint mode gains a `geometry` field set from the palette, constraining hit-test acceptance.
 
-**Tech Stack:** React, Canvas 2D, Hexerei Core (`@hexmap/core`), Vitest.
+**Tech Stack:** TypeScript, React, Vitest, @hexmap/core (HexPath, HexMapDocument), @hexmap/canvas (MapModel, Scene, Commands)
 
----
-
-### Task 1: MapModel and Data Flow
-
-**Files:**
-
-- Modify: `packages/canvas/src/types.ts`
-- Modify: `packages/canvas/src/model.ts`
-- Test: `packages/canvas/src/model.test.ts`
-
-**Step 1: Write the failing test**
-
-```typescript
-// in model.test.ts
-import { HexMapDocument } from '@hexmap/core';
-import { MapModel } from './model.js';
-
-describe('Multi-Geometry MapModel', () => {
-  it('loads edge, vertex, and path terrain definitions', () => {
-    const yaml = `
-hexmap: "1.0"
-grid: { columns: 2, rows: 2, hex_top: flat }
-terrain:
-  edge:
-    river: { color: "#0000ff" }
-  vertex:
-    bridge: { color: "#884400" }
-  path:
-    road: { color: "#444444" }
-`;
-    const doc = new HexMapDocument(yaml);
-    const model = MapModel.fromDocument(doc);
-
-    expect(model.terrainDefs.get('edge:river')).toBeDefined();
-    expect(model.terrainDefs.get('vertex:bridge')).toBeDefined();
-    expect(model.terrainDefs.get('path:road')).toBeDefined();
-  });
-});
-```
-
-**Step 2: Run test to verify it fails**
-
-Run: `npm test packages/canvas/src/model.test.ts`
-Expected: FAIL, cannot find 'edge:river'.
-
-**Step 3: Write minimal implementation**
-
-In `types.ts`, update `TerrainDef` to include `geometry`:
-
-```typescript
-export interface TerrainDef {
-  geometry: 'hex' | 'edge' | 'vertex' | 'path';
-  key: string;
-  name: string;
-  color: string;
-  properties?: Record<string, unknown>;
-}
-```
-
-In `model.ts`, update `constructor` to load all geometries:
-
-```typescript
-// Terrain definitions
-this._terrainDefs = new Map();
-const terrainVocab = doc.getTerrain();
-
-const geometries = ['hex', 'edge', 'vertex', 'path'] as const;
-for (const geo of geometries) {
-  const vocab = terrainVocab[geo] ?? {};
-  for (const [key, def] of Object.entries(vocab)) {
-    this._terrainDefs.set(`${geo}:${key}`, {
-      geometry: geo,
-      key,
-      name: def.name ?? key,
-      color: def.style?.color ?? '#888888',
-      properties: def.properties,
-    });
-  }
-}
-```
-
-**Step 4: Run test to verify it passes**
-
-Run: `npm test packages/canvas/src/model.test.ts`
-Expected: PASS
-
-**Step 5: Commit**
-
-```bash
-git add packages/canvas/src/types.ts packages/canvas/src/model.ts packages/canvas/src/model.test.ts
-git commit -m "feat(canvas): load multi-geometry terrain definitions in MapModel"
-```
+**Design doc:** `editor/docs/plans/2026-03-22-multi-geometry-terrain-design.md`
 
 ---
 
-### Task 2: Terrain Color Resolution
+## File Structure
 
-**Files:**
+### Files to modify
 
-- Modify: `packages/canvas/src/model.ts`
-- Test: `packages/canvas/src/model.test.ts`
+| File | Responsibility | Changes |
+|------|---------------|---------|
+| `canvas/src/model.ts` | MapModel, TerrainDef, terrain loading, feature resolution | Geometry-scoped `_terrainDefs`, new `_edgeToFeatures`/`_vertexToFeatures` reverse indices, add `type`/`onesided` to TerrainDef, extend `terrainColor()` signature, extend feature resolution to handle edge/vertex results |
+| `canvas/src/types.ts` | FeatureItem, HitResult, Selection | Add `geometryType`, `edgeIds`, `vertexIds` to FeatureItem |
+| `canvas/src/scene.ts` | Scene builder | Add `EdgeTerrainRenderItem`, `VertexTerrainRenderItem`, `PathTerrainRenderItem` to Scene; build them from model's edge/vertex/path features |
+| `editor/src/canvas/draw.ts` | Canvas 2D drawing | Add draw passes for edge terrain lines, vertex terrain markers, path terrain lines |
+| `editor/src/components/Inspector.tsx` | Terrain vocabulary UI, paint activation | Split terrain list into 3 geometry sections, pass geometry to paint activation |
+| `editor/src/components/NewMapDialog.tsx` | Starter palette, YAML generation | Add edge terrain (river, cliff) and hex path terrain (road) to Standard Wargame palette |
+| `editor/src/App.tsx` | Paint state, paint click handler | Add `geometry` field to `paintState`, use it to constrain paint hits and set feature terrain lookup |
+| `editor/src/canvas/CanvasHost.tsx` | Paint hover preview | Extend ghost highlight to show edge/vertex hover in paint mode |
 
-**Step 1: Write the failing test**
+### Test files to modify
 
-```typescript
-// in model.test.ts
-it('resolves terrain colors via scoped keys', () => {
-  // Add to previous test
-  expect(model.terrainColor('edge:river')).toBe('#0000ff');
-  expect(model.terrainColor('river', 'edge')).toBe('#0000ff');
-});
-```
-
-**Step 2: Run test to verify it fails**
-
-Run: `npm test packages/canvas/src/model.test.ts`
-Expected: FAIL, `terrainColor` doesn't support scopes.
-
-**Step 3: Write minimal implementation**
-
-In `model.ts`, update `terrainColor`:
-
-```typescript
-  terrainColor(terrainString: string, geometry: 'hex' | 'edge' | 'vertex' | 'path' = 'hex'): string {
-    if (!terrainString) return '#555555';
-    const parts = terrainString.split(/\s+/);
-    const terrain = parts[parts.length - 1];
-
-    // If it's already a scoped key (e.g. edge:river), use it directly
-    const scopedKey = terrain.includes(':') ? terrain : `${geometry}:${terrain}`;
-    const def = this._terrainDefs.get(scopedKey);
-    if (def) return def.color;
-
-    if (terrain === 'unknown') return '#888888';
-
-    let hash = 0;
-    for (let i = 0; i < terrain.length; i++) {
-      hash = terrain.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const h = Math.abs(hash % 360);
-    return `hsl(${h}, 40%, 60%)`;
-  }
-```
-
-_Note: Update calls inside `model.ts` to `this.terrainColor(terrain, 'hex')` where needed._
-
-**Step 4: Run test to verify it passes**
-
-Run: `npm test packages/canvas/src/model.test.ts`
-Expected: PASS
-
-**Step 5: Commit**
-
-```bash
-git add packages/canvas/src/model.ts packages/canvas/src/model.test.ts
-git commit -m "feat(canvas): scoped terrain color resolution"
-```
+| File | Changes |
+|------|---------|
+| `canvas/src/model.test.ts` | Tests for geometry-scoped terrain loading, edge/vertex feature resolution, `terrainColor` with geometry param |
+| `editor/src/components/Inspector.test.tsx` | Tests for 3-section terrain UI, per-geometry add/delete/paint-activate |
+| `editor/src/components/NewMapDialog.test.tsx` | Tests for edge/path terrain in generated YAML |
+| `editor/src/App.test.tsx` | Tests for geometry-aware paint state |
 
 ---
 
-### Task 3: Inspector UI Terrain Sections
+## Task 1: Extend TerrainDef and geometry-scoped terrain storage in MapModel
 
 **Files:**
+- Modify: `canvas/src/model.ts:13-18` (TerrainDef interface)
+- Modify: `canvas/src/model.ts:30-80` (MapModel constructor, _terrainDefs)
+- Modify: `canvas/src/model.ts:166-168` (terrainDefs getter)
+- Modify: `canvas/src/model.ts:219-236` (terrainColor method)
+- Test: `canvas/src/model.test.ts`
 
-- Modify: `editor/src/components/Inspector.tsx`
+### Steps
 
-**Step 1: Write the minimal implementation**
-
-In `Inspector.tsx`, split the "TERRAIN VOCABULARY" rendering into sections.
-
-1. Get geometries: `const geometries = ['hex', 'edge', 'vertex', 'path'] as const;`
-2. Map over them to render 4 `<ul>` blocks, each with its own header.
-3. Filter `model.terrainDefs` by `geometry`:
-   `const defs = Array.from(model.terrainDefs.entries()).filter(([_, d]) => d.geometry === geo);`
-4. Update "+ Add Terrain Type" to take `geo` as an argument.
-5. In `setTerrainType` commands inside the `geo` loop, use `geometry: geo` instead of `'hex'`.
-6. For the "Feature Properties" view, the `Terrain` select dropdown should show all terrain definitions, perhaps with their scope prefixed or grouped by `geometry`.
-
-**Step 2: Run dev/test to verify**
-
-Run: `npm test editor/src/components/Inspector.test.tsx`
-Verify UI updates visually.
-
-**Step 3: Commit**
-
-```bash
-git add editor/src/components/Inspector.tsx
-git commit -m "feat(editor): group Inspector terrain vocab by geometry"
-```
+- [x] **Step 1: Write failing tests for geometry-scoped terrain loading**
+- [x] **Step 2: Run tests to verify they fail**
+- [x] **Step 3: Update TerrainDef interface and MapModel implementation**
+- [x] **Step 4: Fix existing terrainColor call sites to pass 'hex'**
+- [x] **Step 5: Fix existing terrainDefs call sites**
+- [x] **Step 6: Run tests to verify they pass**
+- [x] **Step 7: Run full test suite to check for regressions**
+- [x] **Step 8: Commit**
 
 ---
 
-### Task 4: Paint Mode Setup
+## Task 2: Extend FeatureItem to track geometry type and edge/vertex IDs
 
 **Files:**
+- Modify: `canvas/src/types.ts:8-20` (FeatureItem interface)
+- Modify: `canvas/src/model.ts:93-131` (feature resolution loop)
+- Test: `canvas/src/model.test.ts`
 
-- Modify: `editor/src/App.tsx`
-- Modify: `editor/src/components/Inspector.tsx`
-- Modify: `editor/src/components/StatusBar.tsx`
+### Steps
 
-**Step 1: Write the minimal implementation**
-
-In `App.tsx`:
-Change `paintState` to include `geometry: 'hex' | 'edge' | 'vertex' | 'path'`.
-
-```typescript
-const [paintState, setPaintState] = useState<{
-  terrainKey: string; // no prefix
-  geometry: 'hex' | 'edge' | 'vertex' | 'path';
-  lockedGeometry: 'hex' | 'edge' | 'vertex' | 'path' | null;
-  targetFeatureIndex: number | null;
-} | null>(null);
-```
-
-Update `handlePaintClick` to verify `hit.type === paintState.geometry` before applying (paths map to hex hits).
-For paths, append to `path:` feature arrays.
-
-In `Inspector.tsx`:
-Update `onPaintActivate?: (key: string | null, geometry: string | null) => void;`
-Pass `def.key` and `def.geometry` when clicking chips.
-
-In `StatusBar.tsx`:
-Update props to take `paintGeometry`. Display it alongside `paintTerrainKey`.
-
-**Step 2: Run test to verify**
-
-Run: `npm test editor`
-
-**Step 3: Commit**
-
-```bash
-git add editor/src/App.tsx editor/src/components/Inspector.tsx editor/src/components/StatusBar.tsx
-git commit -m "feat(editor): geometry-aware paint mode"
-```
+- [x] **Step 1: Write failing tests for edge/vertex feature resolution**
+- [x] **Step 2: Run tests to verify they fail**
+- [x] **Step 3: Add fields to FeatureItem**
+- [x] **Step 4: Update feature resolution in MapModel constructor**
+- [x] **Step 5: Run tests to verify they pass**
+- [x] **Step 6: Run full test suite**
+- [x] **Step 7: Commit**
 
 ---
 
-### Task 5: Starter Palettes
+## Task 3: Edge/vertex/path terrain rendering in Scene and Draw
 
 **Files:**
+- Modify: `canvas/src/scene.ts:50-68` (Scene interface, new render item types)
+- Modify: `canvas/src/scene.ts:70-238` (buildScene function)
+- Modify: `editor/src/canvas/draw.ts:21-240` (drawScene function)
+- Test: `canvas/src/scene.test.ts` (create if needed, or add to model.test.ts)
 
-- Modify: `editor/src/components/NewMapDialog.tsx`
+### Steps
 
-**Step 1: Write the minimal implementation**
-
-In `NewMapDialog.tsx`, extend `PALETTES['standard']`:
-Add:
-`edge: ['river', 'cliff']`
-`path: ['road']`
-
-Update the YAML generation logic to output `edge` and `path` sections.
-
-**Step 2: Run test to verify**
-
-Run: `npm test editor/src/components/NewMapDialog.test.tsx`
-
-**Step 3: Commit**
-
-```bash
-git add editor/src/components/NewMapDialog.tsx
-git commit -m "feat(editor): multi-geometry starter palette"
-```
+- [x] **Step 1: Write failing tests for scene building with edge/vertex/path terrain**
+- [x] **Step 2: Run tests to verify they fail**
+- [x] **Step 3: Add new render item types and extend Scene interface**
+- [x] **Step 4: Build edge/vertex/path terrain items in buildScene**
+- [x] **Step 5: Add draw passes in drawScene**
+- [x] **Step 6: Run tests to verify they pass**
+- [x] **Step 7: Run full test suite**
+- [x] **Step 8: Commit**
 
 ---
 
-### Task 6: Canvas Rendering Data Prep
+## Task 4: Split Inspector terrain vocabulary into 3 geometry sections
 
 **Files:**
+- Modify: `editor/src/components/Inspector.tsx:126-288` (terrain vocabulary section)
+- Test: `editor/src/components/Inspector.test.tsx`
 
-- Modify: `packages/canvas/src/scene.ts`
-- Modify: `packages/canvas/src/types.ts`
+### Steps
 
-**Step 1: Write the minimal implementation**
-
-In `types.ts` or `scene.ts`, introduce types for rendering edge, path, and vertex visuals.
-In `scene.ts` `buildScene()`, iterate `model.features`:
-
-- If `f.hexIds` is present and `geometry` is `hex`, do the normal fill.
-- If `edge` references exist in `f`, compute coordinates and store line segments.
-- If `vertex` references exist in `f`, compute coordinates and store points.
-- If `path` (hex sequence) exists in `f`, compute centers and store connected line segments.
-
-Group these into separate render lists inside `Scene`:
-
-```typescript
-export interface Scene {
-  hexes: HexGraphic[];
-  edges: LineGraphic[];
-  paths: LineGraphic[];
-  vertices: PointGraphic[];
-  labels: LabelGraphic[];
-}
-```
-
-**Step 2: Run test to verify**
-
-Run: `npm test packages/canvas/src/scene.test.ts`
-
-**Step 3: Commit**
-
-```bash
-git add packages/canvas/src/scene.ts packages/canvas/src/types.ts
-git commit -m "feat(canvas): pre-compute multi-geometry scene layers"
-```
+- [x] **Step 1: Write failing tests for geometry-sectioned terrain UI**
+- [x] **Step 2: Run tests to verify they fail**
+- [x] **Step 3: Refactor Inspector terrain section into a reusable helper**
+- [x] **Step 4: Update feature terrain dropdown to show geometry-appropriate terrain keys**
+- [x] **Step 5: Run tests to verify they pass**
+- [x] **Step 6: Run full test suite**
+- [x] **Step 7: Commit**
 
 ---
 
-### Task 7: Layered Rendering
+## Task 5: Geometry-aware paint state and click handler
 
 **Files:**
+- Modify: `editor/src/App.tsx:52-55` (paintState type)
+- Modify: `editor/src/App.tsx:260-308` (handlePaintClick)
+- Modify: `editor/src/App.tsx:516` (onPaintActivate callback)
+- Modify: `editor/src/canvas/CanvasHost.tsx:78-83` (paint hover preview)
+- Test: `editor/src/App.test.tsx`
 
-- Modify: `editor/src/canvas/draw.ts`
+### Steps
 
-**Step 1: Write the minimal implementation**
+- [x] **Step 1: Write failing tests for geometry-aware paint state**
+- [x] **Step 2: Update paintState type**
+- [x] **Step 3: Update onPaintActivate callback**
+- [x] **Step 4: Update handlePaintClick to use geometry from paintState**
+- [x] **Step 5: Update terrainColor call in App.tsx**
+- [x] **Step 6: Update CanvasHost paint hover preview**
+- [x] **Step 7: Run tests to verify they pass**
+- [x] **Step 8: Commit**
 
-In `drawScene()`, render the lists in Z-order:
+---
 
-1. `scene.hexes.forEach(drawHexFill)`
-2. `scene.edges.forEach(drawThickLine)` (Add tick marks for directed edges)
-3. `scene.paths.forEach(drawPathLine)`
-4. `scene.vertices.forEach(drawCircle)`
-5. `scene.labels.forEach(drawLabel)`
+## Task 6: Expand starter palettes with edge and path terrain
 
-**Step 2: Run test to verify**
+**Files:**
+- Modify: `editor/src/components/NewMapDialog.tsx:10-37` (TERRAIN_COLORS, PALETTES)
+- Modify: `editor/src/components/NewMapDialog.tsx:99-106` (YAML generation)
+- Test: `editor/src/components/NewMapDialog.test.tsx`
 
-Run: `npm test editor/src/canvas/draw.test.ts`
+### Steps
 
-**Step 3: Commit**
+- [x] **Step 1: Write failing tests for expanded palette**
+- [x] **Step 2: Run tests to verify they fail**
+- [x] **Step 3: Add edge and path terrain to palette definitions and YAML generation**
+- [x] **Step 4: Run tests to verify they pass**
+- [x] **Step 5: Run full test suite**
+- [x] **Step 6: Commit**
 
-```bash
-git add editor/src/canvas/draw.ts
-git commit -m "feat(editor): render multi-geometry layers in canvas"
-```
+---
+
+## Task 7: Integration test — full round-trip
+
+**Files:**
+- Test: `canvas/src/model.test.ts` (add integration test)
+
+### Steps
+
+- [x] **Step 1: Write integration test**
+- [x] **Step 2: Run the integration test**
+- [x] **Step 3: Run full test suite**
+- [x] **Step 4: Commit**
