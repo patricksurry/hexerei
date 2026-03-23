@@ -36,6 +36,24 @@ features:
     terrain: clear
 `;
 
+const MULTI_GEOM_YAML = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    clear: { style: { color: "#ffffff" } }
+    forest: { style: { color: "#00ff00" } }
+  edge:
+    river: { style: { color: "#0044cc" } }
+  vertex:
+    bridge: { style: { color: "#888888" } }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+
 describe('Inspector', () => {
   it('renders placeholder when nothing selected', () => {
     const sel: Selection = { type: 'none' };
@@ -256,7 +274,7 @@ describe('Inspector', () => {
     expect(clearChip).not.toBeNull();
     fireEvent.click(clearChip);
 
-    expect(onPaintActivate).toHaveBeenCalledWith('clear');
+    expect(onPaintActivate).toHaveBeenCalledWith('clear', 'hex');
   });
 
   it('calls onPaintActivate(null) when active terrain chip is clicked again', () => {
@@ -276,7 +294,7 @@ describe('Inspector', () => {
     expect(clearChip).not.toBeNull();
     fireEvent.click(clearChip);
 
-    expect(onPaintActivate).toHaveBeenCalledWith(null);
+    expect(onPaintActivate).toHaveBeenCalledWith(null, 'hex');
   });
 
   it('applies paint-active class to active terrain row', () => {
@@ -293,5 +311,82 @@ describe('Inspector', () => {
     const activeRow = document.querySelector('.terrain-row.paint-active');
     expect(activeRow).not.toBeNull();
     expect(activeRow!.textContent).toContain('clear');
+  });
+
+  describe('multi-geometry terrain sections', () => {
+    it('shows section headers for Hex, Edge, Vertex', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      const sel: Selection = { type: 'none' };
+      render(<Inspector selection={sel} model={model} />);
+
+      expect(screen.getByText('HEX TERRAIN')).toBeDefined();
+      expect(screen.getByText('EDGE TERRAIN')).toBeDefined();
+      expect(screen.getByText('VERTEX TERRAIN')).toBeDefined();
+    });
+
+    it('shows edge terrain types under Edge section', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      const sel: Selection = { type: 'none' };
+      render(<Inspector selection={sel} model={model} />);
+      expect(screen.getByText('river')).toBeDefined();
+    });
+
+    it('dispatches deleteTerrainType with correct geometry for edge terrain', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      const sel: Selection = { type: 'none' };
+      const dispatched: MapCommand[] = [];
+      render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+      const riverRow = screen.getByText('river').closest('.terrain-row');
+      const deleteBtn = within(riverRow as HTMLElement).getByRole('button', { name: /delete terrain/i });
+      fireEvent.click(deleteBtn);
+
+      expect(dispatched).toHaveLength(1);
+      expect(dispatched[0]).toEqual({
+        type: 'deleteTerrainType',
+        geometry: 'edge',
+        key: 'river',
+      });
+    });
+
+    it('dispatches add terrain with correct geometry for edge section', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      const sel: Selection = { type: 'none' };
+      const dispatched: MapCommand[] = [];
+      render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+      // Find the "+ Add Edge Terrain" button
+      const addBtn = screen.getByText('+ Add Edge Terrain');
+      fireEvent.click(addBtn);
+
+      expect(dispatched).toHaveLength(1);
+      expect(dispatched[0].type).toBe('setTerrainType');
+      // @ts-ignore
+      expect(dispatched[0].geometry).toBe('edge');
+    });
+
+    it('activates paint with geometry when edge terrain chip is clicked', () => {
+      const model = MapModel.load(MULTI_GEOM_YAML);
+      const sel: Selection = { type: 'none' };
+      let paintKey: string | null = null;
+      let paintGeometry: string | null = null;
+      render(
+        <Inspector
+          selection={sel}
+          model={model}
+          onPaintActivate={(key, geometry) => {
+            paintKey = key;
+            paintGeometry = (geometry as any) ?? null;
+          }}
+        />
+      );
+
+      const riverRow = screen.getByText('river').closest('.terrain-row');
+      const chip = (riverRow as HTMLElement).querySelector('.terrain-color-chip');
+      fireEvent.click(chip!);
+
+      expect(paintKey).toBe('river');
+      expect(paintGeometry).toBe('edge');
+    });
   });
 });
