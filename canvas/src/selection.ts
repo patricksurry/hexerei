@@ -100,7 +100,17 @@ export function selectFeature(
 export function topmostFeatureAtHex(hexId: string, model: MapModel): number | null {
   const features = model.featuresAtHex(hexId);
   const nonBase = features.filter((f) => !f.isBase);
-  return nonBase.length > 0 ? nonBase[0].index : null;
+  return nonBase.length > 0 ? nonBase[nonBase.length - 1].index : null;
+}
+
+export function topmostFeatureAtEdge(boundaryId: string, model: MapModel): number | null {
+  const features = model.featuresAtEdge(boundaryId);
+  return features.length > 0 ? features[features.length - 1].index : null;
+}
+
+export function topmostFeatureAtVertex(vertexId: string, model: MapModel): number | null {
+  const features = model.featuresAtVertex(vertexId);
+  return features.length > 0 ? features[features.length - 1].index : null;
 }
 
 export function highlightsForSelection(selection: Selection, model: MapModel): SceneHighlight[] {

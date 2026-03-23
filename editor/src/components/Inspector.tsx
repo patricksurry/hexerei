@@ -558,40 +558,111 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     );
   };
 
-  const renderEdge = (boundaryId: string, hexLabels: [string, string | null]) => (
-    <div className="inspector-content">
-      <section className="inspector-section">
-        <h3
-          className="inspector-header"
-          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-        >
-          BOUNDARY
-        </h3>
-        <div className="inspector-row">
-          <label>ID</label>
-          <span className="font-mono text-xs">{boundaryId}</span>
+  const renderEdge = (boundaryId: string, hexLabels: [string, string | null]) => {
+    const edgeFeatures = model.featuresAtEdge(boundaryId);
+    const topmost = edgeFeatures.length > 0 ? edgeFeatures[edgeFeatures.length - 1] : null;
+    const terrain = topmost?.terrain ?? 'none';
+    const color = model.terrainColor('edge', terrain);
+
+    return (
+      <div className="inspector-content">
+        <section className="inspector-section">
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            BOUNDARY
+          </h3>
+          <div className="inspector-row">
+            <label>ID</label>
+            <span className="font-mono text-xs">{boundaryId}</span>
+          </div>
+        </section>
+        <section className="inspector-section">
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            TERRAIN
+          </h3>
+          <div className="inspector-row">
+            <label>Name</label>
+            <span>{terrain}</span>
+          </div>
+          <div className="inspector-row">
+            <label>Color</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  background: color,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 0 4px rgba(0,0,0,0.5)',
+                }}
+              />
+              <span className="font-mono">{color}</span>
+            </div>
+          </div>
+        </section>
+        <section className="inspector-section">
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            CONTRIBUTING FEATURES
+          </h3>
+          <ul className="inspector-list">
+            {edgeFeatures.map((f) => (
+              <li
+                key={f.index}
+                className="inspector-list-item clickable"
+                onClick={() => onSelectFeature?.(f.index)}
+              >
+                {f.label || f.terrain}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section className="inspector-section">
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            ADJACENT HEXES
+          </h3>
+          <div className="inspector-row">
+            <label>Hex A</label>
+            <span className="font-mono">{hexLabels[0]}</span>
+          </div>
+          <div className="inspector-row">
+            <label>Hex B</label>
+            <span className="font-mono">{hexLabels[1] || 'VOID'}</span>
+          </div>
+        </section>
+        <div className="inspector-actions">
+          <button
+            className="btn-primary"
+            onClick={() => {
+              dispatch?.({
+                type: 'addFeature',
+                feature: { at: boundaryIdToHexPath(boundaryId, model) },
+              });
+            }}
+          >
+            + Add Feature Here
+          </button>
         </div>
-      </section>
-      <section className="inspector-section">
-        <h3
-          className="inspector-header"
-          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-        >
-          ADJACENT HEXES
-        </h3>
-        <div className="inspector-row">
-          <label>Hex A</label>
-          <span className="font-mono">{hexLabels[0]}</span>
-        </div>
-        <div className="inspector-row">
-          <label>Hex B</label>
-          <span className="font-mono">{hexLabels[1] || 'VOID'}</span>
-        </div>
-      </section>
-    </div>
-  );
+      </div>
+    );
+  };
 
   const renderVertex = (vertexId: string) => {
+    const vertexFeatures = model.featuresAtVertex(vertexId);
+    const topmost = vertexFeatures.length > 0 ? vertexFeatures[vertexFeatures.length - 1] : null;
+    const terrain = topmost?.terrain ?? 'none';
+    const color = model.terrainColor('vertex', terrain);
+
     const meetingHexes = vertexId
       .split('^')
       .map((id) =>
@@ -622,6 +693,52 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             className="inspector-header"
             style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
           >
+            TERRAIN
+          </h3>
+          <div className="inspector-row">
+            <label>Name</label>
+            <span>{terrain}</span>
+          </div>
+          <div className="inspector-row">
+            <label>Color</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  background: color,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 0 4px rgba(0,0,0,0.5)',
+                }}
+              />
+              <span className="font-mono">{color}</span>
+            </div>
+          </div>
+        </section>
+        <section className="inspector-section">
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
+            CONTRIBUTING FEATURES
+          </h3>
+          <ul className="inspector-list">
+            {vertexFeatures.map((f) => (
+              <li
+                key={f.index}
+                className="inspector-list-item clickable"
+                onClick={() => onSelectFeature?.(f.index)}
+              >
+                {f.label || f.terrain}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section className="inspector-section">
+          <h3
+            className="inspector-header"
+            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
+          >
             MEETING HEXES
           </h3>
           <ul className="inspector-list">
@@ -632,6 +749,19 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             ))}
           </ul>
         </section>
+        <div className="inspector-actions">
+          <button
+            className="btn-primary"
+            onClick={() => {
+              dispatch?.({
+                type: 'addFeature',
+                feature: { at: vertexIdToHexPath(vertexId, model) },
+              });
+            }}
+          >
+            + Add Feature Here
+          </button>
+        </div>
       </div>
     );
   };

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Hex } from '@hexmap/core';
-import { boundaryIdToHexPath, vertexIdToHexPath } from './selection.js';
+import { boundaryIdToHexPath, vertexIdToHexPath, topmostFeatureAtEdge, topmostFeatureAtVertex } from './selection.js';
 import { MapModel } from './model.js';
 
 const YAML = `
@@ -44,5 +44,39 @@ describe('Selection Helpers', () => {
     const vid = Hex.getCanonicalVertexId(h1, 1);
     const result = vertexIdToHexPath(vid, model);
     expect(result).toBe('0101.1');
+  });
+
+  describe('Feature hit detection', () => {
+    const FEATURE_YAML = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex: { clear: { style: { color: "#fff" } } }
+  edge: { river: { style: { color: "#00f" } } }
+  vertex: { bridge: { style: { color: "#888" } } }
+features:
+  - at: "0101/NE"
+    terrain: river
+  - at: "0101.1"
+    terrain: bridge
+`;
+    const model = MapModel.load(FEATURE_YAML);
+
+    it('topmostFeatureAtEdge finds the feature index', () => {
+      const h1 = Hex.offsetToCube(1, 1, 'flat-down');
+      const h2 = Hex.offsetToCube(2, 1, 'flat-down');
+      const bid = Hex.getCanonicalBoundaryId(h1, h2, 0);
+      const index = topmostFeatureAtEdge(bid, model);
+      expect(index).toBe(0);
+    });
+
+    it('topmostFeatureAtVertex finds the feature index', () => {
+      const h1 = Hex.offsetToCube(1, 1, 'flat-down');
+      const vid = Hex.getCanonicalVertexId(h1, 1);
+      const index = topmostFeatureAtVertex(vid, model);
+      expect(index).toBe(1);
+    });
   });
 });

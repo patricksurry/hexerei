@@ -308,17 +308,32 @@ export const App = () => {
       return;
     }
 
-    if (result.type === 'hex') {
-      setSelection(selectHex(result.hexId, result.label));
-      setCommandValue(result.label);
-    }
-    if (result.type === 'edge') {
-      setSelection(selectEdge(result.boundaryId, result.hexLabels));
-      if (model) setCommandValue(boundaryIdToHexPath(result.boundaryId, model));
-    }
-    if (result.type === 'vertex') {
-      setSelection(selectVertex(result.vertexId));
-      if (model) setCommandValue(vertexIdToHexPath(result.vertexId, model));
+    if (model) {
+      if (result.type === 'hex') {
+        const featureIdx = topmostFeatureAtHex(result.hexId, model);
+        if (featureIdx !== null) {
+          handleSelectFeature([featureIdx]);
+          return;
+        }
+        setSelection(selectHex(result.hexId, result.label));
+        setCommandValue(result.label);
+      } else if (result.type === 'edge') {
+        const featureIdx = topmostFeatureAtEdge(result.boundaryId, model);
+        if (featureIdx !== null) {
+          handleSelectFeature([featureIdx]);
+          return;
+        }
+        setSelection(selectEdge(result.boundaryId, result.hexLabels));
+        setCommandValue(boundaryIdToHexPath(result.boundaryId, model));
+      } else if (result.type === 'vertex') {
+        const featureIdx = topmostFeatureAtVertex(result.vertexId, model);
+        if (featureIdx !== null) {
+          handleSelectFeature([featureIdx]);
+          return;
+        }
+        setSelection(selectVertex(result.vertexId));
+        setCommandValue(vertexIdToHexPath(result.vertexId, model));
+      }
     }
   };
 
