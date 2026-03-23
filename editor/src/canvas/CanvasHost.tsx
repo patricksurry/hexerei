@@ -28,11 +28,27 @@ export interface CanvasHostProps {
   onNavigate?: (direction: string) => void;
   paintTerrainKey?: string | null;
   paintTerrainColor?: string | null;
+  paintGeometry?: 'hex' | 'edge' | 'vertex' | null;
   onPaintClick?: (hit: HitResult, shiftKey: boolean) => void;
 }
 
 export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
-  ({ model, highlights, segmentPath, onZoomChange, onHitTest, onCursorHex, onNavigate, paintTerrainKey, paintTerrainColor, onPaintClick }, ref) => {
+  (
+    {
+      model,
+      highlights,
+      segmentPath,
+      onZoomChange,
+      onHitTest,
+      onCursorHex,
+      onNavigate,
+      paintTerrainKey,
+      paintTerrainColor,
+      paintGeometry,
+      onPaintClick,
+    },
+    ref
+  ) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -74,11 +90,33 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       };
 
       const sceneHighlights = [...(highlights || [])];
-      
+
       if (paintTerrainKey && paintTerrainColor && lastMouse.current) {
         const hit = hitTest(lastMouse.current, vp, model, { includeOffBoard: true });
-        if (hit.type === 'hex') {
-          sceneHighlights.push({ type: 'hex', hexIds: [hit.hexId], color: paintTerrainColor, style: 'ghost' });
+        // Only show ghost preview if it matches the current paint geometry
+        if (hit.type === paintGeometry) {
+          if (hit.type === 'hex') {
+            sceneHighlights.push({
+              type: 'hex',
+              hexIds: [hit.hexId],
+              color: paintTerrainColor,
+              style: 'ghost',
+            });
+          } else if (hit.type === 'edge') {
+            sceneHighlights.push({
+              type: 'edge',
+              boundaryId: hit.boundaryId,
+              color: paintTerrainColor,
+              style: 'ghost',
+            });
+          } else if (hit.type === 'vertex') {
+            sceneHighlights.push({
+              type: 'vertex',
+              vertexId: hit.vertexId,
+              color: paintTerrainColor,
+              style: 'ghost',
+            });
+          }
         }
       }
 

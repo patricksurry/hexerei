@@ -51,7 +51,7 @@ export const App = () => {
   const [showNewMapDialog, setShowNewMapDialog] = useState(false);
   const [paintState, setPaintState] = useState<{
     terrainKey: string;
-    lockedGeometry: 'hex' | 'edge' | 'vertex' | null;
+    geometry: 'hex' | 'edge' | 'vertex';
     targetFeatureIndex: number | null;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -259,17 +259,10 @@ export const App = () => {
 
   const handlePaintClick = (hit: HitResult, shiftKey: boolean) => {
     if (!paintState || !model || hit.type === 'none') return;
-    
-    // Geometry lock check
-    if (paintState.lockedGeometry && paintState.lockedGeometry !== hit.type) {
-      // In a real app we'd flash an error on the status bar
-      return;
-    }
 
-    // Lock geometry on first click
-    const newLockedGeometry = paintState.lockedGeometry || hit.type;
-    if (!paintState.lockedGeometry) {
-      setPaintState({ ...paintState, lockedGeometry: newLockedGeometry });
+    // Geometry lock check: MUST match paintState.geometry
+    if (hit.type !== paintState.geometry) {
+      return;
     }
 
     // Build token
@@ -282,11 +275,12 @@ export const App = () => {
 
     // Find or create feature
     let targetIndex = paintState.targetFeatureIndex;
-    
+
     if (targetIndex === null) {
       // Search from top to bottom
       for (let i = model.features.length - 1; i >= 0; i--) {
-        if (model.features[i].terrain === paintState.terrainKey) {
+        const f = model.features[i];
+        if (f.terrain === paintState.terrainKey && f.geometryType === paintState.geometry) {
           targetIndex = i;
           break;
         }
@@ -298,13 +292,13 @@ export const App = () => {
       const newAt = feature.at ? `${feature.at} ${token}` : token;
       dispatch({ type: 'updateFeature', index: targetIndex, changes: { at: newAt } });
       if (paintState.targetFeatureIndex !== targetIndex) {
-        setPaintState({ ...paintState, lockedGeometry: newLockedGeometry, targetFeatureIndex: targetIndex });
+        setPaintState({ ...paintState, targetFeatureIndex: targetIndex });
       }
     } else {
       // Create new feature
       dispatch({ type: 'addFeature', feature: { at: token, terrain: paintState.terrainKey } });
       // The new feature will be at model.features.length
-      setPaintState({ ...paintState, lockedGeometry: newLockedGeometry, targetFeatureIndex: model.features.length });
+      setPaintState({ ...paintState, targetFeatureIndex: model.features.length });
     }
   };
 
@@ -502,7 +496,8 @@ export const App = () => {
             highlights={highlights}
             segmentPath={preview?.segmentPath ?? []}
             paintTerrainKey={paintState?.terrainKey ?? null}
-            paintTerrainColor={paintState ? model?.terrainColor('hex', paintState.terrainKey) : null}
+            paintTerrainColor={paintState ? model?.terrainColor(paintState.geometry, paintState.terrainKey) : null}
+            paintGeometry={paintState?.geometry ?? null}
             onPaintClick={handlePaintClick}
           />
         }
@@ -513,7 +508,13 @@ export const App = () => {
             onSelectFeature={(idx) => handleSelectFeature([idx])}
             dispatch={dispatch}
             paintTerrainKey={paintState?.terrainKey ?? null}
-            onPaintActivate={(key) => setPaintState(key ? { terrainKey: key, lockedGeometry: null, targetFeatureIndex: null } : null)}
+            onPaintActivate={(key, geometry) =>
+              setPaintState(
+                key && geometry
+                  ? { terrainKey: key, geometry, targetFeatureIndex: null }
+                  : null
+              )
+            }
           />
         }
         statusBar={
@@ -528,7 +529,7 @@ export const App = () => {
             mapTitle={mapTitle}
             dirty={history?.isDirty ?? false}
             paintTerrainKey={paintState?.terrainKey ?? null}
-            paintTerrainColor={paintState ? model?.terrainColor('hex', paintState.terrainKey) : null}
+            paintTerrainColor={paintState ? model?.terrainColor(paintState.geometry, paintState.terrainKey) : null}
           />
         }
       />
