@@ -1,7 +1,5 @@
 # Authoring From Scratch (New Map Flow) Design
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Provide a frictionless workflow for users to create a new hex map from a blank slate, define its initial bounds and terrain vocabulary, and paint terrain directly onto the canvas. This replaces the hard-coded loading of "Battle for Moscow" and fixes the "mocked" viewport centering math.
 
 **Architecture:** This flow relies entirely on the existing `MapModel`, `CommandHistory`, and `MapCommand` systems. The UI acts as a smart translation layer that generates standard HexPath (`layout.all` and `features.at`) without altering the underlying file format.
@@ -59,30 +57,46 @@ Currently, the `FeatureStack` component renders the first item in the document's
 
 ---
 
-## 3. Paint Mode vs. Select Mode
+## 3. Paint Mode (HexPath-Native Authoring)
 
-This is the core authoring interaction unlock.
-
-### State Management
-- Introduce a `paintTerrainKey` state variable (likely in `App.tsx` or a dedicated context).
-- **Select Mode (Default):** `paintTerrainKey` is `null`. The cursor is a pointer. Clicking hexes selects them and updates the Inspector.
-- **Paint Mode:** `paintTerrainKey` contains a valid terrain key string (e.g., `'forest'`).
+This is the core authoring interaction unlock. Rather than a pixel-brush metaphor, paint mode builds a **HexPath expression** interactively. Each gesture appends tokens to the active feature's `at` field. The HexPath parser handles all path resolution — the editor never duplicates shortest-path logic.
 
 ### Activation & UI
-- Clicking a terrain chip in the Inspector's "TERRAIN VOCABULARY" list sets `paintTerrainKey`.
+- Clicking a terrain chip in the Inspector's "TERRAIN VOCABULARY" list enters paint mode for that terrain type.
 - The active terrain chip receives a heavy border/highlight.
-- The canvas cursor changes to a brush icon (or `crosshair`).
-- Pressing `Escape`, clicking the active chip again, or clicking elsewhere in the Inspector (like a feature layer) sets `paintTerrainKey` to `null`, returning to Select Mode.
+- The canvas cursor changes to `crosshair`.
+- Pressing `Escape` or clicking the active chip again returns to Select Mode.
 
-### Canvas Interaction (`CanvasHost.tsx`)
-- **Hover:** When in Paint Mode, hovering over a hex highlights it with the color of `paintTerrainKey`.
-- **Click & Drag (Brushing):**
-  - Implement a dragging state `isPainting`.
-  - On mouse down / mouse move over new hexes:
-    - Locate the top-most unlocked feature that uses `paintTerrainKey`. If none exists, create a new one via an `addFeature` command.
-    - Append the hovered hex ID to that feature's `at` path.
-  - **Batching:** To ensure `Undo` works predictably, all hexes painted during a single `mousedown -> mousemove -> mouseup` drag gesture should ideally be batched into a single `MapCommand` operation, or the history stack needs to group them.
-- **Eraser Mode:** If the user holds `Alt` / `Option` while clicking or dragging in Paint Mode, it acts as an eraser. It finds the top-most feature under the cursor matching the active terrain and removes that hex ID from its `at` path (deleting the feature if the path becomes empty).
+### Geometry Type Locking
+- The first click sets the geometry type (hex, edge, or vertex) based on what the hit-test returns.
+- Subsequent clicks must match the locked type. Mismatched clicks show a brief error hint (e.g., status bar message "Expected edge, got hex") and are ignored.
+- Exiting paint mode resets the geometry lock.
+
+### Click Interactions
+
+| Gesture | HexPath Token Appended | Meaning |
+|---|---|---|
+| **Click** | ` hexId` (or edge/vertex ID) | Jump — adds a discrete atom |
+| **Shift-click** | ` - hexId` | Standard connect — shortest path from cursor |
+
+### Post-Selection Modifiers
+Applied to the *last* connection in the path, after viewing the rendered result:
+- **Flip** — toggles last `-` to `~` or vice versa (key TBD, future)
+- **Fill** — appends `fill` to close and flood the boundary (future)
+- **Close** — appends `close` to connect back to segment start (future)
+
+### Off-Board Hex Clicking
+The existing `hitTest` already detects edges and vertices on the map boundary (adjacent to at least one on-map hex). However, hex centers outside `layout.all` return `{ type: 'none' }`. For paint mode, extend hit-testing to return hex hits for the **one-ring neighbors** of the map boundary — hexes not in `layout.all` but adjacent to at least one hex that is. This enables roads/rivers to extend off the map edge through the correct hexside.
+
+### Canvas Interaction
+- **Hover:** When in paint mode, hovering over a valid target highlights it with the color of the active terrain.
+- **Click:** Dispatches `updateFeature` to append the atom to the feature's `at` path. If no feature exists for the active terrain, the first click dispatches `addFeature` instead.
+- **Command Mechanics:** Each click is one atomic `updateFeature` (or `addFeature`) command — one undo step per click, no batching needed.
+
+### What's NOT in MVP
+- Drag-to-paint (brushing)
+- Eraser / `exclude` mode
+- Fill, close, and flip post-selection modifiers (architecture supports adding them later)
 
 ---
 

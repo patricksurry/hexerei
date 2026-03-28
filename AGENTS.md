@@ -16,6 +16,13 @@ The project adheres to a strict TDD workflow for all new features and bug fixes:
 - **Validation:** A change is only considered "complete" once it passes all unit and integration tests.
 4. **Hygiene:** Do **not** 'fix' tests by suppressing errors or warnings, or by changing the test.  Resolve the underlying issue.  This might require additional planning or effort.
 
+## 3. HexPath Mutation Pattern
+All HexPath string construction must use `resolve() -> modify segments -> serialize()`.
+See `core/src/hexpath/hex-path.ts` for the API and JSDoc.
+- **NEVER** build HexPath strings via string concatenation or regex.
+- **Always** parse existing strings into structured segments before making modifications.
+- **Canonicalization:** The `serialize()` method ensures consistent spacing and separators.
+
 # Interaction Protocol
 - **Inquiries:** Requests for analysis or advice. Agents should respond with research and a proposed strategy but **must not** modify files.
 - **Directives:** Explicit instructions to perform a task. Agents should follow the **Plan -> Act -> Validate** cycle.
