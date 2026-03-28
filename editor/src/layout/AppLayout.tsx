@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import './AppLayout.css';
 
 interface AppLayoutProps {
@@ -21,12 +21,9 @@ export const AppLayout = ({
   rightPanelVisible = true,
 }: AppLayoutProps) => (
   <div className="app-layout">
-    <header role="banner" className="layout-header">
-      {commandBar}
-    </header>
+    <header className="layout-header">{commandBar}</header>
     <div className="layout-body">
       <aside
-        role="complementary"
         aria-label="Features"
         className={`layout-panel layout-panel-left ${!leftPanelVisible ? 'collapsed' : ''}`}
         aria-hidden={!leftPanelVisible}
@@ -35,7 +32,6 @@ export const AppLayout = ({
       </aside>
       <main className="layout-canvas">{canvas}</main>
       <aside
-        role="complementary"
         aria-label="Inspector"
         className={`layout-panel layout-panel-right ${!rightPanelVisible ? 'collapsed' : ''}`}
         aria-hidden={!rightPanelVisible}

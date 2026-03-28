@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, test } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { type MapCommand, MapModel, type Selection } from '@hexmap/canvas';
 import { Hex } from '@hexmap/core';
-import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it, test, vi } from 'vitest';
 import { Inspector } from './Inspector';
 
 const MOCK_YAML = `
@@ -262,13 +262,7 @@ describe('Inspector', () => {
     const model = MapModel.load(MOCK_YAML);
     const sel: Selection = { type: 'none' };
     const onPaintActivate = vi.fn();
-    render(
-      <Inspector
-        selection={sel}
-        model={model}
-        onPaintActivate={onPaintActivate}
-      />
-    );
+    render(<Inspector selection={sel} model={model} onPaintActivate={onPaintActivate} />);
 
     const clearChip = document.querySelector('.terrain-chip') as HTMLElement;
     expect(clearChip).not.toBeNull();
@@ -300,17 +294,11 @@ describe('Inspector', () => {
   it('applies paint-active class to active terrain row', () => {
     const model = MapModel.load(MOCK_YAML);
     const sel: Selection = { type: 'none' };
-    render(
-      <Inspector
-        selection={sel}
-        model={model}
-        paintTerrainKey="clear"
-      />
-    );
+    render(<Inspector selection={sel} model={model} paintTerrainKey="clear" />);
 
     const activeRow = document.querySelector('.terrain-row.paint-active');
     expect(activeRow).not.toBeNull();
-    expect(activeRow!.textContent).toContain('clear');
+    expect(activeRow?.textContent).toContain('clear');
   });
 
   describe('multi-geometry terrain sections', () => {
@@ -320,10 +308,10 @@ describe('Inspector', () => {
       render(<Inspector selection={sel} model={model} />);
 
       expect(screen.getByText('HEX TERRAIN')).toBeDefined();
-      
+
       fireEvent.click(screen.getByText('edge'));
       expect(screen.getByText('EDGE TERRAIN')).toBeDefined();
-      
+
       fireEvent.click(screen.getByText('vertex'));
       expect(screen.getByText('VERTEX TERRAIN')).toBeDefined();
     });
@@ -332,7 +320,7 @@ describe('Inspector', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
       const sel: Selection = { type: 'none' };
       render(<Inspector selection={sel} model={model} />);
-      
+
       fireEvent.click(screen.getByText('edge'));
       expect(screen.getByText('river')).toBeDefined();
     });
@@ -345,7 +333,9 @@ describe('Inspector', () => {
 
       fireEvent.click(screen.getByText('edge'));
       const riverRow = screen.getByText('river').closest('.terrain-row');
-      const deleteBtn = within(riverRow as HTMLElement).getByRole('button', { name: /delete terrain/i });
+      const deleteBtn = within(riverRow as HTMLElement).getByRole('button', {
+        name: /delete terrain/i,
+      });
       fireEvent.click(deleteBtn);
 
       expect(dispatched).toHaveLength(1);
@@ -368,7 +358,7 @@ describe('Inspector', () => {
 
       expect(dispatched).toHaveLength(1);
       expect(dispatched[0].type).toBe('setTerrainType');
-      // @ts-ignore
+      // @ts-expect-error
       expect(dispatched[0].geometry).toBe('edge');
     });
 
@@ -390,12 +380,7 @@ features:
       const model = MapModel.load(yaml);
       const sel: Selection = { type: 'none' };
       render(
-        <Inspector
-          selection={sel}
-          model={model}
-          paintTerrainKey="river"
-          paintGeometry="edge"
-        />
+        <Inspector selection={sel} model={model} paintTerrainKey="river" paintGeometry="edge" />
       );
 
       fireEvent.click(screen.getByText('edge'));

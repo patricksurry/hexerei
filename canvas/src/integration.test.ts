@@ -1,8 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import { HexMapDocument } from '@hexmap/core';
+import { describe, expect, it } from 'vitest';
 import { CommandHistory } from './history.js';
 import { MapModel } from './model.js';
-import type { MapCommand } from './command.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"

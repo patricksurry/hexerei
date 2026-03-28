@@ -1,5 +1,5 @@
+import { Hex, type HexArea, type MeshMap } from '@hexmap/core';
 import * as d3 from 'd3';
-import { MeshMap, HexArea, Hex } from '@hexmap/core';
 
 export interface RendererConfig {
   element: HTMLElement;

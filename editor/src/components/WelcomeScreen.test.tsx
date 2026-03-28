@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { expect, test, vi } from 'vitest';
 import { WelcomeScreen } from './WelcomeScreen';
-import { vi, test, expect } from 'vitest';
 
 test('renders create and open buttons', () => {
   const onNew = vi.fn();

@@ -1,4 +1,4 @@
-import { describe, it, expect, test } from 'vitest';
+import { describe, expect, it, test } from 'vitest';
 import { HexMapDocument } from './document.js';
 import type { Feature } from './types.js';
 
@@ -167,7 +167,7 @@ describe('HexMapDocument features mutation', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     // Should not throw
     doc.deleteTerrainType('hex', 'nonexistent');
-    expect(doc.getTerrain().hex!.clear).toBeDefined();
+    expect(doc.getTerrain().hex?.clear).toBeDefined();
   });
 
   test('updateFeature with undefined value deletes the key', () => {
@@ -184,22 +184,22 @@ describe('HexMapDocument terrain mutation', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     const terrain = doc.getTerrain();
     expect(terrain.hex).toBeDefined();
-    expect(terrain.hex!.clear).toBeDefined();
-    expect(terrain.hex!.clear.style?.color).toBe('#ffffff');
+    expect(terrain.hex?.clear).toBeDefined();
+    expect(terrain.hex?.clear.style?.color).toBe('#ffffff');
   });
 
   test('setTerrainType adds a new terrain definition', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     doc.setTerrainType('hex', 'swamp', { style: { color: '#336633' } });
     const terrain = doc.getTerrain();
-    expect(terrain.hex!.swamp.style?.color).toBe('#336633');
+    expect(terrain.hex?.swamp.style?.color).toBe('#336633');
   });
 
   test('deleteTerrainType removes a terrain definition', () => {
     const doc = new HexMapDocument(SAMPLE_YAML_WITH_FEATURES);
     doc.deleteTerrainType('hex', 'forest');
     const terrain = doc.getTerrain();
-    expect(terrain.hex!.forest).toBeUndefined();
-    expect(terrain.hex!.clear).toBeDefined();
+    expect(terrain.hex?.forest).toBeUndefined();
+    expect(terrain.hex?.clear).toBeDefined();
   });
 });

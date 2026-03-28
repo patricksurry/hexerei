@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
 import { Hex } from '@hexmap/core';
-import { MapModel } from './model.js';
-import { ViewportState, worldToScreen } from './viewport.js';
+import { describe, expect, it } from 'vitest';
 import { hitTest } from './hit-test.js';
-import { buildScene, SceneHighlight } from './scene.js';
+import { MapModel } from './model.js';
+import { buildScene, type SceneHighlight } from './scene.js';
+import { type ViewportState, worldToScreen } from './viewport.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -174,7 +174,7 @@ features:
       type: 'hex',
       hexIds: [Hex.hexId(Hex.offsetToCube(1, 1, 'flat-down'))],
       color: '#000000',
-      style: 'dim'
+      style: 'dim',
     };
     const scene = buildScene(model, vp, { highlights: [hl] });
     expect(scene.highlights).toHaveLength(1);

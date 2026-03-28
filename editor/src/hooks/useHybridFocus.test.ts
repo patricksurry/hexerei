@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { vi, test, expect, afterEach } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { useHybridFocus } from './useHybridFocus';
 
 afterEach(() => {

@@ -1,6 +1,6 @@
-import { MeshMap, HexArea, Connection, Edge } from './types.js';
-import * as Hex from '../math/hex-math.js';
 import type { HexMapLayout } from '../format/types.js';
+import * as Hex from '../math/hex-math.js';
+import type { Connection, Edge, HexArea, MeshMap } from './types.js';
 
 export interface HexMeshConfig {
   orientation?: Hex.Orientation;
@@ -90,7 +90,7 @@ export class HexMesh implements MeshMap {
     const fromHex = typeof fromOrId === 'string' ? this.getHex(fromOrId) : fromOrId;
     const toHex = typeof toOrId === 'string' ? this.getHex(toOrId) : toOrId;
 
-    if (!fromHex || !toHex) return undefined;
+    if (!(fromHex && toHex)) return undefined;
 
     const fromCube = Hex.hexFromId(fromHex.id);
     const toCube = Hex.hexFromId(toHex.id);

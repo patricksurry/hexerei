@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { HexMapLoader } from '@hexmap/core';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import * as d3 from 'd3';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { HexRenderer } from './index';
 
 describe('HexRenderer (Headless)', () => {
@@ -22,7 +21,7 @@ describe('HexRenderer (Headless)', () => {
     const mapSource = readFileSync(mapPath, 'utf-8');
     const mesh = HexMapLoader.load(mapSource);
 
-    const renderer = new HexRenderer(mesh, {
+    const _renderer = new HexRenderer(mesh, {
       element: container,
       width: 800,
       height: 600,
@@ -47,7 +46,7 @@ describe('HexRenderer (Headless)', () => {
     const mapSource = readFileSync(mapPath, 'utf-8');
     const mesh = HexMapLoader.load(mapSource);
 
-    const renderer = new HexRenderer(mesh, {
+    const _renderer = new HexRenderer(mesh, {
       element: container,
       width: 800,
       height: 600,

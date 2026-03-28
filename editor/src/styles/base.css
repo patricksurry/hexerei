@@ -1,7 +1,7 @@
 :root {
   /* Typography */
-  --font-ui: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-ui: -apple-system, "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
   --font-size-xs: 11px;
   --font-size-sm: 12px;
   --font-size-md: 13px;
@@ -30,6 +30,7 @@ body {
   font-size: var(--font-size-md);
 }
 
-code, pre {
+code,
+pre {
   font-family: var(--font-mono);
 }

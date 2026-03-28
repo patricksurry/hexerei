@@ -1,5 +1,5 @@
-import { beforeEach, describe, it, expect, vi } from 'vitest';
-import { Scene } from '@hexmap/canvas';
+import type { Scene } from '@hexmap/canvas';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { drawScene } from './draw.js';
 
 describe('Canvas Drawing', () => {

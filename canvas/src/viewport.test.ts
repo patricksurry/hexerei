@@ -1,11 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  ViewportState,
-  screenToWorld,
-  worldToScreen,
-  panBy,
-  zoomAt,
   fitExtent,
+  panBy,
+  screenToWorld,
+  type ViewportState,
+  worldToScreen,
+  zoomAt,
 } from './viewport.js';
 
 describe('Viewport', () => {

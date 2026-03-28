@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest';
 import type {
+  Feature,
+  GeoReference,
   HexMapLayout,
   HexMapMetadata,
-  GeoReference,
-  TerrainTypeDef,
   TerrainStyle,
+  TerrainTypeDef,
   TerrainVocabulary,
-  Feature,
 } from './types.js';
 
 test('Envelope types are correctly exported', () => {

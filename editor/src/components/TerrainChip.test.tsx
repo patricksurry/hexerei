@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { expect, test } from 'vitest';
 import { TerrainChip } from './TerrainChip';
-import { test, expect } from 'vitest';
 
 test('renders hex geometry as filled hexagon', () => {
   const { container } = render(<TerrainChip color="#2d6a1e" geometry="hex" />);

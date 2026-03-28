@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { Hex } from '@hexmap/core';
+import { describe, expect, it } from 'vitest';
 
 describe('Editor-Core Wiring', () => {
   it('should resolve @hexmap/core from editor', () => {

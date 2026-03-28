@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
 import { Hex } from '@hexmap/core';
+import type React from 'react';
+import { useState } from 'react';
 import { OrientationPicker } from './OrientationPicker';
 import { OriginPicker } from './OriginPicker';
 import './NewMapDialog.css';
@@ -21,7 +22,10 @@ const TERRAIN_COLORS: Record<string, string> = {
   road: '#996633',
 };
 
-const PALETTES: Record<string, { label: string; terrain: string[]; edgeTerrain?: string[]; pathTerrain?: string[] }> = {
+const PALETTES: Record<
+  string,
+  { label: string; terrain: string[]; edgeTerrain?: string[]; pathTerrain?: string[] }
+> = {
   standard: {
     label: 'Standard Wargame',
     terrain: ['clear', 'forest', 'rough', 'urban', 'water', 'mountain'],
@@ -38,8 +42,12 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
   const [title, setTitle] = useState('New Map');
   const [width, setWidth] = useState(10);
   const [height, setHeight] = useState(10);
-  const [orientation, setOrientation] = useState<'flat-down' | 'flat-up' | 'pointy-right' | 'pointy-left'>('flat-down');
-  const [origin, setOrigin] = useState<'top-left' | 'bottom-left' | 'top-right' | 'bottom-right'>('top-left');
+  const [orientation, setOrientation] = useState<
+    'flat-down' | 'flat-up' | 'pointy-right' | 'pointy-left'
+  >('flat-down');
+  const [origin, setOrigin] = useState<'top-left' | 'bottom-left' | 'top-right' | 'bottom-right'>(
+    'top-left'
+  );
   const [labelFormat, setLabelFormat] = useState<string>('XXYY');
   const [firstCol, setFirstCol] = useState(1);
   const [firstRow, setFirstRow] = useState(1);
@@ -125,18 +133,19 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
   const selectedPalette = PALETTES[paletteId];
 
   return (
-    <div className="new-map-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="new-map-title">
+    <div
+      className="new-map-dialog-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="new-map-title"
+    >
       <div className="new-map-dialog">
         <h2 id="new-map-title">Create New Map</h2>
 
         <div className="dialog-row">
           <label>
             Title:
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
           </label>
         </div>
 
@@ -145,11 +154,23 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
           <div className="dialog-row">
             <label>
               Width:
-              <input type="number" min="1" max="100" value={width} onChange={e => setWidth(Number(e.target.value))} />
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={width}
+                onChange={(e) => setWidth(Number(e.target.value))}
+              />
             </label>
             <label>
               Height:
-              <input type="number" min="1" max="100" value={height} onChange={e => setHeight(Number(e.target.value))} />
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={height}
+                onChange={(e) => setHeight(Number(e.target.value))}
+              />
             </label>
           </div>
 
@@ -166,17 +187,14 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
           <div className="dialog-row">
             <label>
               Origin:
-              <OriginPicker
-                value={origin as any}
-                onChange={(val) => setOrigin(val)}
-              />
+              <OriginPicker value={origin as any} onChange={(val) => setOrigin(val)} />
             </label>
           </div>
 
           <div className="dialog-row">
             <label>
               Label Format:
-              <select value={labelFormat} onChange={e => setLabelFormat(e.target.value)}>
+              <select value={labelFormat} onChange={(e) => setLabelFormat(e.target.value)}>
                 <option value="XXYY">XXYY (0304)</option>
                 <option value="XX.YY">XX.YY (03.04)</option>
                 <option value="AYY">AYY (C04)</option>
@@ -187,11 +205,23 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
           <div className="dialog-row">
             <label>
               First Column:
-              <input type="number" min="0" max="99" value={firstCol} onChange={e => setFirstCol(Number(e.target.value))} />
+              <input
+                type="number"
+                min="0"
+                max="99"
+                value={firstCol}
+                onChange={(e) => setFirstCol(Number(e.target.value))}
+              />
             </label>
             <label>
               First Row:
-              <input type="number" min="0" max="99" value={firstRow} onChange={e => setFirstRow(Number(e.target.value))} />
+              <input
+                type="number"
+                min="0"
+                max="99"
+                value={firstRow}
+                onChange={(e) => setFirstRow(Number(e.target.value))}
+              />
             </label>
           </div>
         </div>
@@ -203,7 +233,9 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
               Terrain Palette:
               <select value={paletteId} onChange={handlePaletteChange}>
                 {Object.entries(PALETTES).map(([id, p]) => (
-                  <option key={id} value={id}>{p.label}</option>
+                  <option key={id} value={id}>
+                    {p.label}
+                  </option>
                 ))}
               </select>
             </label>
@@ -212,10 +244,12 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
           <div className="dialog-row">
             <label>
               Base Terrain:
-              <select value={baseTerrain} onChange={e => setBaseTerrain(e.target.value)}>
+              <select value={baseTerrain} onChange={(e) => setBaseTerrain(e.target.value)}>
                 <option value="none">None</option>
-                {selectedPalette.terrain.map(t => (
-                  <option key={t} value={t}>{t}</option>
+                {selectedPalette.terrain.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
                 ))}
               </select>
             </label>
@@ -223,8 +257,12 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
         </div>
 
         <div className="dialog-actions">
-          <button className="btn-secondary" onClick={onCancel}>Cancel</button>
-          <button className="btn-primary" onClick={handleCreate}>Create</button>
+          <button className="btn-secondary" onClick={onCancel}>
+            Cancel
+          </button>
+          <button className="btn-primary" onClick={handleCreate}>
+            Create
+          </button>
         </div>
       </div>
     </div>

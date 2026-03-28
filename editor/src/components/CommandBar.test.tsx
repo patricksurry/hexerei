@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, test, expect } from 'vitest';
+import { useState } from 'react';
+import { expect, test, vi } from 'vitest';
 import { CommandBar } from './CommandBar';
 
 test('renders the command bar input', () => {

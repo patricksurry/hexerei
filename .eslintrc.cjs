@@ -9,11 +9,7 @@ module.exports = {
     node: true,
     es2022: true,
   },
-  extends: [
-    'airbnb-base',
-    'plugin:@typescript-eslint/recommended',
-    'prettier',
-  ],
+  extends: ['airbnb-base', 'plugin:@typescript-eslint/recommended', 'prettier'],
   plugins: ['@typescript-eslint', 'prettier'],
   rules: {
     // Prettier integration
@@ -30,28 +26,30 @@ module.exports = {
 
     // Import rules
     'import/prefer-default-export': 'off',
-    'import/extensions': ['error', 'ignorePackages', {
-      ts: 'never',
-      tsx: 'never',
-    }],
-    'import/no-extraneous-dependencies': ['error', {
-      devDependencies: ['**/*.test.ts', '**/*.test.tsx', '**/test-*.ts', '**/*.config.ts'],
-    }],
+    'import/extensions': [
+      'error',
+      'ignorePackages',
+      {
+        ts: 'never',
+        tsx: 'never',
+      },
+    ],
+    'import/no-extraneous-dependencies': [
+      'error',
+      {
+        devDependencies: ['**/*.test.ts', '**/*.test.tsx', '**/test-*.ts', '**/*.config.ts'],
+      },
+    ],
 
     // Allow for-of loops (Airbnb disables by default)
-    'no-restricted-syntax': [
-      'error',
-      'ForInStatement',
-      'LabeledStatement',
-      'WithStatement',
-    ],
+    'no-restricted-syntax': ['error', 'ForInStatement', 'LabeledStatement', 'WithStatement'],
 
     // Airbnb style overrides for this codebase
     'no-underscore-dangle': 'off', // We use private fields
     'no-plusplus': 'off', // Common in loops
     'no-continue': 'off', // Useful for early loop exits
     'no-bitwise': 'off', // Used in hex math
-    'radix': 'off', // parseInt defaults are fine
+    radix: 'off', // parseInt defaults are fine
     'no-param-reassign': 'off', // Sometimes necessary
     'no-nested-ternary': 'off', // Can be readable
     'class-methods-use-this': 'off', // Interface consistency matters
@@ -65,10 +63,13 @@ module.exports = {
 
     // TypeScript handles these
     'consistent-return': 'off',
-    '@typescript-eslint/no-unused-vars': ['error', {
-      argsIgnorePattern: '^_',
-      varsIgnorePattern: '^_',
-    }],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
     '@typescript-eslint/naming-convention': 'off', // Too restrictive
     '@typescript-eslint/lines-between-class-members': 'off', // Compact classes ok
     '@typescript-eslint/dot-notation': 'off', // Sometimes bracket notation is clearer
@@ -76,7 +77,7 @@ module.exports = {
     '@typescript-eslint/no-use-before-define': 'off', // Hoisting is fine
     '@typescript-eslint/comma-dangle': 'off', // Prettier handles this
     '@typescript-eslint/indent': 'off', // Prettier handles this
-    'indent': 'off', // Prettier handles this
+    indent: 'off', // Prettier handles this
   },
   overrides: [
     {
@@ -85,19 +86,18 @@ module.exports = {
       parserOptions: {
         project: null,
       },
-      extends: [
-        'airbnb-base',
-        'plugin:@typescript-eslint/recommended',
-        'prettier',
-      ],
+      extends: ['airbnb-base', 'plugin:@typescript-eslint/recommended', 'prettier'],
       rules: {
         '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-call': 'off',
-        'import/no-extraneous-dependencies': ['error', {
-          devDependencies: true,
-        }],
+        'import/no-extraneous-dependencies': [
+          'error',
+          {
+            devDependencies: true,
+          },
+        ],
       },
     },
     {
@@ -128,10 +128,13 @@ module.exports = {
       },
       rules: {
         'react/react-in-jsx-scope': 'off', // Not needed with new JSX transform
-        'react/function-component-definition': ['error', {
-          namedComponents: 'arrow-function',
-          unnamedComponents: 'arrow-function',
-        }],
+        'react/function-component-definition': [
+          'error',
+          {
+            namedComponents: 'arrow-function',
+            unnamedComponents: 'arrow-function',
+          },
+        ],
       },
     },
   ],

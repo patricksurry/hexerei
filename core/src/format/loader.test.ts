@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { HexMapLoader } from './loader.js';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 import * as Hex from '../math/hex-math.js';
+import { HexMapLoader } from './loader.js';
 
 describe('HexMapLoader - Battle for Moscow', () => {
   // Read the actual map file from the sibling directory

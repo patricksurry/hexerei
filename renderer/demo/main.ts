@@ -25,7 +25,7 @@ async function init() {
     container.style.height = `${height}px`;
     container.style.position = 'relative';
 
-    const renderer = new HexRenderer(mesh, {
+    const _renderer = new HexRenderer(mesh, {
       element: container,
       width,
       height,

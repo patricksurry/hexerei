@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { expect, test, vi } from 'vitest';
 import { ShortcutsOverlay } from './ShortcutsOverlay';
-import { vi, test, expect } from 'vitest';
 
 test('renders shortcut list', () => {
   render(<ShortcutsOverlay onClose={() => {}} />);

@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { expect, test, vi } from 'vitest';
 import { ColorPicker } from './ColorPicker';
-import { vi, test, expect } from 'vitest';
 
 test('renders color hex and color input', () => {
   render(<ColorPicker value="#ff0000" onChange={() => {}} />);

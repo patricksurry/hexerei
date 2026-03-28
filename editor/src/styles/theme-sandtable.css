@@ -1,29 +1,29 @@
 :root.theme-sandtable {
   /* Backgrounds */
-  --bg-base: #0A0E14;
-  --bg-surface: #0D1117;
-  --bg-elevated: #151B23;
-  --bg-canvas: #080C12;
+  --bg-base: #0a0e14;
+  --bg-surface: #0d1117;
+  --bg-elevated: #151b23;
+  --bg-canvas: #080c12;
 
   /* Borders & Rules */
-  --border-subtle: #1A2332;
-  --border-focus: #2A3A4A;
+  --border-subtle: #1a2332;
+  --border-focus: #2a3a4a;
   --border-accent: rgba(0, 212, 255, 0.25);
 
   /* Text */
-  --text-primary: #E6EDF3;
-  --text-secondary: #8B949E;
-  --text-muted: #484F58;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
   --text-glow: rgba(0, 212, 255, 0.6);
 
   /* Accents (geometry-typed) */
-  --accent-hex: #00D4FF;
+  --accent-hex: #00d4ff;
   --accent-hex-glow: rgba(0, 212, 255, 0.4);
-  --accent-edge: #FF44FF;
+  --accent-edge: #ff44ff;
   --accent-edge-glow: rgba(255, 68, 255, 0.4);
-  --accent-vertex: #FFDD00;
+  --accent-vertex: #ffdd00;
   --accent-vertex-glow: rgba(255, 221, 0, 0.4);
-  --accent-command: #00D4FF;
+  --accent-command: #00d4ff;
 
   /* Canvas-specific */
   --canvas-grid-stroke: rgba(0, 180, 220, 0.18);
@@ -34,7 +34,7 @@
   --canvas-hover-glow: 4;
 
   /* Semantic */
-  --color-error: #F85149;
-  --color-success: #3FB950;
-  --color-warning: #D29922;
+  --color-error: #f85149;
+  --color-success: #3fb950;
+  --color-warning: #d29922;
 }

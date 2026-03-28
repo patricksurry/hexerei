@@ -11,7 +11,7 @@ export const ColorPicker = ({ value, onChange }: ColorPickerProps) => (
       <input
         type="color"
         value={value}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         aria-label="Pick color"
       />
     </div>

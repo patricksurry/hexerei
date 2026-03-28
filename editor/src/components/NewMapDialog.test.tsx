@@ -1,18 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { NewMapDialog } from './NewMapDialog';
 
 describe('NewMapDialog', () => {
   it('generates standard YAML on create', () => {
     const onCreateMap = vi.fn();
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
-    
+
     // Default is 10x10, flat-down, top-left, standard palette, clear base terrain
     fireEvent.click(screen.getByText('Create'));
-    
+
     expect(onCreateMap).toHaveBeenCalled();
     const yaml = onCreateMap.mock.calls[0][0];
-    
+
     expect(yaml).toContain('title: "New Map"');
     expect(yaml).toContain('orientation: flat-down');
     expect(yaml).toContain('all: "0101 - 1001 - 1010 - 0110 fill"');
@@ -34,19 +34,19 @@ describe('NewMapDialog', () => {
   it('updates YAML when inputs change', () => {
     const onCreateMap = vi.fn();
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
-    
+
     const widthInput = screen.getByLabelText('Width:');
     fireEvent.change(widthInput, { target: { value: '5' } });
-    
+
     const heightInput = screen.getByLabelText('Height:');
     fireEvent.change(heightInput, { target: { value: '5' } });
-    
+
     const orientationBtn = screen.getByTitle('pointy-right');
     fireEvent.click(orientationBtn);
-    
+
     const originBtn = screen.getByTitle('bottom-right');
     fireEvent.click(originBtn);
-    
+
     fireEvent.click(screen.getByText('Create'));
     const yaml = onCreateMap.mock.calls[0][0];
 
@@ -142,13 +142,13 @@ describe('NewMapDialog', () => {
 
   it('updates base terrain dropdown when palette changes', () => {
     render(<NewMapDialog onCreateMap={() => {}} onCancel={() => {}} />);
-    
+
     const baseTerrainSelect = screen.getByLabelText('Base Terrain:') as HTMLSelectElement;
     expect(baseTerrainSelect.options.length).toBeGreaterThan(1);
-    
+
     const paletteSelect = screen.getByLabelText('Terrain Palette:');
     fireEvent.change(paletteSelect, { target: { value: 'blank' } });
-    
+
     // Base terrain should change to 'none' and have no other options except 'None'
     expect(baseTerrainSelect.options.length).toBe(1);
     expect(baseTerrainSelect.value).toBe('none');
@@ -156,7 +156,14 @@ describe('NewMapDialog', () => {
 
   it('Standard Wargame palette generates edge terrain in YAML', () => {
     let createdYaml = '';
-    render(<NewMapDialog onCreateMap={(yaml) => { createdYaml = yaml; }} onCancel={() => {}} />);
+    render(
+      <NewMapDialog
+        onCreateMap={(yaml) => {
+          createdYaml = yaml;
+        }}
+        onCancel={() => {}}
+      />
+    );
 
     fireEvent.click(screen.getByText('Create'));
 
@@ -166,7 +173,14 @@ describe('NewMapDialog', () => {
 
   it('Standard Wargame palette generates path terrain in YAML', () => {
     let createdYaml = '';
-    render(<NewMapDialog onCreateMap={(yaml) => { createdYaml = yaml; }} onCancel={() => {}} />);
+    render(
+      <NewMapDialog
+        onCreateMap={(yaml) => {
+          createdYaml = yaml;
+        }}
+        onCancel={() => {}}
+      />
+    );
 
     fireEvent.click(screen.getByText('Create'));
 

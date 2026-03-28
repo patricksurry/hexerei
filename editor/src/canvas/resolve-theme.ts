@@ -1,11 +1,11 @@
-import { CanvasTheme } from './draw';
+import type { CanvasTheme } from './draw';
 
 export function resolveCanvasTheme(): CanvasTheme {
   const style = getComputedStyle(document.documentElement);
   const get = (prop: string) => style.getPropertyValue(prop).trim();
   const getNum = (prop: string, fallback: number) => {
     const v = parseFloat(get(prop));
-    return isNaN(v) ? fallback : v;
+    return Number.isNaN(v) ? fallback : v;
   };
 
   return {

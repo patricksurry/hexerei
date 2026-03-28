@@ -1,8 +1,8 @@
 import {
-  HexMapDocument,
-  type HexMapMetadata,
-  type HexMapLayout,
   type Feature,
+  HexMapDocument,
+  type HexMapLayout,
+  type HexMapMetadata,
   type TerrainTypeDef,
 } from '@hexmap/core';
 import { MapModel } from './model.js';

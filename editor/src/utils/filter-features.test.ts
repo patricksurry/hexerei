@@ -1,12 +1,36 @@
-import { describe, test, expect } from 'vitest';
-import { FeatureItem } from '@hexmap/canvas';
+import type { FeatureItem } from '@hexmap/canvas';
+import { describe, expect, test } from 'vitest';
 import { filterFeatures } from './filter-features';
 
 const mockFeatures: FeatureItem[] = [
   { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [], label: 'Base' },
-  { index: 1, terrain: 'forest', at: '0201', isBase: false, hexIds: [], tags: ['dense'], label: 'Dark Forest' },
-  { index: 2, terrain: 'river', at: '0101/E', isBase: false, hexIds: [], tags: ['waterway'], label: 'Elbe' },
-  { index: 3, terrain: 'forest', at: '0301', isBase: false, hexIds: [], tags: [], label: 'Light Forest' },
+  {
+    index: 1,
+    terrain: 'forest',
+    at: '0201',
+    isBase: false,
+    hexIds: [],
+    tags: ['dense'],
+    label: 'Dark Forest',
+  },
+  {
+    index: 2,
+    terrain: 'river',
+    at: '0101/E',
+    isBase: false,
+    hexIds: [],
+    tags: ['waterway'],
+    label: 'Elbe',
+  },
+  {
+    index: 3,
+    terrain: 'forest',
+    at: '0301',
+    isBase: false,
+    hexIds: [],
+    tags: [],
+    label: 'Light Forest',
+  },
 ];
 
 describe('filterFeatures', () => {

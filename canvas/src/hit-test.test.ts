@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { ViewportState, worldToScreen } from './viewport.js';
 import { Hex } from '@hexmap/core';
+import { describe, expect, it } from 'vitest';
 import { hitTest } from './hit-test.js';
 import { MapModel } from './model.js';
+import { type ViewportState, worldToScreen } from './viewport.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -65,13 +65,13 @@ describe('hitTest', () => {
   it('detects off-board hexes for paint mode', () => {
     // 0202 is on board. 0303 is off board but might not be a direct neighbor depending on orientation.
     // 0302 is definitely a neighbor of 0202.
-    // In flat-down: (col, row) -> 0202 is col 2, row 2. 
+    // In flat-down: (col, row) -> 0202 is col 2, row 2.
     // Wait, the easiest way to test is to take 0000 and find a neighbor not on the board.
     // Let's use 0000, and find a neighbor at direction 3 (West) which is off the board.
     const onBoardHexCube = Hex.createHex(0, 0, 0); // 0000
     const offBoardAdjCube = Hex.hexNeighbor(onBoardHexCube, 3); // neighbor in direction 3
     const offBoardAdjPixel = Hex.hexToPixel(offBoardAdjCube, 1, 'flat');
-    
+
     // Create viewport to convert pixel back and test
     const vp: ViewportState = {
       center: { x: 0, y: 0 },

@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MapModel } from '@hexmap/canvas';
 import { render } from '@testing-library/react';
 import React from 'react';
-import { CanvasHost, CanvasHostRef } from './CanvasHost';
-import { MapModel } from '@hexmap/canvas';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { CanvasHost, type CanvasHostRef } from './CanvasHost';
 
 describe('CanvasHost Phase 1 Tests', () => {
   beforeEach(() => {
@@ -48,11 +48,17 @@ features:
       right: 1000,
       x: 0,
       y: 0,
-      toJSON: () => {}
+      toJSON: () => {},
     });
 
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 1000 });
-    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, value: 1000 });
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      value: 1000,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      value: 1000,
+    });
 
     render(<CanvasHost ref={ref} model={model} onZoomChange={onZoomChange} />);
 
@@ -61,7 +67,7 @@ features:
 
     onZoomChange.mockClear();
     ref.current?.resetZoom();
-    
+
     // resetZoom uses animateZoom, first frame is at progress 0, so still 100%
     expect(onZoomChange).toHaveBeenCalledWith(100);
 
@@ -81,14 +87,20 @@ features: []
 `;
     const model = MapModel.load(yaml);
     const onZoomChange = vi.fn();
-    
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 1000 });
-    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, value: 1000 });
+
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      value: 1000,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      value: 1000,
+    });
 
     expect(() => {
       render(<CanvasHost model={model} onZoomChange={onZoomChange} />);
     }).not.toThrow();
-    
+
     // Initial fit sends 100%
     expect(onZoomChange).toHaveBeenCalledWith(100);
   });
@@ -108,8 +120,14 @@ features:
 `;
     const model = MapModel.load(yaml);
 
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 1000 });
-    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, value: 1000 });
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      value: 1000,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      value: 1000,
+    });
 
     const { container } = render(
       <CanvasHost model={model} paintTerrainKey="clear" paintTerrainColor="#ffffff" />
@@ -117,7 +135,7 @@ features:
 
     const canvas = container.querySelector('canvas');
     expect(canvas).not.toBeNull();
-    expect(canvas!.style.cursor).toBe('crosshair');
+    expect(canvas?.style.cursor).toBe('crosshair');
   });
 
   it('calls onPaintClick instead of onHitTest in paint mode', () => {
@@ -135,8 +153,14 @@ features:
 `;
     const model = MapModel.load(yaml);
 
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 1000 });
-    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, value: 1000 });
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      value: 1000,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      value: 1000,
+    });
 
     const onHitTest = vi.fn();
     const onPaintClick = vi.fn();
@@ -173,20 +197,29 @@ features:
 
     // Tall container
     Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 500 });
-    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, value: 2000 });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      value: 2000,
+    });
 
     const { rerender } = render(<CanvasHost model={model} onZoomChange={onZoomChange} />);
 
     // To verify different fits, we'll check that fitZoomRef changes internally.
     // Since we only get 100% via onZoomChange, let's fit once, change size, and check.
-    
+
     // Wide container
-    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, value: 2000 });
-    Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, value: 500 });
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      value: 2000,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      value: 500,
+    });
 
     rerender(<CanvasHost model={model} onZoomChange={onZoomChange} />);
-    
-    // initial fit will still be 100% relative to NEW fit. 
+
+    // initial fit will still be 100% relative to NEW fit.
     // This test is hard to verify via public API now that it's percentage-based.
     // But it should at least not crash and reach 100%.
     expect(onZoomChange).toHaveBeenCalledWith(100);

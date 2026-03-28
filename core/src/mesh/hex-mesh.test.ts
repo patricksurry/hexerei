@@ -1,7 +1,7 @@
-import { describe, it, test, expect } from 'vitest';
-import { HexMesh } from './hex-mesh.js';
+import { describe, expect, it, test } from 'vitest';
 import type { HexMapLayout } from '../format/types.js';
 import * as Hex from '../math/hex-math.js';
+import { HexMesh } from './hex-mesh.js';
 
 describe('HexMesh Topology', () => {
   // Create a simple map with 2 adjacent hexes: 0,0,0 and 1,-1,0 (Direction 0 from center)
@@ -40,8 +40,8 @@ describe('HexMesh Topology', () => {
     expect(conn1).toBeDefined();
     expect(conn2).toBeDefined();
     // Check identity
-    expect(conn1!.edge).toBe(conn2!.edge);
-    expect(conn1!.edge.id).toBe(conn2!.edge.id);
+    expect(conn1?.edge).toBe(conn2?.edge);
+    expect(conn1?.edge.id).toBe(conn2?.edge.id);
   });
 
   it('should generate edge loops including void edges', () => {
@@ -49,7 +49,7 @@ describe('HexMesh Topology', () => {
     expect(loop).toHaveLength(6);
 
     // One edge should be the shared one with neighbor
-    const shared = mesh.getConnection(hexCenter, hexNeighbor)!.edge;
+    const shared = mesh.getConnection(hexCenter, hexNeighbor)?.edge;
     expect(loop).toContain(shared);
 
     // The other 5 should be VOID edges

@@ -1,10 +1,10 @@
-import { parseDocument, Document, type Node, YAMLSeq } from 'yaml';
+import { type Document, type Node, parseDocument, type YAMLSeq } from 'yaml';
 import type {
+  Feature,
   HexMapLayout,
   HexMapMetadata,
-  Feature,
-  TerrainVocabulary,
   TerrainTypeDef,
+  TerrainVocabulary,
 } from './types.js';
 
 /**

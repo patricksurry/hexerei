@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { expect, test, vi } from 'vitest';
 import { OriginPicker } from './OriginPicker';
-import { vi, test, expect } from 'vitest';
 
 test('renders four origin options', () => {
   render(<OriginPicker value="top-left" onChange={() => {}} />);

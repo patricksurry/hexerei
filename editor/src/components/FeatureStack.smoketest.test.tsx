@@ -1,9 +1,17 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { FeatureStack } from './FeatureStack';
 
 const MOCK_FEATURES: any[] = [
-  { index: 0, at: '@all', terrain: 'clear', isBase: true, tags: [], hexIds: [], geometryType: 'hex' },
+  {
+    index: 0,
+    at: '@all',
+    terrain: 'clear',
+    isBase: true,
+    tags: [],
+    hexIds: [],
+    geometryType: 'hex',
+  },
   {
     index: 1,
     at: '0304',
@@ -24,7 +32,17 @@ describe('FeatureStack Smoketest', () => {
 
   it('passes geometry type to terrainColor callback', () => {
     const edgeFeatures: any[] = [
-      { index: 0, at: '0101/NE', terrain: 'river', isBase: false, tags: [], hexIds: [], edgeIds: ['a|b'], vertexIds: [], geometryType: 'edge' },
+      {
+        index: 0,
+        at: '0101/NE',
+        terrain: 'river',
+        isBase: false,
+        tags: [],
+        hexIds: [],
+        edgeIds: ['a|b'],
+        vertexIds: [],
+        geometryType: 'edge',
+      },
     ];
     const terrainColorSpy = vi.fn().mockReturnValue('#0044cc');
     render(<FeatureStack features={edgeFeatures} terrainColor={terrainColorSpy} />);

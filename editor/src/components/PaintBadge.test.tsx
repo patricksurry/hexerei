@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { expect, test, vi } from 'vitest';
 import { PaintBadge } from './PaintBadge';
-import { vi, test, expect } from 'vitest';
 
 test('renders terrain name and exit button', () => {
   render(<PaintBadge terrainKey="forest" terrainColor="#2d6a1e" onExit={() => {}} />);

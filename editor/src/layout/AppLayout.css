@@ -25,7 +25,10 @@
 .layout-panel {
   flex-shrink: 0;
   background: var(--bg-surface);
-  transition: width 150ms ease, opacity 150ms ease, transform 150ms ease;
+  transition:
+    width 150ms ease,
+    opacity 150ms ease,
+    transform 150ms ease;
   overflow: hidden;
 }
 
@@ -72,7 +75,7 @@
     z-index: 10;
     box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
   }
-  
+
   .layout-panel-right.collapsed {
     transform: translateX(100%);
     width: var(--panel-right-width); /* Maintain width but slide out */

@@ -26,12 +26,15 @@ export const TerrainChip = ({ color, geometry, active, title }: TerrainChipProps
   })();
 
   return (
-    <div 
+    <div
       className={`terrain-chip terrain-chip-${geometry} ${active ? 'active' : ''}`}
       title={title}
     >
       <svg viewBox="0 0 16 16" width="16" height="16">
-        <g fill={geometry === 'edge' ? 'none' : color} stroke={geometry === 'edge' ? color : 'none'}>
+        <g
+          fill={geometry === 'edge' ? 'none' : color}
+          stroke={geometry === 'edge' ? color : 'none'}
+        >
           {content}
         </g>
       </svg>

@@ -1,9 +1,9 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { vi, beforeEach, afterEach, test, expect } from 'vitest';
-import { App } from './App';
 import { CommandHistory, MapModel } from '@hexmap/canvas';
 import { HexMapDocument } from '@hexmap/core';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { App } from './App';
 
 beforeEach(() => {
   vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mac');
@@ -87,13 +87,13 @@ features:
 
 test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', async () => {
   // Mock downloadFile dependencies
-  const createObjectURLMock = vi.fn().mockReturnValue('blob:mock');
-  const revokeObjectURLMock = vi.fn();
-  const originalCreateObjectURL = window.URL.createObjectURL;
-  const originalRevokeObjectURL = window.URL.revokeObjectURL;
-  
-  window.URL.createObjectURL = createObjectURLMock;
-  window.URL.revokeObjectURL = revokeObjectURLMock;
+  const createObjectUrlMock = vi.fn().mockReturnValue('blob:mock');
+  const revokeObjectUrlMock = vi.fn();
+  const originalCreateObjectUrl = window.URL.createObjectURL;
+  const originalRevokeObjectUrl = window.URL.revokeObjectURL;
+
+  window.URL.createObjectURL = createObjectUrlMock;
+  window.URL.revokeObjectURL = revokeObjectUrlMock;
 
   // Mock HTMLAnchorElement click so it doesn't navigate or error
   const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
@@ -108,7 +108,7 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
 
     // Wait for initial render
     await screen.findByTitle('flat-down');
-    
+
     // 1. Initial state: not modified
     expect(screen.queryByText('MODIFIED')).not.toBeInTheDocument();
 
@@ -126,8 +126,8 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
     expect(screen.queryByText('MODIFIED')).not.toBeInTheDocument();
   } finally {
     // Cleanup mocks
-    window.URL.createObjectURL = originalCreateObjectURL;
-    window.URL.revokeObjectURL = originalRevokeObjectURL;
+    window.URL.createObjectURL = originalCreateObjectUrl;
+    window.URL.revokeObjectURL = originalRevokeObjectUrl;
     clickSpy.mockRestore();
   }
 });
@@ -145,7 +145,7 @@ test('canceling new map dialog without existing map shows empty state, not Loadi
 
   // Inspector should NOT show "Loading..."
   expect(screen.queryByText(/loading\.\.\./i)).not.toBeInTheDocument();
-  
+
   // Should show welcome/placeholder text instead
   expect(screen.getByText(/no map loaded/i)).toBeInTheDocument();
 });
@@ -154,13 +154,13 @@ test('>new command opens dialog and closes it on cancel', async () => {
   render(<App />);
   const input = screen.getByRole('combobox', { name: /command/i });
   await userEvent.type(input, '>new{enter}');
-  
+
   expect(await screen.findByRole('dialog', { name: /create new map/i })).toBeInTheDocument();
-  
+
   const dialog = screen.getByRole('dialog');
   const cancelBtn = within(dialog).getByRole('button', { name: /cancel/i });
   await userEvent.click(cancelBtn);
-  
+
   expect(screen.queryByRole('dialog', { name: /create new map/i })).not.toBeInTheDocument();
 });
 

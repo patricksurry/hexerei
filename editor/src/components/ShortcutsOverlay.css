@@ -18,7 +18,9 @@
   width: 600px;
   max-width: 90vw;
   border: 1px solid var(--border-accent);
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5), 0 0 1px var(--accent-hex-glow);
+  box-shadow:
+    0 4px 32px rgba(0, 0, 0, 0.5),
+    0 0 1px var(--accent-hex-glow);
 }
 
 .shortcuts-header {

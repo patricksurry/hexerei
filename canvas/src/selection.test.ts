@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest';
 import { Hex } from '@hexmap/core';
-import { boundaryIdToHexPath, vertexIdToHexPath, topmostFeatureAtEdge, topmostFeatureAtVertex } from './selection.js';
+import { describe, expect, it } from 'vitest';
 import { MapModel } from './model.js';
+import {
+  boundaryIdToHexPath,
+  topmostFeatureAtEdge,
+  topmostFeatureAtVertex,
+  vertexIdToHexPath,
+} from './selection.js';
 
 const YAML = `
 hexmap: "1.0"
@@ -36,8 +41,8 @@ describe('Selection Helpers', () => {
   it('vertexIdToHexPath returns label.index for a vertex', () => {
     // 0101, 0201, 0102 meet at a vertex (vertex index 1 for 0101)
     const h1 = Hex.offsetToCube(1, 1, 'flat-down');
-    const h2 = Hex.offsetToCube(2, 1, 'flat-down');
-    const h3 = Hex.offsetToCube(2, 2, 'flat-down'); // not used in simple vertex
+    const _h2 = Hex.offsetToCube(2, 1, 'flat-down');
+    const _h3 = Hex.offsetToCube(2, 2, 'flat-down'); // not used in simple vertex
 
     // In flat-down, corners are 0=30°, 1=90°, 2=150°, 3=210°, 4=270°, 5=330°
     // Corner 1 is shared between h1, h2, and h3 (if they are in a triangle)
@@ -47,7 +52,7 @@ describe('Selection Helpers', () => {
   });
 
   describe('Feature hit detection', () => {
-    const FEATURE_YAML = `
+    const FeatureYaml = `
 hexmap: "1.0"
 layout:
   orientation: flat-down
@@ -62,7 +67,7 @@ features:
   - at: "0101.1"
     terrain: bridge
 `;
-    const model = MapModel.load(FEATURE_YAML);
+    const model = MapModel.load(FeatureYaml);
 
     it('topmostFeatureAtEdge finds the feature index', () => {
       const h1 = Hex.offsetToCube(1, 1, 'flat-down');

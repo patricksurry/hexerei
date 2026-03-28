@@ -126,17 +126,14 @@
         "tags": { "type": "string" },
         "properties": { "type": "object", "additionalProperties": true },
         "side": {
-             "enum": ["both", "in", "out", "left", "right"],
-             "description": "For edge features only."
+          "enum": ["both", "in", "out", "left", "right"],
+          "description": "For edge features only."
         }
       }
     },
     "FeatureEntry": {
       "type": "object",
-      "allOf": [
-        { "$ref": "#/$defs/FeatureAttributes" },
-        { "$ref": "#/$defs/GeometrySelector" }
-      ],
+      "allOf": [{ "$ref": "#/$defs/FeatureAttributes" }, { "$ref": "#/$defs/GeometrySelector" }],
       "unevaluatedProperties": false
     },
     "GeometrySelector": {

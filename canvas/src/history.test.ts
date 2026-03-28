@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import { HexMapDocument } from '@hexmap/core';
+import { describe, expect, it } from 'vitest';
+import type { MapState } from './command.js';
 import { CommandHistory } from './history.js';
 import { MapModel } from './model.js';
-import type { MapState, MapCommand } from './command.js';
 
 const MOCK_YAML = `
 hexmap: "1.0"
@@ -48,7 +48,7 @@ describe('CommandHistory', () => {
     history.execute({ type: 'addFeature', feature: { at: '0101', terrain: 'forest' } });
     const undoneState = history.undo();
     expect(undoneState).not.toBeNull();
-    expect(undoneState!.model.features).toHaveLength(2);
+    expect(undoneState?.model.features).toHaveLength(2);
     expect(history.canUndo).toBe(false);
     expect(history.canRedo).toBe(true);
   });
@@ -59,7 +59,7 @@ describe('CommandHistory', () => {
     history.undo();
     const redoneState = history.redo();
     expect(redoneState).not.toBeNull();
-    expect(redoneState!.model.features).toHaveLength(3);
+    expect(redoneState?.model.features).toHaveLength(3);
     expect(history.canRedo).toBe(false);
   });
 

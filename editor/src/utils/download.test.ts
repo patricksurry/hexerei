@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach, MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import { downloadFile } from './download';
 
 describe('downloadFile', () => {
   let clickSpy: MockInstance;
-  let revokeObjectURLSpy: MockInstance;
+  let revokeObjectUrlSpy: MockInstance;
 
   beforeEach(() => {
     // Ensure URL methods exist for jsdom
@@ -15,7 +15,7 @@ describe('downloadFile', () => {
     }
 
     clickSpy = vi.spyOn(window.HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
-    revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
   });
 
@@ -26,6 +26,6 @@ describe('downloadFile', () => {
   it('creates a blob and triggers download', () => {
     downloadFile('hello', 'test.yaml', 'text/yaml');
     expect(clickSpy).toHaveBeenCalled();
-    expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:mock');
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith('blob:mock');
   });
 });

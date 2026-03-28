@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import { HexMapDocument } from '@hexmap/core';
-import { executeCommand, MapCommand, MapState } from './command.js';
+import { describe, expect, it } from 'vitest';
+import { executeCommand, type MapCommand, type MapState } from './command.js';
 import { MapModel } from './model.js';
 
 const MOCK_YAML = `
@@ -120,7 +120,7 @@ describe('executeCommand', () => {
       },
       state
     );
-    expect(result.state.document.getTerrain().hex!.swamp).toBeDefined();
+    expect(result.state.document.getTerrain().hex?.swamp).toBeDefined();
     expect(result.inverse.type).toBe('deleteTerrainType');
   });
 
@@ -134,7 +134,7 @@ describe('executeCommand', () => {
       },
       state
     );
-    expect(result.state.document.getTerrain().hex!.forest).toBeUndefined();
+    expect(result.state.document.getTerrain().hex?.forest).toBeUndefined();
     expect(result.inverse.type).toBe('setTerrainType');
   });
 

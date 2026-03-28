@@ -1,4 +1,4 @@
-import { Scene } from '@hexmap/canvas';
+import type { Scene } from '@hexmap/canvas';
 
 export interface CanvasTheme {
   background: string;
@@ -22,7 +22,7 @@ export interface CanvasTheme {
   featureLabelScale: number;
 }
 
-export const DEFAULT_THEME: CanvasTheme = {
+const DEFAULT_THEME: CanvasTheme = {
   background: '#141414',
   gridStroke: '#3A3A3A',
   gridLineWidth: 1,
@@ -43,7 +43,7 @@ export const DEFAULT_THEME: CanvasTheme = {
   featureLabelScale: 0.22,
 };
 
-export interface DrawOptions {
+interface DrawOptions {
   labelMinZoom?: number;
   theme?: CanvasTheme;
 }
