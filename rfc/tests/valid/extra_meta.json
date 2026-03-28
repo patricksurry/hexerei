@@ -2,10 +2,10 @@
   "hexmap": "1.0",
   "metadata": {
     "title": "Strictness Test",
-    "unauthorized_key": "Should fail if strict"
+    "unauthorized_key": "Should pass now"
   },
   "layout": {
-    "hex_top": "flat",
+    "orientation": "flat-down",
     "all": "0101"
   }
 }

@@ -51,9 +51,7 @@ It is REQUIRED.
 | `all` | string | YES | HexPath defining the valid hexes in the map. |
 | `label` | string | no | Label pattern (e.g., `"XXYY"`). Default: `"auto"`. |
 | `origin` | string | no | Visual corner where numbers start. Default: `"top-left"`. |
-| `georef` | object | no | Geographic scale and anchoring. See below. |
-
-PDS: use georeference instead of the abbreviation
+| `georeference` | object | no | Geographic scale and anchoring. See below. |
 
 #### layout.all (The Map Extent)
 
@@ -116,9 +114,9 @@ origin [1,1] shifted RIGHT     origin [1,1] shifted LEFT
 also determines the base sign of the path bias for HexPath shortest paths
 (see Section 7).
 
-#### georef (geographic anchoring and scale)
+#### georeference (geographic anchoring and scale)
 
-The optional `georef` object provides physical scale and anchors the hex
+The optional `georeference` object provides physical scale and anchors the hex
 layout to real-world geography.
 
 | Field | Type | Description |
@@ -198,12 +196,12 @@ by the geometry they apply to: hexes, edges, or vertices.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | no | Human-readable display name. |
-| `type` | string | no | Either `"base"` or `"modifier"`. Default: `"base"`. |
+| `modifier` | boolean | no | If `true`, this terrain is a modifier (e.g., "woods") rather than a base type. Default: `false`. |
+| `path` | boolean | no | If `true`, this is path-like terrain (e.g., "road") where rendering and connectivity follow the path sequence. Default: `false`. |
 | `onesided` | boolean | no | Edge types only. Feature is asymmetric (e.g., cliff). |
 | `style` | object | no | Display hints (color, pattern, etc). |
 | `properties` | object | no | Arbitrary game-specific metadata. |
 
-PDS: replace 'type' with 'modifier' a boolean default false.
 
 #### Default values and the @all identifier
 
@@ -253,6 +251,7 @@ All attribute fields are OPTIONAL.
 | Field | Type | Description |
 |-------|------|-------------|
 | `terrain` | string | One or more space-separated terrain types. |
+| `side` | string | For edge features: `"left"`, `"right"`, `"both"`, `"in"`, or `"out"`. |
 | `elevation` | integer | Elevation level. |
 | `label` | string | Display name or label text. |
 | `id` | string | Unique identifier for this feature (for cross-referencing). |
@@ -306,16 +305,25 @@ features:
 
 #### Edge features
 
-Edges are referenced using the HexPath notation `hex/direction` or `hex@hour`:
+Edges are referenced using the HexPath notation `hex/direction` or `hex@hour`. 
+For path-like features, the `-` operator defines a connected sequence.
 
 ```yaml
 features:
-  - at: "0304/N 0304/NE 0404/N" # A path of three edges
+  - at: "0304/N - 0304/NE - 0404/N" # A path of three edges
     terrain: river
 
   - at: "0503/SE"
-    terrain: cliff    # onesided: 0503 is the "active" side
+    terrain: cliff
+    side: left    # Relative to the edge viewed clockwise from 0503
 ```
+
+The `side` attribute is used for asymmetric features (`onesided: true` in 
+terrain definition). For single edges, `left` and `right` are relative to the 
+edge viewed in a **clockwise direction** from the hex it is addressed from. 
+For paths of edges, `left` and `right` use the **right-hand rule** relative 
+to the direction of travel along the path. `in` and `out` are used for 
+closed loops (Regions).
 
 #### Vertex features
 
@@ -329,18 +337,18 @@ features:
 
 #### Regions
 
-A region is simply a feature with an `id` and a `hexes` collection. Other
+A region is simply a feature with an `id` and an `at` collection. Other
 features can refer to this region by ID using the `@` prefix in a HexPath.
 
 ```yaml
 features:
   - id: soviet-fortifications
-    at: "0805 1105" # Path from 0805 to 1105
+    at: "0805 - 1105" # Path from 0805 to 1105
     tags: "fortified"
     label: "Soviet Fortification Line"
 
   - id: german-entry-west
-    at: "0101 0105" # Path from 0101 to 0105
+    at: "0101 + 0105" # Two hexes (top-left and bottom-left of entry)
     tags: "entry"
     label: "German Entry Area"
 ```

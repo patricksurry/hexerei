@@ -21,10 +21,52 @@ User coordinates are parsed into (col, row) integers via the label
 pattern, then converted to cube coordinates. The conversion depends on
 the grid's **orientation**.
 
-Let (col, row) be the parsed column and row indices from the user
-coordinates.
+Let `(col, row)` be the parsed column and row indices from the user
+coordinates. These values are relative to the `origin` specified in the 
+`layout`.
+
+Implementations MUST transform these into a standard **top-left** reference 
+frame before performing cube coordinate conversion. If the map's `origin` 
+is not `top-left`, the indices are reflected:
+
+*   **`bottom-left`**: `row' = (min_row + max_row) - row`
+*   **`top-right`**: `col' = (min_col + max_col) - col`
+*   **`bottom-right`**: Both reflections apply.
+
+Where `min_col`, `max_col`, `min_row`, and `max_row` are the logical bounds 
+of the map as defined in `layout.all`. If the `origin` is `top-left`, then 
+`col' = col` and `row' = row`.
+
+The resulting `(col', row')` are then used in the following conversion 
+formulas:
 
 **Orientation: flat-down (Odd-Q):**
+```
+q = col'
+r = row' - floor(col' / 2)
+s = -q - r
+```
+
+**Orientation: flat-up (Even-Q):**
+```
+q = col'
+r = row' - ceil(col' / 2)
+s = -q - r
+```
+
+**Orientation: pointy-right (Odd-R):**
+```
+q = col' - floor(row' / 2)
+r = row'
+s = -q - r
+```
+
+**Orientation: pointy-left (Even-R):**
+```
+q = col' - ceil(row' / 2)
+r = row'
+s = -q - r
+```
 ```
 q = col
 r = row - floor(col / 2)

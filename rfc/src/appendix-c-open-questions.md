@@ -5,26 +5,27 @@ further implementation experience before being formalized in a normative
 specification.
 
 1. **Multi-board / geomorphic maps.** Some wargames use interchangeable 
-   map boards composed into different configurations per scenario. The 
-   format needs a way to define individual boards and compose them — 
-   including rotation and offset of coordinates. The current 
-   simplification of the `layout` and the use of reserved identifiers like 
-   `@all` provides a natural path for this: a master document could 
-   compose several `@board-id` collections into a single coordinate space.
+   map boards (e.g., ASL) sharing a common geometry and vocabulary. 
+
+   - **Proposal (Shared Vocabulary):** A `HexmapLibrary` or `HexmapSystem` 
+     object could define shared `terrain_types` and `layout` templates. 
+     Individual maps then reference this library and only specify local 
+     features.
+   - **Proposal (Scenario Composition):** A `Scenario` document could 
+     compose multiple boards into a single master coordinate space using 
+     cube coordinate offsets and 60-degree rotations.
 
 2. **Variable-width coordinate label schemes.** The current fixed-width 
-   pattern logic cannot parse variable-width schemes (e.g., A-Z followed 
-   by AA-QQ). Support for A...Z, AA...AZ, BA...BZ as well as 
-   A...Z, AA..ZZ, AAA...ZZZ, ... as column (or less likely row) label 
-   formats SHOULD be explored to improve flexibility.
+   pattern logic cannot parse schemes like A-Z followed by AA-QQ. 
 
-3. **Normative HexPath path bias rules.** The exact pathing algorithm
-   MUST be normative to ensure identical geometry across
-   implementations. The current HexPath DSL specification provides basic
-   rules, but more detailed pathing rules may be necessary for complex
-   tie cases. **(Resolved: Section 7 now specifies the full bias formula.)**
+   - **Proposal (Sequence Generators):** Extend the `labels` field to accept 
+     sequence generators like `columns: "A..ZZ"` (A, B, ..., Z, AA, ..., AZ, 
+     BA, ..., ZZ). 
+   - **Proposal (Explicit Sequences):** Allow an explicit array of labels for 
+     irregular layouts: `columns: ["A", "B", ..., "Z", "AA", ...]`.
 
-4. **Geographic reference naming.** While the `georef` object captures
-   the key physical mapping parameters, the exact naming and structure 
-   for anchoring may need refinement for better alignment with existing 
-   GIS standards (e.g., GeoJSON, WKT).
+3. **Geographic reference naming.** While the `georeference` object 
+   captures the key physical mapping parameters, the exact naming and 
+   structure for anchoring remains **provisional**. Future refinement 
+   is expected to improve alignment with GIS standards (e.g., GeoJSON, 
+   WKT) and real-world map data.

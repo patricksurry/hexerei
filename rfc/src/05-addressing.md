@@ -33,10 +33,8 @@ another feature, or using a reserved identifier:
 0304        # XXYY format
 C4          # letter-number format
 @moscow     # reference to feature 'moscow'
-@all        # reserved: resolves to all hexes in layout.at
+@all        # reserved: resolves to all hexes in layout.all
 ```
-
-PDS: should be layout.all?
 
 ### Edges
 
@@ -64,7 +62,7 @@ The compass directions available for edges and vertices depend on
 `hex_top`. The following diagrams show both on the same hex shape.
 Edges are labeled along the sides; vertices are labeled at the corners:
 
-**Flat-top** (`hex_top: flat`):
+**Flat-top** (`orientation: flat-down` or `flat-up`):
 
 ```
                NW (v)    N (e)    NE (v)
@@ -83,7 +81,7 @@ Edges are labeled along the sides; vertices are labeled at the corners:
 Edge directions: **N, NE, SE, S, SW, NW** (6 edges)
 Vertex directions: **NE, E, SE, SW, W, NW** (6 vertices)
 
-**Pointy-top** (`hex_top: pointy`):
+**Pointy-top** (`orientation: pointy-right` or `pointy-left`):
 
 ```
                        N (v)

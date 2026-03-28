@@ -23,6 +23,7 @@ Maps are not required to use these exact identifiers, but following these conven
 | `farmland` | Farmland / Fields | Tactical |
 | `bocage` | Bocage | WWII / Tactical |
 | `major_river` | Major River (hex-filling) | Operational+ |
+| `lake` | Lake | Many |
 
 ## Edge terrain types
 
@@ -37,6 +38,7 @@ Maps are not required to use these exact identifiers, but following these conven
 | `hedge` | Hedge | no | Tactical |
 | `bocage` | Bocage (edge) | no | WWII / Tactical |
 | `ford` | Ford | no | Many |
+| `coastline` | Coastline | no | Many |
 | `impassable` | Impassable Hexside | no | Various |
 
 ## Vertex terrain types
@@ -44,8 +46,9 @@ Maps are not required to use these exact identifiers, but following these conven
 | Identifier | Name | Typical games |
 |------------|------|---------------|
 | `bridge` | Bridge | Many |
-| `ford` | Ford | Many |
-| `crossroads` | Crossroads | Tactical |
+| `tower` | Watch Tower / Observation Post | Tactical |
+| `town` | Town / City (vertex-based) | Tactical / Catan-style |
+| `peak` | Hilltop / Peak | Many |
 
 ## Linear Features (Roads, Rivers, etc.)
 
@@ -65,3 +68,5 @@ Recommended identifiers for linear features:
 | `river` | River / Stream | Edge |
 | `major_river` | Major River | Hex or Edge |
 | `canal` | Canal | Hex or Edge |
+
+PDS: note these get tagged with path: true when represented as hexes

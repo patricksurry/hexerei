@@ -1,20 +1,13 @@
 ## Serialization
 
-### JSON (canonical)
+HexMap supports two equivalent serializations: **YAML** (for hand-authoring) 
+and **JSON** (for machine interchange and validation). YAML is the primary 
+authoring format, favored for its readability and support for comments.
 
-The canonical serialization is JSON (RFC 8259). A HexMap JSON file:
+### YAML (primary authoring format)
 
-- MUST be valid JSON.
-- MUST be encoded as UTF-8.
-- SHOULD use the file extension `.hexmap.json`.
-- SHOULD use the media type `application/vnd.hexerei.hexmap+json`.
-
-PDS: I thought we said yaml in the intro, to preserve round-trip comments etc?
-
-### YAML (authoring format)
-
-YAML (version 1.2) is an equivalent serialization, recommended for
-hand-authored maps. A HexMap YAML file:
+YAML (version 1.2) is the recommended serialization for hand-authored maps. 
+A HexMap YAML file:
 
 - MUST produce a JSON-compatible data structure when parsed.
   (YAML 1.2 is a superset of JSON; this is always true for documents
@@ -22,6 +15,15 @@ hand-authored maps. A HexMap YAML file:
 - SHOULD use the file extension `.hexmap.yaml` or `.hexmap.yml`.
 - SHOULD use the media type `application/vnd.hexerei.hexmap+yaml`.
 - MAY contain comments (a key advantage over JSON for authoring).
+
+### JSON (canonical interchange)
+
+The canonical interchange format is JSON (RFC 8259). A HexMap JSON file:
+
+- MUST be valid JSON.
+- MUST be encoded as UTF-8.
+- SHOULD use the file extension `.hexmap.json`.
+- SHOULD use the media type `application/vnd.hexerei.hexmap+json`.
 
 A HexMap YAML document, when converted to JSON, MUST validate against
 the same JSON Schema as a native JSON document.

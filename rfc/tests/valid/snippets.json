@@ -10,7 +10,7 @@
     "all": "0101 2201 2215 0115 !",
     "label": "XXYY",
     "origin": "top-left",
-    "georef": {
+    "georeference": {
       "scale": 16000,
       "anchor": { "lat": 54.5, "lng": 35.0 },
       "bearing": 0,

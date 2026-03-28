@@ -26,10 +26,10 @@
             "url": { "type": "string", "format": "uri" },
             "notes": { "type": "string" }
           },
-          "additionalProperties": false
+          "additionalProperties": true
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "layout": {
       "type": "object",
@@ -45,7 +45,7 @@
           "enum": ["top-left", "bottom-left", "top-right", "bottom-right"],
           "default": "top-left"
         },
-        "georef": {
+        "georeference": {
           "type": "object",
           "properties": {
             "scale": { "type": "number", "exclusiveMinimum": 0 },
@@ -99,7 +99,8 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "type": { "enum": ["base", "modifier"], "default": "base" },
+        "modifier": { "type": "boolean", "default": false },
+        "path": { "type": "boolean", "default": false },
         "onesided": { "type": "boolean", "default": false },
         "style": {
           "type": "object",
@@ -118,7 +119,7 @@
     "FeatureAttributes": {
       "type": "object",
       "properties": {
-        "terrain": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "terrain": { "type": "string", "pattern": "^[a-z][a-z0-9_]*( [a-z][a-z0-9_]*)*$" },
         "elevation": { "type": "integer" },
         "label": { "type": "string" },
         "id": { "type": "string" },

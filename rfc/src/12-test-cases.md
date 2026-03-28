@@ -1,5 +1,8 @@
 ## Test Cases
 
+PDS: this seems speculative, are these actually implemented and validated yet?  
+the synthetic case sounds good but aspirational.  is it better to have more complete test coverage first?
+
 The following real wargame maps are identified as test cases for format
 validation. Each exercises different aspects of the format. Reference
 encodings will be maintained in the `tests/` directory.
@@ -28,7 +31,7 @@ Geomorphic map boards (multiple boards per scenario).
 **Scale:** 250m/hex, 4 boards of ~16x10 each, flat-top.
 
 **Complexity:** Medium. Tests elevation, directed edges.
-Multi-board composition deferred to v2 (see Appendix D, Q1).
+Multi-board composition deferred to v2 (see Appendix C, Q1).
 
 ### Advanced Squad Leader boards (MMP)
 

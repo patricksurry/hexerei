@@ -45,7 +45,7 @@ Connectors (`-` and `~`) are infix operators. Whitespace is allowed around conne
 *   **Include Mode (`include`)**: Modal switch. Adds subsequent items to the collection (default). Implies a segment boundary.
 *   **Exclude Mode (`exclude`)**: Modal switch. Subtracts subsequent items from the collection. Implies a segment boundary.
 *   **Closure (`close` / `~close`)**: Connects the cursor back to the start of the current segment and ends the segment. `~close` uses the flipped path bias.
-*   **Fill (`fill` / `~fill`)**: Closes the segment and adds all items contained within the resulting boundary to the collection. `~fill` uses the flipped path bias.
+*   **Fill (`fill` / `~fill`)**: Closes the segment and adds all items contained within the resulting boundary to the collection using the **even-odd rule**. `~fill` uses the flipped path bias.
 
 **Label Precedence:**
 When `-` appears inside a token that matches a valid coordinate label (e.g., `board1-a3`), the label interpretation takes precedence. Authors can disambiguate by adding spaces: `board1 - a3`.
@@ -72,7 +72,7 @@ A HexPath resolves to a **Geometry Collection**: an ordered list of **Segments**
 #### Close and Fill
 
 *   **`close`** connects the cursor back to the current segment's anchor (its first atom) and ends the segment. `~close` uses flipped bias for the closing path.
-*   **`fill`** does the same as `close`, then adds all interior atoms of the active geometry type within the closed boundary (typically in scanline order). `~fill` uses flipped bias for the closing path.
+*   **`fill`** does the same as `close`, then adds all interior atoms of the active geometry type within the closed boundary using the **even-odd rule**. `~fill` uses the flipped path bias for the closing path.
 
 #### Order Preservation
 
