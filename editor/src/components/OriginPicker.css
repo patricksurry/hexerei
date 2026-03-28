@@ -1,0 +1,62 @@
+.origin-picker {
+  display: flex;
+  gap: 4px;
+}
+
+.origin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.origin-btn svg {
+  width: 28px;
+  height: 28px;
+}
+
+.origin-outline {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.3;
+}
+
+.origin-dot {
+  fill: var(--accent-hex);
+  opacity: 0.7;
+}
+
+.origin-btn:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.origin-btn:hover .origin-outline {
+  opacity: 0.5;
+}
+
+.origin-btn:hover .origin-dot {
+  opacity: 1;
+}
+
+.origin-btn.active {
+  background: rgba(0, 212, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.2);
+}
+
+.origin-btn.active .origin-outline {
+  stroke: var(--accent-hex);
+  opacity: 0.5;
+}
+
+.origin-btn.active .origin-dot {
+  fill: var(--accent-hex);
+  opacity: 1;
+}

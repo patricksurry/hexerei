@@ -1,0 +1,47 @@
+.paint-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4), 0 0 1px var(--accent-hex-glow);
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.paint-badge-chip {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.paint-badge-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.paint-badge-exit {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 0 0 4px;
+  cursor: pointer;
+  border-left: 1px solid var(--border-subtle);
+  margin-left: 4px;
+}
+
+.paint-badge-exit:hover {
+  color: var(--text-primary);
+}

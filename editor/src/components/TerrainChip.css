@@ -1,0 +1,31 @@
+.terrain-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+
+.terrain-chip.active {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 1px var(--accent-hex), 0 0 8px var(--accent-hex-glow);
+}
+
+.terrain-chip-hex.active {
+  box-shadow: 0 0 0 1px var(--accent-hex), 0 0 8px var(--accent-hex-glow);
+}
+
+.terrain-chip-edge.active {
+  box-shadow: 0 0 0 1px var(--accent-edge), 0 0 8px var(--accent-edge-glow);
+}
+
+.terrain-chip-vertex.active {
+  box-shadow: 0 0 0 1px var(--accent-vertex), 0 0 8px var(--accent-vertex-glow);
+}
+
+.terrain-chip svg {
+  display: block;
+}

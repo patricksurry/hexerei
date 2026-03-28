@@ -1,0 +1,35 @@
+.inspector-section-header {
+  cursor: pointer;
+  list-style: none; /* remove default triangle */
+  user-select: none;
+  outline: none;
+}
+
+.inspector-section-header::-webkit-details-marker {
+  display: none;
+}
+
+.inspector-section-header::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 8px;
+  color: var(--text-muted);
+  transition: transform 150ms ease;
+  vertical-align: middle;
+}
+
+details[open] > .inspector-section-header::before {
+  transform: rotate(90deg);
+}
+
+.inspector-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+}
+
+.inspector-section {
+  margin-bottom: var(--space-md);
+}
