@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7); /* darker backdrop */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,20 +12,23 @@
 }
 
 .new-map-dialog {
-  background: var(--bg-panel);
+  background: var(--bg-elevated);
   padding: 24px;
   border-radius: 8px;
   width: 400px;
   max-width: 90vw;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-accent);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 1px var(--accent-hex-glow);
 }
 
 .new-map-dialog h2 {
   margin-top: 0;
   margin-bottom: 20px;
-  font-size: 1.2rem;
-  color: var(--text-primary);
+  color: var(--accent-hex);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .dialog-row {
@@ -46,11 +49,18 @@
 .dialog-row input,
 .dialog-row select {
   padding: 6px 8px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-focus);
   color: var(--text-primary);
   border-radius: 4px;
   font-family: inherit;
+}
+
+.dialog-row input:focus,
+.dialog-row select:focus {
+  border-color: var(--accent-hex);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--accent-hex-glow);
 }
 
 .dialog-actions {
@@ -71,18 +81,35 @@
 .dialog-actions .btn-secondary {
   background: transparent;
   color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
 }
 
 .dialog-actions .btn-secondary:hover {
-  background: var(--bg-hover);
+  background: var(--bg-elevated);
   color: var(--text-primary);
 }
 
 .dialog-actions .btn-primary {
   background: var(--accent-hex);
   color: #fff;
+  box-shadow: 0 0 8px var(--accent-hex-glow);
 }
 
 .dialog-actions .btn-primary:hover {
   filter: brightness(1.1);
+}
+
+.dialog-section {
+  margin-bottom: 16px;
+}
+
+.dialog-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent-hex);
+  letter-spacing: 0.1em;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-accent);
 }

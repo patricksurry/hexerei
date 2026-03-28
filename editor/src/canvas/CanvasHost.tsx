@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react';
 import {
   MapModel,
   ViewportState,
@@ -9,9 +9,16 @@ import {
   SceneHighlight,
   HitResult,
   computeWorldBounds,
+  ZOOM_SENSITIVITY,
+  ZOOM_ANIMATION_DURATION,
+  ZOOM_FIT_PADDING_FACTOR,
+  ACCENT_HEX,
+  ACCENT_EDGE,
+  ACCENT_VERTEX,
 } from '@hexmap/canvas';
 import { Hex } from '@hexmap/core';
 import { drawScene } from './draw.js';
+import { resolveCanvasTheme } from './resolve-theme';
 
 export interface CanvasHostRef {
   resetZoom: () => void;
@@ -21,7 +28,7 @@ export interface CanvasHostRef {
 export interface CanvasHostProps {
   model: MapModel | null;
   highlights?: SceneHighlight[];
-  segmentPath?: string[];
+  segments?: string[][];
   onZoomChange?: (zoom: number) => void;
   onHitTest?: (result: HitResult) => void;
   onCursorHex?: (label: string | null) => void;
@@ -37,7 +44,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
     {
       model,
       highlights,
-      segmentPath,
+      segments,
       onZoomChange,
       onHitTest,
       onCursorHex,
@@ -60,9 +67,23 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       height: 600,
     });
 
+    const fitZoomRef = useRef<number>(1);
+    const canvasThemeRef = useRef(resolveCanvasTheme());
     const isDragging = useRef(false);
     const lastMouse = useRef<{ x: number; y: number } | null>(null);
     const dragStart = useRef<{ x: number; y: number } | null>(null);
+    const pendingFrame = useRef(0);
+
+    useEffect(() => {
+      canvasThemeRef.current = resolveCanvasTheme();
+    }, [model]); // Re-resolve when model changes (typically on map load/new map)
+
+    const [hoverType, setHoverType] = useState<'none' | 'hex' | 'edge' | 'vertex'>('none');
+
+    const scheduleRender = () => {
+      cancelAnimationFrame(pendingFrame.current);
+      pendingFrame.current = requestAnimationFrame(render);
+    };
 
     const render = () => {
       const canvas = canvasRef.current;
@@ -72,24 +93,22 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
 
       const vp = viewportRef.current;
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = vp.width * dpr;
-      canvas.height = vp.height * dpr;
-      ctx.scale(dpr, dpr);
+      const targetW = Math.round(vp.width * dpr);
+      const targetH = Math.round(vp.height * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const theme = {
-        background: '#1a1a1a',
-        gridStroke: '#333333',
-        gridLineWidth: 1,
-        terrainOpacity: 0.8,
-        labelColor: '#888888',
-        labelGlow: '#000000',
-        selectionGlow: 10,
-        hoverGlow: 5,
-        featureLabelColor: '#ffffff',
-        featureLabelShadow: '0px 2px 4px rgba(0,0,0,0.8)',
-      };
+      const theme = canvasThemeRef.current;
 
-      const sceneHighlights = [...(highlights || [])];
+      const sceneHighlights = (highlights || []).map((hl) => {
+        if (hl.color === ACCENT_HEX) return { ...hl, color: theme.accentHex };
+        if (hl.color === ACCENT_EDGE) return { ...hl, color: theme.accentEdge };
+        if (hl.color === ACCENT_VERTEX) return { ...hl, color: theme.accentVertex };
+        return hl;
+      });
 
       if (paintTerrainKey && paintTerrainColor && lastMouse.current) {
         const hit = hitTest(lastMouse.current, vp, model, { includeOffBoard: true });
@@ -123,7 +142,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       const scene = buildScene(model, vp, {
         background: theme.background,
         highlights: sceneHighlights,
-        segmentPath,
+        segments,
       });
       drawScene(ctx, scene, { theme });
     };
@@ -166,8 +185,9 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
         height: clientHeight,
       };
       
-      if (onZoomChange) onZoomChange(zoom);
-      requestAnimationFrame(render);
+      fitZoomRef.current = zoom;
+      if (onZoomChange) onZoomChange(100);
+      scheduleRender();
     };
 
     // Initial fit
@@ -176,8 +196,28 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
     }, [model]);
 
     useEffect(() => {
-      render();
-    }, [model, highlights, segmentPath, paintTerrainKey, paintTerrainColor]);
+      scheduleRender();
+    }, [model, highlights, segments, paintTerrainKey, paintTerrainColor]);
+
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const observer = new ResizeObserver((entries) => {
+        const { width, height } = entries[0].contentRect;
+        if (width > 0 && height > 0) {
+          viewportRef.current = {
+            ...viewportRef.current,
+            width,
+            height,
+          };
+          scheduleRender();
+        }
+      });
+
+      observer.observe(container);
+      return () => observer.disconnect();
+    }, [model]);
 
     const handlePointerDown = (e: React.PointerEvent) => {
       const rect = canvasRef.current?.getBoundingClientRect();
@@ -207,19 +247,21 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
         const dy = y - lastMouse.current.y;
         viewportRef.current = panBy(viewportRef.current, { x: dx, y: dy });
         lastMouse.current = { x, y };
-        requestAnimationFrame(render);
-      } else if (paintTerrainKey) {
-        lastMouse.current = screen;
-        requestAnimationFrame(render);
-        if (model && onCursorHex) {
-          const result = hitTest(screen, viewportRef.current, model, { includeOffBoard: true });
-          const label = result && result.type === 'hex' ? result.label : null;
-          onCursorHex(label);
+        scheduleRender();
+      } else if (model) {
+        const hit = hitTest(screen, viewportRef.current, model, {
+          includeOffBoard: !!paintTerrainKey,
+        });
+        if (hit.type === 'hex') {
+          onCursorHex?.(hit.offBoard ? null : hit.hexId);
+        } else {
+          onCursorHex?.(null);
         }
-      } else if (model && onCursorHex) {
-        const result = hitTest(screen, viewportRef.current, model);
-        const label = result && result.type === 'hex' ? result.label : null;
-        onCursorHex(label);
+        setHoverType(hit.type);
+        if (paintTerrainKey) {
+          lastMouse.current = screen;
+        }
+        scheduleRender();
       }
     };
 
@@ -252,10 +294,11 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      const factor = 0.995 ** e.deltaY;
+      const factor = ZOOM_SENSITIVITY ** e.deltaY;
       viewportRef.current = zoomAt(viewportRef.current, { x, y }, factor);
-      if (onZoomChange) onZoomChange(viewportRef.current.zoom);
-      requestAnimationFrame(render);
+      if (onZoomChange)
+        onZoomChange(Math.round((viewportRef.current.zoom / fitZoomRef.current) * 100));
+      scheduleRender();
     };
 
     useEffect(() => {
@@ -265,9 +308,68 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       return () => canvas.removeEventListener('wheel', handleWheel);
     }, []);
 
+    const animateZoom = (targetVp: ViewportState, duration = ZOOM_ANIMATION_DURATION) => {
+      const startVp = { ...viewportRef.current };
+      const startTime = performance.now();
+
+      const step = (now: number) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+
+        viewportRef.current = {
+          ...startVp,
+          center: {
+            x: startVp.center.x + (targetVp.center.x - startVp.center.x) * ease,
+            y: startVp.center.y + (targetVp.center.y - startVp.center.y) * ease,
+          },
+          zoom: startVp.zoom + (targetVp.zoom - startVp.zoom) * ease,
+        };
+
+        if (onZoomChange) {
+          onZoomChange(Math.round((viewportRef.current.zoom / fitZoomRef.current) * 100));
+        }
+        render();
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        }
+      };
+
+      requestAnimationFrame(step);
+    };
+
     useImperativeHandle(ref, () => ({
       resetZoom: () => {
-        fitExtent();
+        if (!model || !containerRef.current) return;
+        const { clientWidth, clientHeight } = containerRef.current;
+        const centers = [];
+        const orientation = Hex.orientationTop(model.grid.orientation);
+        for (const hex of model.mesh.getAllHexes()) {
+          centers.push(Hex.hexToPixel(Hex.hexFromId(hex.id), 1, orientation));
+        }
+
+        let zoom = 20;
+        let center = { x: 0, y: 0 };
+
+        if (centers.length > 0) {
+          const bounds = computeWorldBounds(centers, 1, orientation);
+          center = {
+            x: (bounds.min.x + bounds.max.x) / 2,
+            y: (bounds.min.y + bounds.max.y) / 2,
+          };
+          const worldWidth = bounds.max.x - bounds.min.x;
+          const worldHeight = bounds.max.y - bounds.min.y;
+          zoom = Math.min(
+            clientWidth / (worldWidth * ZOOM_FIT_PADDING_FACTOR),
+            clientHeight / (worldHeight * ZOOM_FIT_PADDING_FACTOR)
+          );
+        }
+
+        animateZoom({
+          ...viewportRef.current,
+          center,
+          zoom,
+        });
       },
       centerOnHexes: (hexIds: string[]) => {
         if (!viewportRef.current || hexIds.length === 0 || !model) return;
@@ -279,12 +381,15 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
         const bounds = computeWorldBounds(centers, 1, orientation);
         const vp = viewportRef.current;
         // Center on the midpoint of the bounds, keep current zoom
-        const newCenter = {
+        const targetCenter = {
           x: (bounds.min.x + bounds.max.x) / 2,
           y: (bounds.min.y + bounds.max.y) / 2,
         };
-        viewportRef.current = { ...vp, center: newCenter };
-        requestAnimationFrame(render);
+
+        animateZoom({
+          ...viewportRef.current,
+          center: targetCenter,
+        });
       },
     }));
 
@@ -297,7 +402,11 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
             height: '100%',
             touchAction: 'none',
             display: 'block',
-            cursor: paintTerrainKey ? 'crosshair' : (isDragging.current ? 'grabbing' : 'grab'),
+            cursor: paintTerrainKey 
+              ? 'crosshair' 
+              : (isDragging.current 
+                  ? 'grabbing' 
+                  : (hoverType !== 'none' ? 'pointer' : 'grab')),
           }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}

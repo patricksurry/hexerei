@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, afterEach, test, expect } from 'vitest';
 import { App } from './App';
@@ -102,17 +102,19 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
     render(<App />);
 
     // create a map so we have a model
-    const cancelBtn = await screen.findByRole('button', { name: /create/i });
-    await userEvent.click(cancelBtn);
+    const dialog = screen.getByRole('dialog');
+    const createBtn = within(dialog).getByRole('button', { name: /create/i });
+    await userEvent.click(createBtn);
 
-    // Wait for initial render and data fetch to complete
-    const orientationSelect = await screen.findByDisplayValue('flat-down');
+    // Wait for initial render
+    await screen.findByTitle('flat-down');
     
     // 1. Initial state: not modified
     expect(screen.queryByText('MODIFIED')).not.toBeInTheDocument();
 
     // 2. Make a change (change layout orientation to trigger a history update)
-    await userEvent.selectOptions(orientationSelect, 'flat-up');
+    const flatUpBtn = screen.getByTitle('flat-up');
+    fireEvent.click(flatUpBtn);
 
     // Verify MODIFIED appears
     expect(await screen.findByText('MODIFIED')).toBeVisible();
@@ -130,6 +132,24 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
   }
 });
 
+test('canceling new map dialog without existing map shows empty state, not Loading', async () => {
+  render(<App />);
+
+  // Initial state: dialog is open
+  expect(await screen.findByRole('dialog', { name: /create new map/i })).toBeInTheDocument();
+
+  // Cancel the dialog
+  const dialog = screen.getByRole('dialog');
+  const cancelBtn = within(dialog).getByRole('button', { name: /cancel/i });
+  await userEvent.click(cancelBtn);
+
+  // Inspector should NOT show "Loading..."
+  expect(screen.queryByText(/loading\.\.\./i)).not.toBeInTheDocument();
+  
+  // Should show welcome/placeholder text instead
+  expect(screen.getByText(/no map loaded/i)).toBeInTheDocument();
+});
+
 test('>new command opens dialog and closes it on cancel', async () => {
   render(<App />);
   const input = screen.getByRole('combobox', { name: /command/i });
@@ -137,7 +157,8 @@ test('>new command opens dialog and closes it on cancel', async () => {
   
   expect(await screen.findByRole('dialog', { name: /create new map/i })).toBeInTheDocument();
   
-  const cancelBtn = screen.getByRole('button', { name: /cancel/i });
+  const dialog = screen.getByRole('dialog');
+  const cancelBtn = within(dialog).getByRole('button', { name: /cancel/i });
   await userEvent.click(cancelBtn);
   
   expect(screen.queryByRole('dialog', { name: /create new map/i })).not.toBeInTheDocument();
@@ -168,7 +189,8 @@ test('>open command triggers file input click', async () => {
   render(<App />);
 
   // Close initial dialog by clicking Create
-  const createBtn = await screen.findByRole('button', { name: /create/i });
+  const dialog = screen.getByRole('dialog');
+  const createBtn = within(dialog).getByRole('button', { name: /create/i });
   await userEvent.click(createBtn);
 
   // Spy on file input click

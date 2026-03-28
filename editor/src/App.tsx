@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import { Hex } from '@hexmap/core';
+import { Hex, HexPath } from '@hexmap/core';
 import {
   MapModel,
   CommandHistory,
@@ -22,10 +22,14 @@ import {
   topmostFeatureAtVertex,
   boundaryIdToHexPath,
   vertexIdToHexPath,
+  ACCENT_HEX,
 } from '@hexmap/canvas';
 import { downloadFile } from './utils/download';
 import { AppLayout } from './layout/AppLayout';
 import { CommandBar, CommandBarRef } from './components/CommandBar';
+import { WelcomeScreen } from './components/WelcomeScreen';
+import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { PaintBadge } from './components/PaintBadge';
 import { FeatureStack } from './components/FeatureStack';
 import { Inspector } from './components/Inspector';
 import { StatusBar } from './components/StatusBar';
@@ -51,12 +55,23 @@ export const App = () => {
   const [preview, setPreview] = useState<HexPathPreview | null>(null);
   const [theme, setTheme] = useState<'sandtable' | 'classic'>('sandtable');
   const [showNewMapDialog, setShowNewMapDialog] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [paintState, setPaintState] = useState<{
     terrainKey: string;
     geometry: 'hex' | 'edge' | 'vertex';
     targetFeatureIndex: number | null;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const getHexPath = useCallback(() => {
+    if (!model) return null;
+    return new HexPath(model.mesh, {
+      labelFormat: model.grid.labelFormat,
+      orientation: model.grid.orientation,
+      firstCol: model.grid.firstCol,
+      firstRow: model.grid.firstRow,
+    });
+  }, [model]);
 
   const commandBarRef = useRef<CommandBarRef>(null);
   const canvasHostRef = useRef<CanvasHostRef>(null);
@@ -206,7 +221,7 @@ export const App = () => {
 
     const previewHighlights: SceneHighlight[] =
       preview && preview.hexIds.length > 0
-        ? [{ type: 'hex', hexIds: preview.hexIds, color: '#00D4FF', style: 'ghost' }]
+        ? [{ type: 'hex', hexIds: preview.hexIds, color: ACCENT_HEX, style: 'ghost' }]
         : [];
 
     // Dim highlights for non-matching features when filter is active
@@ -261,46 +276,51 @@ export const App = () => {
 
   const handlePaintClick = (hit: HitResult, shiftKey: boolean) => {
     if (!paintState || !model || hit.type === 'none') return;
+    if (hit.type !== paintState.geometry) return;
 
-    // Geometry lock check: MUST match paintState.geometry
-    if (hit.type !== paintState.geometry) {
-      return;
-    }
+    const hp = getHexPath();
+    if (!hp) return;
 
-    // Build token
+    // Convert hit to atom string
     let atomId = '';
-    if (hit.type === 'hex') atomId = hit.label;
-    else if (hit.type === 'edge') atomId = boundaryIdToHexPath(hit.boundaryId, model);
-    else if (hit.type === 'vertex') atomId = vertexIdToHexPath(hit.vertexId, model);
-
-    const token = shiftKey ? `- ${atomId}` : atomId;
-
-    // Find or create feature
-    let targetIndex = paintState.targetFeatureIndex;
-
-    if (targetIndex === null) {
-      // Search from top to bottom
-      for (let i = model.features.length - 1; i >= 0; i--) {
-        const f = model.features[i];
-        if (f.terrain === paintState.terrainKey && f.geometryType === paintState.geometry) {
-          targetIndex = i;
-          break;
-        }
-      }
+    if (hit.type === 'hex') {
+      if (!model.mesh.getHex(hit.hexId)) return;
+      atomId = hp.idToAtom(hit.hexId, 'hex');
+    } else if (hit.type === 'edge') {
+      atomId = hp.idToAtom(hit.boundaryId, 'edge');
+    } else if (hit.type === 'vertex') {
+      atomId = hp.idToAtom(hit.vertexId, 'vertex');
     }
+    if (!atomId) return;
+
+    const targetIndex = paintState.targetFeatureIndex;
 
     if (targetIndex !== null) {
       const feature = model.features[targetIndex];
-      const newAt = feature.at ? `${feature.at} ${token}` : token;
-      dispatch({ type: 'updateFeature', index: targetIndex, changes: { at: newAt } });
-      if (paintState.targetFeatureIndex !== targetIndex) {
-        setPaintState({ ...paintState, targetFeatureIndex: targetIndex });
+      // Parse existing expression into segments
+      const existing = feature.at ? hp.resolve(feature.at) : { segments: [], type: hit.type };
+      const segments = [...(existing.segments ?? [])];
+
+      if (shiftKey && segments.length > 0) {
+        // Extend last segment (connected path)
+        const lastSegment = segments[segments.length - 1];
+        const newAtomResult = hp.resolve(atomId);
+        const newId = newAtomResult.items[0];
+        lastSegment.push(newId);
+      } else {
+        // New disconnected atom (singleton segment)
+        const newAtomResult = hp.resolve(atomId);
+        segments.push(newAtomResult.items.map((id) => id));
       }
+
+      const newAt = hp.serialize(segments, hit.type);
+      dispatch({ type: 'updateFeature', index: targetIndex, changes: { at: newAt } });
+      setCommandValue(newAt);
     } else {
-      // Create new feature
-      dispatch({ type: 'addFeature', feature: { at: token, terrain: paintState.terrainKey } });
-      // The new feature will be at model.features.length
+      // New paint session — create new feature
+      dispatch({ type: 'addFeature', feature: { at: atomId, terrain: paintState.terrainKey } });
       setPaintState({ ...paintState, targetFeatureIndex: model.features.length });
+      setCommandValue(atomId);
     }
   };
 
@@ -351,6 +371,10 @@ export const App = () => {
         return;
       } else if (cmd === 'open') {
         fileInputRef.current?.click();
+        setCommandValue('');
+        return;
+      } else if (cmd === 'shortcuts' || cmd === 'keys' || cmd === 'help') {
+        setShowShortcuts(true);
         setCommandValue('');
         return;
       }
@@ -475,6 +499,15 @@ export const App = () => {
   const features = model?.features ?? [];
   const mapTitle = model?.metadata?.title ?? 'Untitled';
 
+  const commandBarPlaceholder = useMemo(() => {
+    if (selection.type === 'hex') return `Add features at ${selection.label}, or > for commands…`;
+    if (selection.type === 'feature' && model) {
+      const f = model.features[selection.indices[0]];
+      return f ? `Editing ${f.label || f.terrain || 'feature'}, or > for commands…` : undefined;
+    }
+    return undefined;
+  }, [selection, model]);
+
   return (
     <>
       <AppLayout
@@ -489,6 +522,7 @@ export const App = () => {
             onSubmit={handleCommandSubmit}
             error={preview?.error?.message}
             gotoSuggestions={gotoSuggestions}
+            placeholder={commandBarPlaceholder}
           />
         }
         leftPanel={
@@ -503,20 +537,36 @@ export const App = () => {
           />
         }
         canvas={
-          <CanvasHost
-            ref={canvasHostRef}
-            model={model}
-            onCursorHex={setCursorHex}
-            onZoomChange={setZoom}
-            onHitTest={handleHit}
-            onNavigate={handleNavigate}
-            highlights={highlights}
-            segmentPath={preview?.segmentPath ?? []}
-            paintTerrainKey={paintState?.terrainKey ?? null}
-            paintTerrainColor={paintState ? model?.terrainColor(paintState.geometry, paintState.terrainKey) : null}
-            paintGeometry={paintState?.geometry ?? null}
-            onPaintClick={handlePaintClick}
-          />
+          <>
+            {model ? (
+              <CanvasHost
+                ref={canvasHostRef}
+                model={model}
+                onCursorHex={setCursorHex}
+                onZoomChange={setZoom}
+                onHitTest={handleHit}
+                onNavigate={handleNavigate}
+                highlights={highlights}
+                segments={preview?.segments ?? []}
+                paintTerrainKey={paintState?.terrainKey ?? null}
+                paintTerrainColor={paintState ? model?.terrainColor(paintState.geometry, paintState.terrainKey) : null}
+                paintGeometry={paintState?.geometry ?? null}
+                onPaintClick={handlePaintClick}
+              />
+            ) : (
+              <WelcomeScreen
+                onNewMap={() => setShowNewMapDialog(true)}
+                onOpenMap={() => fileInputRef.current?.click()}
+              />
+            )}
+            {paintState && (
+              <PaintBadge
+                terrainKey={paintState.terrainKey}
+                terrainColor={model?.terrainColor(paintState.geometry, paintState.terrainKey) ?? '#888'}
+                onExit={() => setPaintState(null)}
+              />
+            )}
+          </>
         }
         rightPanel={
           <Inspector
@@ -569,6 +619,8 @@ export const App = () => {
           onCancel={() => setShowNewMapDialog(false)}
         />
       )}
+
+      {showShortcuts && <ShortcutsOverlay onClose={() => setShowShortcuts(false)} />}
 
       <input
         type="file"

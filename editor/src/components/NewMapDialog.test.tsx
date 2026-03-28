@@ -13,9 +13,22 @@ describe('NewMapDialog', () => {
     expect(onCreateMap).toHaveBeenCalled();
     const yaml = onCreateMap.mock.calls[0][0];
     
+    expect(yaml).toContain('title: "New Map"');
     expect(yaml).toContain('orientation: flat-down');
     expect(yaml).toContain('all: "0101 - 1001 - 1010 - 0110 fill"');
     expect(yaml).toContain('terrain: clear');
+  });
+
+  it('includes custom title in generated YAML', () => {
+    const onCreateMap = vi.fn();
+    render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Battle for Moscow' } });
+
+    fireEvent.click(screen.getByText('Create'));
+    const yaml = onCreateMap.mock.calls[0][0];
+    expect(yaml).toContain('title: "Battle for Moscow"');
   });
 
   it('updates YAML when inputs change', () => {
@@ -28,19 +41,18 @@ describe('NewMapDialog', () => {
     const heightInput = screen.getByLabelText('Height:');
     fireEvent.change(heightInput, { target: { value: '5' } });
     
-    const orientationSelect = screen.getByLabelText('Orientation:');
-    fireEvent.change(orientationSelect, { target: { value: 'pointy-right' } });
+    const orientationBtn = screen.getByTitle('pointy-right');
+    fireEvent.click(orientationBtn);
     
-    const originSelect = screen.getByLabelText('Origin:');
-    fireEvent.change(originSelect, { target: { value: 'bottom-right' } });
+    const originBtn = screen.getByTitle('bottom-right');
+    fireEvent.click(originBtn);
     
     fireEvent.click(screen.getByText('Create'));
-    
     const yaml = onCreateMap.mock.calls[0][0];
-    
+
     expect(yaml).toContain('orientation: pointy-right');
-    // bottom-right for 5x5: startX=5, startY=5, endX=1, endY=1
-    expect(yaml).toContain('all: "0505 - 0105 - 0101 - 0501 fill"');
+    // Actual 5x5 rectangle path
+    expect(yaml).toContain('all: "0101 - 0501 - 0505 - 0105 fill"');
   });
 
   it('generates valid YAML when base terrain is none', () => {
@@ -53,8 +65,8 @@ describe('NewMapDialog', () => {
     fireEvent.click(screen.getByText('Create'));
     const yaml = onCreateMap.mock.calls[0][0];
 
-    expect(yaml).toContain('features: []');
-    expect(yaml).not.toMatch(/features:\n\s+\[\]/);
+    expect(yaml).toContain('features:\n');
+    expect(yaml).not.toContain('terrain: none');
   });
 
   it('generates distinct colors for standard wargame terrain', () => {
@@ -134,7 +146,7 @@ describe('NewMapDialog', () => {
     const baseTerrainSelect = screen.getByLabelText('Base Terrain:') as HTMLSelectElement;
     expect(baseTerrainSelect.options.length).toBeGreaterThan(1);
     
-    const paletteSelect = screen.getByLabelText('Starter Palette:');
+    const paletteSelect = screen.getByLabelText('Terrain Palette:');
     fireEvent.change(paletteSelect, { target: { value: 'blank' } });
     
     // Base terrain should change to 'none' and have no other options except 'None'

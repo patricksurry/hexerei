@@ -4,14 +4,44 @@ export interface CanvasTheme {
   background: string;
   gridStroke: string;
   gridLineWidth: number;
-  terrainOpacity: number; // 0–1, applied to terrain fills
+  terrainOpacity: number;
   labelColor: string;
-  labelGlow: string | null; // null = no glow
-  selectionGlow: number; // shadowBlur radius
+  labelGlow: string | null;
+  selectionGlow: number;
   hoverGlow: number;
   featureLabelColor: string;
   featureLabelShadow: string;
+  accentHex: string;
+  accentEdge: string;
+  accentVertex: string;
+  // Geometric rendering constants
+  pathLineWidth: number;
+  vertexRadius: number;
+  hexLabelScale: number;
+  hexLabelOffset: number;
+  featureLabelScale: number;
 }
+
+export const DEFAULT_THEME: CanvasTheme = {
+  background: '#141414',
+  gridStroke: '#3A3A3A',
+  gridLineWidth: 1,
+  terrainOpacity: 1.0,
+  labelColor: '#888888',
+  labelGlow: null,
+  selectionGlow: 0,
+  hoverGlow: 0,
+  featureLabelColor: '#ffffff',
+  featureLabelShadow: 'rgba(0,0,0,0.8)',
+  accentHex: '#00D4FF',
+  accentEdge: '#FF44FF',
+  accentVertex: '#FFDD00',
+  pathLineWidth: 5,
+  vertexRadius: 5,
+  hexLabelScale: 0.28,
+  hexLabelOffset: 0.4,
+  featureLabelScale: 0.22,
+};
 
 export interface DrawOptions {
   labelMinZoom?: number;
@@ -23,14 +53,14 @@ export function drawScene(
   scene: Scene,
   options: DrawOptions = {}
 ): void {
-  const { labelMinZoom = 12, theme } = options;
+  const { labelMinZoom = 12 } = options;
+  const theme = options.theme || DEFAULT_THEME;
 
-  // Use theme colors or fallbacks from scene/hardcoded
-  const background = theme?.background || scene.background.trim() || '#141414';
-  const gridStroke = theme?.gridStroke || '#3A3A3A';
-  const gridLineWidth = theme?.gridLineWidth ?? 1;
-  const terrainOpacity = theme?.terrainOpacity ?? 1.0;
-  const labelColor = theme?.labelColor || '#888888';
+  const background = theme.background || scene.background.trim() || DEFAULT_THEME.background;
+  const gridStroke = theme.gridStroke;
+  const gridLineWidth = theme.gridLineWidth;
+  const terrainOpacity = theme.terrainOpacity;
+  const labelColor = theme.labelColor;
 
   // Clear canvas
   ctx.fillStyle = background;
@@ -49,10 +79,12 @@ export function drawScene(
     }
     ctx.closePath();
 
-    ctx.globalAlpha = terrainOpacity;
-    ctx.fillStyle = hex.fill;
-    ctx.fill();
-    ctx.globalAlpha = 1.0;
+    if (hex.fill !== 'none') {
+      ctx.globalAlpha = terrainOpacity;
+      ctx.fillStyle = hex.fill;
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+    }
   }
 
   // Second pass: Grid Stroke (on top of fills)
@@ -108,7 +140,7 @@ export function drawScene(
       ctx.lineTo(path.points[i].x, path.points[i].y);
     }
     ctx.strokeStyle = path.color;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = theme.pathLineWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -117,7 +149,7 @@ export function drawScene(
   // Draw vertex terrain
   for (const vtx of scene.vertexTerrain) {
     ctx.beginPath();
-    ctx.arc(vtx.point.x, vtx.point.y, 5, 0, Math.PI * 2);
+    ctx.arc(vtx.point.x, vtx.point.y, theme.vertexRadius, 0, Math.PI * 2);
     ctx.fillStyle = vtx.color;
     ctx.fill();
     ctx.strokeStyle = '#000000';
@@ -143,7 +175,7 @@ export function drawScene(
       ctx.fill();
     } else if (hl.style === 'select') {
       // Glow effect for selection
-      if (theme?.selectionGlow) {
+      if (theme.selectionGlow) {
         ctx.shadowColor = hl.color;
         ctx.shadowBlur = theme.selectionGlow;
       }
@@ -159,7 +191,7 @@ export function drawScene(
       ctx.shadowBlur = 0;
     } else if (hl.style === 'hover') {
       // Subtle glow for hover
-      if (theme?.hoverGlow) {
+      if (theme.hoverGlow) {
         ctx.shadowColor = hl.color;
         ctx.shadowBlur = theme.hoverGlow;
       }
@@ -187,7 +219,7 @@ export function drawScene(
     ctx.moveTo(edge.p1.x, edge.p1.y);
     ctx.lineTo(edge.p2.x, edge.p2.y);
 
-    if (theme?.selectionGlow) {
+    if (theme.selectionGlow) {
       ctx.shadowColor = edge.color;
       ctx.shadowBlur = theme.selectionGlow;
     }
@@ -202,17 +234,15 @@ export function drawScene(
   // Draw vertex highlights
   for (const vtx of scene.vertexHighlights) {
     ctx.beginPath();
-    ctx.arc(vtx.point.x, vtx.point.y, 5, 0, Math.PI * 2);
+    ctx.arc(vtx.point.x, vtx.point.y, theme.vertexRadius, 0, Math.PI * 2);
 
-    if (theme?.selectionGlow) {
+    if (theme.selectionGlow) {
       ctx.shadowColor = vtx.color;
       ctx.shadowBlur = theme.selectionGlow;
     }
 
     ctx.fillStyle = vtx.color;
     ctx.fill();
-
-    // No black stroke as per design
     ctx.shadowBlur = 0;
   }
 
@@ -225,7 +255,7 @@ export function drawScene(
       ctx.lineTo(line.points[i].x, line.points[i].y);
     }
 
-    if (theme?.hoverGlow) {
+    if (theme.hoverGlow) {
       ctx.shadowColor = line.color;
       ctx.shadowBlur = theme.hoverGlow;
     }
@@ -246,20 +276,20 @@ export function drawScene(
     );
 
     if (hexScreenRadius > labelMinZoom) {
-      const fontSize = Math.max(8, hexScreenRadius * 0.28);
+      const fontSize = Math.max(8, hexScreenRadius * theme.hexLabelScale);
 
-      if (theme?.labelGlow) {
+      if (theme.labelGlow) {
         ctx.shadowColor = theme.labelGlow;
         ctx.shadowBlur = 4;
       }
 
       ctx.fillStyle = labelColor;
-      ctx.font = `${fontSize}px monospace`;
+      ctx.font = `${fontSize}px var(--font-mono)`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       for (const hex of scene.hexagons) {
-        const labelY = hex.center.y - hexScreenRadius * 0.4;
+        const labelY = hex.center.y - hexScreenRadius * theme.hexLabelOffset;
         ctx.fillText(hex.label, hex.center.x, labelY);
       }
       ctx.shadowBlur = 0;
@@ -273,19 +303,18 @@ export function drawScene(
       (h0.corners[0].x - h0.center.x) ** 2 + (h0.corners[0].y - h0.center.y) ** 2
     );
     if (hexScreenRadius > (options.labelMinZoom ?? 12)) {
-      const fontSize = Math.max(7, hexScreenRadius * 0.22);
-      ctx.font = `600 ${fontSize}px sans-serif`; // 600 weight per design
+      const fontSize = Math.max(7, hexScreenRadius * theme.featureLabelScale);
+      ctx.font = `600 ${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       for (const fl of scene.featureLabels) {
-        if (theme?.featureLabelShadow) {
-          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        if (theme.featureLabelShadow) {
+          ctx.shadowColor = theme.featureLabelShadow;
           ctx.shadowBlur = 6;
         }
 
-        // Double shadow for that HUD feel if theme specifies
-        ctx.fillStyle = theme?.featureLabelColor || '#ffffff';
+        ctx.fillStyle = theme.featureLabelColor;
         ctx.fillText(fl.text, fl.point.x, fl.point.y);
         ctx.shadowBlur = 0;
       }

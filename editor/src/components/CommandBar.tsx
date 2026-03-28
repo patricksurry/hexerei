@@ -8,6 +8,7 @@ interface CommandBarProps {
   onSubmit?: (value: string) => void;
   error?: string;
   gotoSuggestions?: { label: string; index: number }[];
+  placeholder?: string;
 }
 
 export interface CommandBarRef {
@@ -24,12 +25,13 @@ const COMMANDS = [
   { label: 'export json', description: 'Download as JSON' },
   { label: 'zoom fit', description: 'Reset viewport' },
   { label: 'clear', description: 'Clear selection' },
+  { label: 'shortcuts', description: 'Show keyboard shortcuts' },
   { label: 'theme sandtable', description: 'Sand table theme' },
   { label: 'theme classic', description: 'Classic theme' },
 ];
 
 export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
-  ({ value = '', onChange, onClear, onSubmit, error, gotoSuggestions }, ref) => {
+  ({ value = '', onChange, onClear, onSubmit, error, gotoSuggestions, placeholder }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     useImperativeHandle(ref, () => ({
@@ -122,7 +124,7 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
               onChange={(e) => onChange?.(e.target.value)}
               onKeyDown={handleKeyDown}
               className="command-input font-mono"
-              placeholder="Enter HexPath, /search, or >command"
+              placeholder={placeholder || 'Type a HexPath, or > for commands, / to search, @ to jump…'}
             />
           </div>
         </div>
