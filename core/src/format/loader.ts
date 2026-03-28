@@ -1,8 +1,8 @@
-import { HexMapDocument } from './document.js';
-import { HexMesh } from '../mesh/hex-mesh.js';
-import * as Hex from '../math/hex-math.js';
 import { HexPath } from '../hexpath/hex-path.js';
 import type { Orientation } from '../math/hex-math.js';
+import * as Hex from '../math/hex-math.js';
+import { HexMesh } from '../mesh/hex-mesh.js';
+import { HexMapDocument } from './document.js';
 
 // Type guards for parsed YAML data
 interface ParsedCoordinates {
@@ -54,16 +54,32 @@ export class HexMapLoader {
     const doc = new HexMapDocument(source);
     const json = doc.toJS();
 
-    // Type guard the parsed document
     if (typeof json !== 'object' || json === null) {
       throw new Error('Invalid HexMap document: expected object');
     }
     const parsed = json as ParsedDocument;
-
     const { layout } = parsed;
     if (!layout) throw new Error("Missing mandatory 'layout' section in HexMap document");
 
-    // 1. Determine Orientation/Coordinates from layout
+    const options = HexMapLoader.resolveLayoutOptions(layout);
+    const validHexes = HexMapLoader.resolveValidHexes(layout, options);
+    const validHexIdSet = new Set(validHexes.map(Hex.hexId));
+
+    const mesh = new HexMesh(validHexes, { ...options, layout });
+    const meshHexPath = new HexPath(mesh, options);
+
+    const { terrainMap, elevationMap, tagsMap } = HexMapLoader.processFeatures(
+      parsed.features,
+      meshHexPath,
+      validHexIdSet
+    );
+
+    HexMapLoader.applyFeatureMaps(mesh, terrainMap, elevationMap, tagsMap);
+
+    return mesh;
+  }
+
+  private static resolveLayoutOptions(layout: any) {
     const orientationValue = layout.orientation || 'flat-down';
     const orientation: Orientation = isValidOrientation(orientationValue)
       ? orientationValue
@@ -83,43 +99,27 @@ export class HexMapLoader {
 
     const labelFormat = asString(layout.label || layout.coordinates?.label, 'XXYY');
 
-    // 2. Determine Map Extent (validHexes)
-    let validHexes: Hex.Cube[] = [];
+    return { orientation, firstCol, firstRow, labelFormat };
+  }
+
+  private static resolveValidHexes(layout: any, options: any): Hex.Cube[] {
     const allPath = layout.all;
-    if (typeof allPath === 'string') {
-      const tempMesh = new HexMesh([], { orientation, firstCol, firstRow, layout });
-      const hexPath = new HexPath(tempMesh, {
-        labelFormat,
-        orientation,
-        firstCol,
-        firstRow,
-      });
-      const allResult = hexPath.resolve(allPath);
-      validHexes = allResult.items.map(Hex.hexFromId);
-    } else {
+    if (typeof allPath !== 'string') {
       throw new Error("Missing mandatory 'layout.all'");
     }
 
-    const validHexIdSet = new Set(validHexes.map(Hex.hexId));
+    const tempMesh = new HexMesh([], { ...options, layout });
+    const hexPath = new HexPath(tempMesh, options);
+    const allResult = hexPath.resolve(allPath);
+    return allResult.items.map(Hex.hexFromId);
+  }
 
-    // 3. Process Features
+  private static processFeatures(features: any, meshHexPath: HexPath, validHexIdSet: Set<string>) {
     const terrainMap = new Map<string, string>();
     const elevationMap = new Map<string, number>();
     const tagsMap = new Map<string, Set<string>>();
-    const features = Array.isArray(parsed.features) ? parsed.features : [];
 
-    const mesh = new HexMesh(validHexes, {
-      orientation,
-      firstCol,
-      firstRow,
-      layout,
-    });
-    const meshHexPath = new HexPath(mesh, {
-      labelFormat,
-      orientation,
-      firstCol,
-      firstRow,
-    });
+    if (!Array.isArray(features)) return { terrainMap, elevationMap, tagsMap };
 
     for (const feature of features) {
       const at = feature.at ?? feature.hex ?? feature.hexes;
@@ -130,31 +130,30 @@ export class HexMapLoader {
         if (typeof pathStr !== 'string') continue;
 
         const result = meshHexPath.resolve(pathStr);
+        if (result.type !== 'hex') continue;
 
-        if (result.type === 'hex') {
-          for (const id of result.items) {
-            if (!validHexIdSet.has(id)) continue;
+        for (const id of result.items) {
+          if (!validHexIdSet.has(id)) continue;
 
-            const { terrain } = feature;
-            if (typeof terrain === 'string') {
-              const current = terrainMap.get(id) || '';
-              terrainMap.set(id, current ? `${current} ${terrain}` : terrain);
-            }
+          if (typeof feature.terrain === 'string') {
+            const current = terrainMap.get(id) || '';
+            terrainMap.set(id, current ? `${current} ${feature.terrain}` : feature.terrain);
+          }
 
-            const { elevation } = feature;
-            if (typeof elevation === 'number') {
-              elevationMap.set(id, elevation);
-            }
+          if (typeof feature.elevation === 'number') {
+            elevationMap.set(id, feature.elevation);
+          }
 
-            const { tags } = feature;
-            if (tags) {
-              if (!tagsMap.has(id)) tagsMap.set(id, new Set());
-              const tagArray = Array.isArray(tags)
-                ? tags.filter((t): t is string => typeof t === 'string')
-                : typeof tags === 'string'
-                  ? tags.split(/\s+/)
-                  : [];
-              tagArray.forEach((t: string) => tagsMap.get(id)!.add(t));
+          if (feature.tags) {
+            if (!tagsMap.has(id)) tagsMap.set(id, new Set());
+            const tags = feature.tags;
+            const tagArray = Array.isArray(tags)
+              ? tags.filter((t): t is string => typeof t === 'string')
+              : typeof tags === 'string'
+                ? tags.split(/\s+/)
+                : [];
+            for (const t of tagArray) {
+              tagsMap.get(id)?.add(t);
             }
           }
         }
@@ -163,8 +162,15 @@ export class HexMapLoader {
         console.warn(`Failed to resolve HexPath in feature: ${atStr}`, e);
       }
     }
+    return { terrainMap, elevationMap, tagsMap };
+  }
 
-    // Finalize mesh hexes
+  private static applyFeatureMaps(
+    mesh: HexMesh,
+    terrainMap: Map<string, string>,
+    elevationMap: Map<string, number>,
+    tagsMap: Map<string, Set<string>>
+  ) {
     for (const hex of mesh.getAllHexes()) {
       const { id } = hex;
       if (terrainMap.has(id)) hex.terrain = terrainMap.get(id)!;
@@ -173,7 +179,5 @@ export class HexMapLoader {
         hex.props.tags = Array.from(tagsMap.get(id)!);
       }
     }
-
-    return mesh;
   }
 }

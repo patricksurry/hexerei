@@ -1,5 +1,12 @@
-import { Hex, HexMapDocument, HexMesh, HexMapLoader, HexPath, HexMapMetadata } from '@hexmap/core';
-import { FeatureItem } from './types.js';
+import {
+  Hex,
+  HexMapDocument,
+  HexMapLoader,
+  type HexMapMetadata,
+  type HexMesh,
+  HexPath,
+} from '@hexmap/core';
+import type { FeatureItem } from './types.js';
 
 export interface GridConfig {
   orientation: Hex.Orientation;
@@ -108,71 +115,75 @@ export class MapModel {
     this._edgeToFeatures = new Map<string, FeatureItem[]>();
     this._vertexToFeatures = new Map<string, FeatureItem[]>();
 
-    const featureList = doc.getFeatures();
-    this._features = featureList.map((f, idx) => {
-      let hexIds: string[] = [];
-      let edgeIds: string[] = [];
-      let vertexIds: string[] = [];
-      let segments: string[][] | undefined;
-      let geometryType: 'hex' | 'edge' | 'vertex' = 'hex';
-
-      if (f.at) {
-        try {
-          const result = meshHexPath.resolve(f.at);
-          geometryType = result.type;
-          segments = result.segments;
-          if (result.type === 'hex') {
-            hexIds = result.items;
-          } else if (result.type === 'edge') {
-            edgeIds = result.items;
-          } else if (result.type === 'vertex') {
-            vertexIds = result.items;
-          }
-        } catch (e) {
-          console.warn(`MapModel: Failed to resolve feature at index ${idx}`, e);
-        }
-      }
-
-      const featureItem: FeatureItem = {
-        index: idx,
-        terrain: f.terrain ?? '',
-        label: f.label,
-        id: f.id,
-        tags: typeof f.tags === 'string' ? f.tags.split(/\s+/).filter(Boolean) : [],
-        at: typeof f.at === 'string' ? f.at : 'complex',
-        isBase: f.at === '@all',
-        geometryType,
-        hexIds,
-        edgeIds,
-        vertexIds,
-        segments,
-        elevation: f.elevation,
-        properties: f.properties,
-        side: f.side,
-      };
-
-      // Populate reverse indexes
-      for (const hid of hexIds) {
-        if (!this._hexToFeatures.has(hid)) {
-          this._hexToFeatures.set(hid, []);
-        }
-        this._hexToFeatures.get(hid)!.push(featureItem);
-      }
-      for (const eid of edgeIds) {
-        if (!this._edgeToFeatures.has(eid)) {
-          this._edgeToFeatures.set(eid, []);
-        }
-        this._edgeToFeatures.get(eid)!.push(featureItem);
-      }
-      for (const vid of vertexIds) {
-        if (!this._vertexToFeatures.has(vid)) {
-          this._vertexToFeatures.set(vid, []);
-        }
-        this._vertexToFeatures.get(vid)!.push(featureItem);
-      }
-
+    this._features = doc.getFeatures().map((f, idx) => {
+      const featureItem = this.resolveFeatureItem(f, idx, meshHexPath);
+      this.populateReverseIndexes(featureItem);
       return featureItem;
     });
+  }
+
+  private resolveFeatureItem(f: any, idx: number, meshHexPath: HexPath): FeatureItem {
+    let hexIds: string[] = [];
+    let edgeIds: string[] = [];
+    let vertexIds: string[] = [];
+    let segments: string[][] | undefined;
+    let geometryType: 'hex' | 'edge' | 'vertex' = 'hex';
+
+    if (f.at) {
+      try {
+        const result = meshHexPath.resolve(f.at);
+        geometryType = result.type;
+        segments = result.segments;
+        if (result.type === 'hex') {
+          hexIds = result.items;
+        } else if (result.type === 'edge') {
+          edgeIds = result.items;
+        } else if (result.type === 'vertex') {
+          vertexIds = result.items;
+        }
+      } catch (e) {
+        console.warn(`MapModel: Failed to resolve feature at index ${idx}`, e);
+      }
+    }
+
+    return {
+      index: idx,
+      terrain: f.terrain ?? '',
+      label: f.label,
+      id: f.id,
+      tags: typeof f.tags === 'string' ? f.tags.split(/\s+/).filter(Boolean) : [],
+      at: typeof f.at === 'string' ? f.at : 'complex',
+      isBase: f.at === '@all',
+      geometryType,
+      hexIds,
+      edgeIds,
+      vertexIds,
+      segments,
+      elevation: f.elevation,
+      properties: f.properties,
+      side: f.side,
+    };
+  }
+
+  private populateReverseIndexes(featureItem: FeatureItem) {
+    for (const hid of featureItem.hexIds) {
+      if (!this._hexToFeatures.has(hid)) {
+        this._hexToFeatures.set(hid, []);
+      }
+      this._hexToFeatures.get(hid)?.push(featureItem);
+    }
+    for (const eid of featureItem.edgeIds) {
+      if (!this._edgeToFeatures.has(eid)) {
+        this._edgeToFeatures.set(eid, []);
+      }
+      this._edgeToFeatures.get(eid)?.push(featureItem);
+    }
+    for (const vid of featureItem.vertexIds) {
+      if (!this._vertexToFeatures.has(vid)) {
+        this._vertexToFeatures.set(vid, []);
+      }
+      this._vertexToFeatures.get(vid)?.push(featureItem);
+    }
   }
 
   static load(yamlSource: string): MapModel {

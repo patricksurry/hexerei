@@ -82,7 +82,11 @@ export function getCanonicalBoundaryId(a: Cube, b: Cube | null, dirFromA?: numbe
  * A vertex touches 3 hexes (in infinite grid).
  * Identified by the 3 hex IDs sorted.
  */
-export function getCanonicalVertexId(hex: Cube, corner: number, orientation: HexOrientation = 'flat'): string {
+export function getCanonicalVertexId(
+  hex: Cube,
+  corner: number,
+  orientation: HexOrientation = 'flat'
+): string {
   const isPointy = orientation === 'pointy';
   const n1 = hexNeighbor(hex, (corner + (isPointy ? 1 : 0)) % 6);
   const n2 = hexNeighbor(hex, (corner + (isPointy ? 2 : 1)) % 6);
@@ -131,7 +135,7 @@ export function offsetToCube(
 
   if (top === 'flat') {
     const q = col;
-    let r;
+    let r: number;
     if (stagger === Stagger.Odd) {
       r = row - (col - (col & 1)) / 2;
     } else {
@@ -140,7 +144,7 @@ export function offsetToCube(
     return createHex(q, r, -q - r);
   }
   const r = row;
-  let q;
+  let q: number;
   if (stagger === Stagger.Odd) {
     q = col - (row - (row & 1)) / 2;
   } else {
@@ -155,7 +159,7 @@ export function cubeToOffset(cube: Cube, orientation: Orientation = 'flat-down')
 
   if (top === 'flat') {
     const col = cube.q;
-    let row;
+    let row: number;
     if (stagger === Stagger.Odd) {
       row = cube.r + (cube.q - (cube.q & 1)) / 2;
     } else {
@@ -164,7 +168,7 @@ export function cubeToOffset(cube: Cube, orientation: Orientation = 'flat-down')
     return { x: col, y: row };
   }
   const row = cube.r;
-  let col;
+  let col: number;
   if (stagger === Stagger.Odd) {
     col = cube.q + (cube.r - (cube.r & 1)) / 2;
   } else {
@@ -340,7 +344,7 @@ export function formatHexLabel(
   labelFormat: string,
   orientation: Orientation,
   firstCol: number = 0,
-  firstRow: number = 0,
+  firstRow: number = 0
 ): string {
   const offset = cubeToOffset(hex, orientation);
   const col = offset.x + firstCol;
@@ -351,7 +355,6 @@ export function formatHexLabel(
       return `${String(col).padStart(2, '0')}.${String(row).padStart(2, '0')}`;
     case 'AYY':
       return `${String.fromCharCode(64 + col)}${String(row).padStart(2, '0')}`;
-    case 'XXYY':
     default:
       return `${String(col).padStart(2, '0')}${String(row).padStart(2, '0')}`;
   }
@@ -362,7 +365,7 @@ export function parseHexLabel(
   labelFormat: string,
   orientation: Orientation,
   firstCol: number = 0,
-  firstRow: number = 0,
+  firstRow: number = 0
 ): Cube {
   let col: number;
   let row: number;
@@ -379,7 +382,6 @@ export function parseHexLabel(
       row = parseInt(label.slice(1), 10);
       break;
     }
-    case 'XXYY':
     default: {
       const colStr = label.slice(0, -2);
       const rowStr = label.slice(-2);

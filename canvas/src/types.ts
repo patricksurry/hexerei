@@ -23,6 +23,15 @@ export interface FeatureItem {
   side?: 'both' | 'in' | 'out' | 'left' | 'right';
 }
 
+export interface SceneHighlight {
+  type: 'hex' | 'edge' | 'vertex';
+  hexIds?: string[];
+  boundaryId?: string;
+  vertexId?: string;
+  color: string;
+  style: 'select' | 'hover' | 'ghost' | 'dim';
+}
+
 export type Selection =
   | { type: 'none' }
   | { type: 'hex'; hexId: string; label: string }

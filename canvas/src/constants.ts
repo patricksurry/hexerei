@@ -23,3 +23,10 @@ export const ZOOM_ANIMATION_DURATION = 300; // ms
  * Culling
  */
 export const SCENE_CULL_PADDING_FACTOR = 1.5;
+
+/**
+ * Selection and Highlighting
+ */
+export const ACCENT_HEX = '#00D4FF';
+export const ACCENT_EDGE = '#FF44FF';
+export const ACCENT_VERTEX = '#FFDD00';

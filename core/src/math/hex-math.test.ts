@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as Hex from './hex-math.js';
 import {
-  parseBoundaryId,
-  parseVertexId,
-  hexId,
-  formatHexLabel,
-  parseHexLabel,
   createHex,
   edgeEndpoints,
+  formatHexLabel,
+  hexId,
+  parseBoundaryId,
+  parseHexLabel,
+  parseVertexId,
   vertexPoint,
 } from './hex-math.js';
 
@@ -248,9 +248,9 @@ describe('Hex Math', () => {
       const a = { q: 0, r: 0, s: 0 };
       const b = { q: 1, r: -2, s: 1 };
       // hexLine(a, b, 1) should be same as hexLine(b, a, 1).reverse()
-      const pathAB = Hex.hexLine(a, b, 1);
-      const pathBA = Hex.hexLine(b, a, 1);
-      expect(pathAB).toEqual([...pathBA].reverse());
+      const pathAb = Hex.hexLine(a, b, 1);
+      const pathBa = Hex.hexLine(b, a, 1);
+      expect(pathAb).toEqual([...pathBa].reverse());
     });
 
     it('produces different results for flipped nudge on ambiguous path', () => {
@@ -538,18 +538,20 @@ describe('Hex Math', () => {
       expect(p0201.y).toBe(1);
     });
 
-    it.each(['flat-down', 'flat-up', 'pointy-right', 'pointy-left'] as Hex.Orientation[])(
-      'round-trip raw offsets for %s',
-      (orientation) => {
-        for (let q = -10; q <= 10; q++) {
-          for (let r = -10; r <= 10; r++) {
-            const cube = Hex.offsetToCube(q, r, orientation);
-            const back = Hex.cubeToOffset(cube, orientation);
-            expect(back.x).toBe(q);
-            expect(back.y).toBe(r);
-          }
+    it.each([
+      'flat-down',
+      'flat-up',
+      'pointy-right',
+      'pointy-left',
+    ] as Hex.Orientation[])('round-trip raw offsets for %s', (orientation) => {
+      for (let q = -10; q <= 10; q++) {
+        for (let r = -10; r <= 10; r++) {
+          const cube = Hex.offsetToCube(q, r, orientation);
+          const back = Hex.cubeToOffset(cube, orientation);
+          expect(back.x).toBe(q);
+          expect(back.y).toBe(r);
         }
       }
-    );
+    });
   });
 });
