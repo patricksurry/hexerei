@@ -1,7 +1,7 @@
 import { Hex, HexPath } from '@hexmap/core';
-import { Selection } from './types.js';
-import { MapModel } from './model.js';
-import { SceneHighlight } from './scene.js'; // Will move to scene.ts soon
+import { ACCENT_EDGE, ACCENT_HEX, ACCENT_VERTEX } from './constants.js';
+import type { MapModel } from './model.js';
+import type { SceneHighlight, Selection } from './types.js';
 
 export function clearSelection(): Selection {
   return { type: 'none' };
@@ -89,10 +89,6 @@ export function topmostFeatureAtVertex(vertexId: string, model: MapModel): numbe
   return features.length > 0 ? features[features.length - 1].index : null;
 }
 
-export const ACCENT_HEX = '#00D4FF';
-export const ACCENT_EDGE = '#FF44FF';
-export const ACCENT_VERTEX = '#FFDD00';
-
 export function highlightsForSelection(
   selection: Selection,
   model: MapModel,
@@ -107,7 +103,7 @@ export function highlightsForSelection(
       return [];
     case 'hex':
       return [{ type: 'hex', hexIds: [selection.hexId], color: accentHex, style: 'select' }];
-    case 'edge':
+    case 'edge': {
       const eParts = Hex.parseBoundaryId(selection.boundaryId);
       const hexIds = [Hex.hexId(eParts.hexA)];
       if (eParts.hexB) hexIds.push(Hex.hexId(eParts.hexB));
@@ -122,7 +118,8 @@ export function highlightsForSelection(
         },
         { type: 'hex', hexIds, color: accentEdge, style: 'hover' }, // Subtle background
       ];
-    case 'vertex':
+    }
+    case 'vertex': {
       const vParts = Hex.parseVertexId(selection.vertexId).map(Hex.hexId);
       return [
         {
@@ -134,7 +131,8 @@ export function highlightsForSelection(
         },
         { type: 'hex', hexIds: vParts, color: accentVertex, style: 'hover' }, // Subtle background
       ];
-    case 'feature':
+    }
+    case 'feature': {
       const featureHexIds = selection.indices.flatMap((idx) => model.features[idx].hexIds);
       return [
         {
@@ -144,6 +142,7 @@ export function highlightsForSelection(
           style: 'select',
         },
       ];
+    }
   }
 }
 

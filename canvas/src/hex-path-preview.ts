@@ -1,5 +1,5 @@
-import { HexPath, GeometryType } from '@hexmap/core';
-import { MapModel } from './model.js';
+import { type GeometryType, HexPath } from '@hexmap/core';
+import type { MapModel } from './model.js';
 
 export interface HexPathPreview {
   hexIds: string[];

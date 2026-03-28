@@ -1,47 +1,47 @@
-import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import { Hex, HexPath } from '@hexmap/core';
 import {
-  MapModel,
-  CommandHistory,
-  MapCommand,
-  Selection,
-  HitResult,
-  HexPathPreview,
-  parseHexPathInput,
-  SceneHighlight,
-  clearSelection,
-  selectHex,
-  selectFeature,
-  selectEdge,
-  selectVertex,
-  highlightsForSelection,
-  highlightsForHover,
-  highlightsForCursor,
-  topmostFeatureAtHex,
-  topmostFeatureAtEdge,
-  topmostFeatureAtVertex,
-  boundaryIdToHexPath,
-  vertexIdToHexPath,
   ACCENT_HEX,
+  boundaryIdToHexPath,
+  CommandHistory,
+  clearSelection,
+  type HexPathPreview,
+  type HitResult,
+  highlightsForCursor,
+  highlightsForHover,
+  highlightsForSelection,
+  type MapCommand,
+  MapModel,
+  parseHexPathInput,
+  type SceneHighlight,
+  type Selection,
+  selectEdge,
+  selectFeature,
+  selectHex,
+  selectVertex,
+  topmostFeatureAtEdge,
+  topmostFeatureAtHex,
+  topmostFeatureAtVertex,
+  vertexIdToHexPath,
 } from '@hexmap/canvas';
-import { downloadFile } from './utils/download';
-import { AppLayout } from './layout/AppLayout';
-import { CommandBar, CommandBarRef } from './components/CommandBar';
-import { WelcomeScreen } from './components/WelcomeScreen';
-import { ShortcutsOverlay } from './components/ShortcutsOverlay';
-import { PaintBadge } from './components/PaintBadge';
+import { Hex, HexPath } from '@hexmap/core';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CanvasHost, type CanvasHostRef } from './canvas/CanvasHost';
+import { CommandBar, type CommandBarRef } from './components/CommandBar';
 import { FeatureStack } from './components/FeatureStack';
 import { Inspector } from './components/Inspector';
-import { StatusBar } from './components/StatusBar';
 import { NewMapDialog } from './components/NewMapDialog';
-import { CanvasHost, CanvasHostRef } from './canvas/CanvasHost';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { PaintBadge } from './components/PaintBadge';
+import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { StatusBar } from './components/StatusBar';
+import { WelcomeScreen } from './components/WelcomeScreen';
 import { useHybridFocus } from './hooks/useHybridFocus';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { AppLayout } from './layout/AppLayout';
+import { downloadFile } from './utils/download';
 import { filterFeatures } from './utils/filter-features';
 
 export const App = () => {
   const historyRef = useRef<CommandHistory | null>(null);
-  const [historyVersion, setHistoryVersion] = useState(0);
+  const [_historyVersion, setHistoryVersion] = useState(0);
   const history = historyRef.current;
   const model = history?.currentState.model ?? null;
   const [leftPanelVisible, setLeftPanelVisible] = useState(true);
@@ -212,7 +212,7 @@ export const App = () => {
   useHybridFocus({ onCapture: handleHybridCapture });
 
   const filteredIndices = useMemo(() => {
-    if (!filterQuery || !model) return null; // null = no filter active
+    if (!(filterQuery && model)) return null; // null = no filter active
     return filterFeatures(model.features, filterQuery);
   }, [filterQuery, model]);
 
@@ -244,7 +244,7 @@ export const App = () => {
       ...previewHighlights,
       ...dimHighlights,
     ];
-  }, [selection, hoverIndex, cursorHex, model, preview, historyVersion, filteredIndices]);
+  }, [selection, hoverIndex, cursorHex, model, preview, filteredIndices]);
 
   const stackSelectedIndices = useMemo(() => {
     if (!model) return [];
@@ -254,10 +254,10 @@ export const App = () => {
       return idx !== null ? [idx] : [];
     }
     return [];
-  }, [selection, model, historyVersion]);
+  }, [selection, model]);
 
   const gotoSuggestions = useMemo(() => {
-    if (!model || !commandValue.startsWith('@')) return [];
+    if (!(model && commandValue.startsWith('@'))) return [];
     const query = commandValue.substring(1).toLowerCase();
     if (!query) {
       return model.features
@@ -275,7 +275,7 @@ export const App = () => {
   }, [commandValue, model]);
 
   const handlePaintClick = (hit: HitResult, shiftKey: boolean) => {
-    if (!paintState || !model || hit.type === 'none') return;
+    if (!(paintState && model) || hit.type === 'none') return;
     if (hit.type !== paintState.geometry) return;
 
     const hp = getHexPath();
@@ -361,7 +361,7 @@ export const App = () => {
 
   const handleCommandSubmit = (value: string) => {
     if (!value.trim()) return;
-    
+
     // Commands that work without a model
     if (value.startsWith('>')) {
       const cmd = value.substring(1).trim().toLowerCase();
@@ -450,7 +450,7 @@ export const App = () => {
       }
     };
     reader.readAsText(file);
-    
+
     // Clear input so the same file can be selected again
     e.target.value = '';
   };
@@ -530,7 +530,9 @@ export const App = () => {
             features={features}
             filteredIndices={filteredIndices}
             selectedIndices={stackSelectedIndices}
-            terrainColor={(t, geo) => model?.terrainColor(geo as 'hex' | 'edge' | 'vertex', t) ?? '#888'}
+            terrainColor={(t, geo) =>
+              model?.terrainColor(geo as 'hex' | 'edge' | 'vertex', t) ?? '#888'
+            }
             onSelect={handleSelectFeature}
             onHover={setHoverIndex}
             dispatch={dispatch}
@@ -549,7 +551,11 @@ export const App = () => {
                 highlights={highlights}
                 segments={preview?.segments ?? []}
                 paintTerrainKey={paintState?.terrainKey ?? null}
-                paintTerrainColor={paintState ? model?.terrainColor(paintState.geometry, paintState.terrainKey) : null}
+                paintTerrainColor={
+                  paintState
+                    ? model?.terrainColor(paintState.geometry, paintState.terrainKey)
+                    : null
+                }
                 paintGeometry={paintState?.geometry ?? null}
                 onPaintClick={handlePaintClick}
               />
@@ -562,7 +568,9 @@ export const App = () => {
             {paintState && (
               <PaintBadge
                 terrainKey={paintState.terrainKey}
-                terrainColor={model?.terrainColor(paintState.geometry, paintState.terrainKey) ?? '#888'}
+                terrainColor={
+                  model?.terrainColor(paintState.geometry, paintState.terrainKey) ?? '#888'
+                }
                 onExit={() => setPaintState(null)}
               />
             )}
@@ -578,9 +586,7 @@ export const App = () => {
             paintGeometry={paintState?.geometry ?? null}
             onPaintActivate={(key, geometry) =>
               setPaintState(
-                key && geometry
-                  ? { terrainKey: key, geometry, targetFeatureIndex: null }
-                  : null
+                key && geometry ? { terrainKey: key, geometry, targetFeatureIndex: null } : null
               )
             }
           />
@@ -597,7 +603,9 @@ export const App = () => {
             mapTitle={mapTitle}
             dirty={history?.isDirty ?? false}
             paintTerrainKey={paintState?.terrainKey ?? null}
-            paintTerrainColor={paintState ? model?.terrainColor(paintState.geometry, paintState.terrainKey) : null}
+            paintTerrainColor={
+              paintState ? model?.terrainColor(paintState.geometry, paintState.terrainKey) : null
+            }
           />
         }
       />
@@ -607,7 +615,10 @@ export const App = () => {
           onCreateMap={(yaml) => {
             try {
               const newModel = MapModel.load(yaml);
-              historyRef.current = new CommandHistory({ document: newModel.document, model: newModel });
+              historyRef.current = new CommandHistory({
+                document: newModel.document,
+                model: newModel,
+              });
               setHistoryVersion((v) => v + 1);
               setSelection(clearSelection());
               setShowNewMapDialog(false);

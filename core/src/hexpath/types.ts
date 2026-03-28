@@ -14,8 +14,3 @@ export interface HexPathResult {
 /**
  * Metadata for a path item (internal use).
  */
-export interface PathItem {
-  id: string;
-  next?: string;
-  prev?: string;
-}

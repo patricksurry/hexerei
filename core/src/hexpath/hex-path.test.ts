@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { HexMesh } from '../mesh/hex-mesh.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import * as Hex from '../math/hex-math.js';
+import { HexMesh } from '../mesh/hex-mesh.js';
 import { HexPath } from './hex-path.js';
 
 describe('HexPath RFC Compliance', () => {
@@ -146,9 +146,9 @@ describe('HexPath RFC Compliance', () => {
     it('should exhibit reversal symmetry with flipped nudge', () => {
       // hexLine(a, b, nudge) == reverse(hexLine(b, a, nudge))
       // So a ~b should be reverse of b ~a
-      const pathAB = hexPath.resolve('0000 ~ 0102');
-      const pathBA = hexPath.resolve('0102 ~ 0000');
-      expect(pathAB.items).toEqual([...pathBA.items].reverse());
+      const pathAb = hexPath.resolve('0000 ~ 0102');
+      const pathBa = hexPath.resolve('0102 ~ 0000');
+      expect(pathAb.items).toEqual([...pathBa.items].reverse());
     });
 
     it('should throw on leading ~ with no left-hand operand', () => {
@@ -238,7 +238,7 @@ describe('HexPath RFC Compliance', () => {
     }
 
     // 20-col × 12-row grid, 1-indexed — covers all test coordinates
-    function makeHP(orientation: Hex.Orientation): HexPath {
+    function makeHp(orientation: Hex.Orientation): HexPath {
       const grid = Hex.createRectangularGrid(20, 12, orientation, 1, 1);
       const m = new HexMesh(grid, {
         layout: { orientation, coordinates: { first: [1, 1] } },
@@ -250,7 +250,7 @@ describe('HexPath RFC Compliance', () => {
     describe('flat-up: constant-row paths stay on the same row', () => {
       let hp: HexPath;
       beforeEach(() => {
-        hp = makeHP('flat-up');
+        hp = makeHp('flat-up');
       });
 
       it('0502→1102: row 2, odd-start col (min.q=5) — BFM failing case', () => {
@@ -303,7 +303,7 @@ describe('HexPath RFC Compliance', () => {
     describe('flat-down: constant-row paths stay on the same row', () => {
       let hp: HexPath;
       beforeEach(() => {
-        hp = makeHP('flat-down');
+        hp = makeHp('flat-down');
       });
 
       it('0502→1102: row 2, odd-start col (min.q=5)', () => {
@@ -342,7 +342,7 @@ describe('HexPath RFC Compliance', () => {
     describe('pointy-right: constant-col paths stay on the same col', () => {
       let hp: HexPath;
       beforeEach(() => {
-        hp = makeHP('pointy-right');
+        hp = makeHp('pointy-right');
       });
 
       it('0205→0211: col 2, odd-start row (min.r=5)', () => {
@@ -383,7 +383,7 @@ describe('HexPath RFC Compliance', () => {
     describe('pointy-left: constant-col paths stay on the same col', () => {
       let hp: HexPath;
       beforeEach(() => {
-        hp = makeHP('pointy-left');
+        hp = makeHp('pointy-left');
       });
 
       it('0205→0211: col 2, odd-start row (min.r=5)', () => {
@@ -636,19 +636,19 @@ describe('HexPath RFC Compliance', () => {
     it('should return segments array in result', () => {
       const result = hexPath.resolve('0101 - 0103');
       expect(result.segments).toBeDefined();
-      expect(result.segments!.length).toBeGreaterThanOrEqual(1);
+      expect(result.segments?.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should create separate segments on jump', () => {
       const result = hexPath.resolve('0101 - 0103 0201 - 0203');
       expect(result.segments).toBeDefined();
-      expect(result.segments!.length).toBe(2);
+      expect(result.segments?.length).toBe(2);
     });
 
     it('should create separate segments on keyword boundary', () => {
       const result = hexPath.resolve('0101 - 0103 include 0201 - 0203');
       expect(result.segments).toBeDefined();
-      expect(result.segments!.length).toBe(2);
+      expect(result.segments?.length).toBe(2);
     });
   });
 
@@ -727,7 +727,7 @@ describe('HexPath RFC Compliance', () => {
       const output = hexPath.serialize(result.segments!, result.type);
       const re = hexPath.resolve(output);
       expect(re.items.sort()).toEqual(result.items.sort());
-      expect(re.segments!.length).toBe(result.segments!.length);
+      expect(re.segments?.length).toBe(result.segments?.length);
     });
 
     it('serializes edge atoms', () => {
@@ -770,7 +770,7 @@ describe('HexPath RFC Compliance', () => {
         const output = hexPath.serialize(result.segments!, result.type);
         const result2 = hexPath.resolve(output);
         expect(result2.items.sort()).toEqual(result.items.sort());
-        expect(result2.segments!.length).toEqual(result.segments!.length);
+        expect(result2.segments?.length).toEqual(result.segments?.length);
       });
     }
   });
@@ -789,9 +789,9 @@ describe('HexPath RFC Compliance', () => {
       const result = hexPath.resolve('0101 - 0301 - 0303 - 0103 fill');
       expect(result.segments).toBeDefined();
       // The boundary path should be a single segment (closed loop)
-      expect(result.segments!.length).toBe(1);
+      expect(result.segments?.length).toBe(1);
       // The segment should include the boundary hexes
-      const boundarySegment = result.segments![0];
+      const boundarySegment = result.segments?.[0];
       expect(boundarySegment.length).toBeGreaterThan(0);
       // Interior hexes are in items but NOT in any segment
       const segmentIds = new Set(boundarySegment);

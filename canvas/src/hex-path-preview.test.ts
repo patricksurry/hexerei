@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parseHexPathInput } from './hex-path-preview.js';
 import { MapModel } from './model.js';
 
@@ -46,7 +46,7 @@ describe('HexPath Preview', () => {
       expect(seg).toHaveLength(1);
       expect(seg[0]).toMatch(/^-?\d+,-?\d+,-?\d+$/);
     });
-    expect(result.segments![0][0]).not.toEqual(result.segments![1][0]);
+    expect(result.segments?.[0][0]).not.toEqual(result.segments?.[1][0]);
   });
 
   // I1: trailing separator should be an error, not a silent partial result
@@ -68,12 +68,12 @@ describe('HexPath Preview', () => {
     const result = parseHexPathInput('0101 0201 0101', model);
     expect(result.hexIds).toHaveLength(2); // Set deduplication
     expect(result.segments).toHaveLength(3); // traversal order with repeats
-    expect(result.segments![0][0]).toEqual(result.segments![2][0]); // 0101 at start and end
+    expect(result.segments?.[0][0]).toEqual(result.segments?.[2][0]); // 0101 at start and end
   });
 
   it('connected path produces a single segment with multiple items', () => {
     const result = parseHexPathInput('0101 - 0103', model);
     expect(result.segments).toHaveLength(1);
-    expect(result.segments![0]).toHaveLength(3);
+    expect(result.segments?.[0]).toHaveLength(3);
   });
 });

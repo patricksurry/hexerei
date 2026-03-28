@@ -1,6 +1,6 @@
 import * as Hex from '../math/hex-math.js';
-import { MeshMap } from '../mesh/types.js';
-import { HexPathResult, GeometryType } from './types.js';
+import type { MeshMap } from '../mesh/types.js';
+import type { GeometryType, HexPathResult } from './types.js';
 
 enum ParseMode {
   ADD = 'include',
@@ -270,7 +270,7 @@ export class HexPath {
 
       const stepMatch = token.match(/^(\d*)\*?(n|ne|se|s|sw|nw|e|w)$/i);
       if (stepMatch) {
-        const count = parseInt(stepMatch[1] || '1');
+        const count = parseInt(stepMatch[1] || '1', 10);
         const dir = this.parseDirection(stepMatch[2]);
         if (cursor.lastHex) {
           if (cursor.pendingConnector === 'none') {
@@ -470,7 +470,7 @@ export class HexPath {
     const alphaMatch = token.match(/^([a-z]+)(\d+)(?:(?:\/|\.|@)(.*))?$/i);
     if (alphaMatch) {
       const colStr = alphaMatch[1].toLowerCase();
-      const row = parseInt(alphaMatch[2]);
+      const row = parseInt(alphaMatch[2], 10);
       let col = 0;
       for (let i = 0; i < colStr.length; i++) {
         col = col * 26 + (colStr.charCodeAt(i) - 'a'.charCodeAt(0) + 1);
@@ -497,7 +497,7 @@ export class HexPath {
         return { id: this.resolveVertex(hexId, suffix), type: 'vertex' };
       }
       if (separator === '@') {
-        const hour = parseInt(suffix);
+        const hour = parseInt(suffix, 10);
         const type = this.inferType(token);
         if (type === 'edge') return { id: this.resolveEdge(hexId, hour.toString()), type: 'edge' };
         if (type === 'vertex')
@@ -514,11 +514,11 @@ export class HexPath {
       let col;
       let row;
       if (format === 'RRCC') {
-        row = parseInt(coords.substring(0, 2));
-        col = parseInt(coords.substring(2, 4));
+        row = parseInt(coords.substring(0, 2), 10);
+        col = parseInt(coords.substring(2, 4), 10);
       } else {
-        col = parseInt(coords.substring(0, 2));
-        row = parseInt(coords.substring(2, 4));
+        col = parseInt(coords.substring(0, 2), 10);
+        row = parseInt(coords.substring(2, 4), 10);
       }
       // Use raw col/row directly - offsetToCube handles stagger parity
       const cube = Hex.offsetToCube(col, row, this.options.orientation);
@@ -542,7 +542,7 @@ export class HexPath {
         return { id: this.resolveVertex(hexId, suffix), type: 'vertex' };
       }
       if (separator === '@') {
-        const hour = parseInt(suffix);
+        const hour = parseInt(suffix, 10);
         const type = this.inferType(token);
         if (type === 'edge') return { id: this.resolveEdge(hexId, hour.toString()), type: 'edge' };
         if (type === 'vertex')
@@ -718,8 +718,8 @@ export class HexPath {
     if (top === 'flat' && clockMappingFlat[d] !== undefined) return clockMappingFlat[d];
     if (top === 'pointy' && clockMappingPointy[d] !== undefined) return clockMappingPointy[d];
 
-    const numeric = parseInt(dir);
-    if (!isNaN(numeric)) return ((numeric % 6) + 6) % 6;
+    const numeric = parseInt(dir, 10);
+    if (!Number.isNaN(numeric)) return ((numeric % 6) + 6) % 6;
     return 0;
   }
 }
