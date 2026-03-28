@@ -1,4 +1,5 @@
 import { FeatureItem, MapCommand } from '@hexmap/canvas';
+import { TerrainChip } from './TerrainChip';
 import './FeatureStack.css';
 
 interface FeatureStackProps {
@@ -40,6 +41,7 @@ export const FeatureStack = ({
         <button
           className="btn-icon"
           aria-label="Add feature"
+          title="Add empty feature"
           onClick={() => dispatch?.({ type: 'addFeature', feature: { at: '' } })}
         >
           +
@@ -50,9 +52,9 @@ export const FeatureStack = ({
           const isSelected = selectedIndices.includes(feature.index);
           const label =
             feature.label ||
-            (feature.isBase
-              ? 'Base Layer'
-              : feature.terrain || feature.id || `Feature ${feature.index}`);
+            feature.id ||
+            feature.terrain ||
+            `Feature ${feature.index}`;
 
           return (
             <li
@@ -70,21 +72,19 @@ export const FeatureStack = ({
               onMouseEnter={() => onHover?.(feature.index)}
               onMouseLeave={() => onHover?.(null)}
             >
-              {/* <div className="feature-drag-handle">⋮⋮</div> */}
-              <div
-                className="feature-color-chip"
-                style={{ backgroundColor: getTerrainColor(feature.terrain, feature.geometryType) }}
-              />
-              <div className="feature-info">
-                <div className="feature-label truncate">{label}</div>
-                <div
-                  className="feature-at font-mono truncate"
-                  style={{ color: 'rgba(0, 180, 220, 0.5)' }}
-                >
-                  {feature.at}
-                  <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>
-                    {feature.isBase ? '(base)' : ''}
-                  </span>
+              <div className="feature-main">
+                <TerrainChip
+                  color={getTerrainColor(feature.terrain, feature.geometryType)}
+                  geometry={feature.geometryType}
+                />
+                <div className="feature-info">
+                  <div className="feature-label truncate">{label}</div>
+                  <div className="feature-at font-mono truncate">
+                    {feature.at}
+                    <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>
+                      {feature.isBase ? '(base)' : ''}
+                    </span>
+                  </div>
                 </div>
               </div>
             </li>

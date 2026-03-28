@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, test } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { Hex } from '@hexmap/core';
 import { Selection, MapModel, MapCommand } from '@hexmap/canvas';
@@ -56,10 +56,10 @@ features:
 `;
 
 describe('Inspector', () => {
-  it('renders placeholder when nothing selected', () => {
+  test('renders placeholder when nothing selected', () => {
     const sel: Selection = { type: 'none' };
     render(<Inspector selection={sel} model={null} />);
-    expect(screen.getByText(/Loading/i)).toBeDefined();
+    expect(screen.getByText(/No map loaded/i)).toBeDefined();
   });
 
   it('shows terrain types when nothing is selected', () => {
@@ -109,13 +109,13 @@ describe('Inspector', () => {
   });
 
   it('dispatches setLayout when orientation is changed', () => {
-    const model = MapModel.load(METADATA_YAML); // Note: METADATA_YAML was added to the test file in Task 1
+    const model = MapModel.load(METADATA_YAML);
     const sel: Selection = { type: 'none' };
     const dispatched: MapCommand[] = [];
     render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
 
-    const orientationSelect = screen.getByDisplayValue('flat-down');
-    fireEvent.change(orientationSelect, { target: { value: 'pointy-right' } });
+    const orientationBtn = screen.getByTitle('pointy-right');
+    fireEvent.click(orientationBtn);
 
     expect(dispatched).toHaveLength(1);
     expect(dispatched[0]).toEqual({ type: 'setLayout', key: 'orientation', value: 'pointy-right' });
@@ -182,13 +182,12 @@ describe('Inspector', () => {
     const dispatched: MapCommand[] = [];
     render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
 
-    // Click "clear" to expand
-    fireEvent.click(screen.getByText('clear'));
+    // Double-click "clear" to expand edit form
+    fireEvent.doubleClick(screen.getByText('clear'));
 
-    // Find the color input (type="color")
-    const colorInput = screen.getByLabelText('Terrain color');
+    // Find the color input via ColorPicker
+    const colorInput = screen.getByLabelText('Pick color');
     fireEvent.change(colorInput, { target: { value: '#ff0000' } });
-    fireEvent.blur(colorInput);
 
     expect(dispatched.length).toBeGreaterThanOrEqual(1);
     const setCmd = dispatched.find((c) => c.type === 'setTerrainType');
@@ -206,7 +205,7 @@ describe('Inspector', () => {
     render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
 
     // Click "clear" to expand
-    fireEvent.click(screen.getByText('clear'));
+    fireEvent.doubleClick(screen.getByText('clear'));
 
     const keyInput = screen.getByLabelText('Key');
     fireEvent.change(keyInput, { target: { value: 'clear_new' } });
@@ -245,7 +244,7 @@ describe('Inspector', () => {
     const dispatched: MapCommand[] = [];
     render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
 
-    fireEvent.click(screen.getByText('clear'));
+    fireEvent.doubleClick(screen.getByText('clear'));
 
     const typeSelect = screen.getByLabelText('Type');
     fireEvent.change(typeSelect, { target: { value: 'modifier' } });
@@ -271,7 +270,7 @@ describe('Inspector', () => {
       />
     );
 
-    const clearChip = document.querySelector('.terrain-color-chip') as HTMLElement;
+    const clearChip = document.querySelector('.terrain-chip') as HTMLElement;
     expect(clearChip).not.toBeNull();
     fireEvent.click(clearChip);
 
@@ -291,7 +290,7 @@ describe('Inspector', () => {
       />
     );
 
-    const clearChip = document.querySelector('.terrain-color-chip.active') as HTMLElement;
+    const clearChip = document.querySelector('.terrain-chip.active') as HTMLElement;
     expect(clearChip).not.toBeNull();
     fireEvent.click(clearChip);
 
@@ -315,13 +314,17 @@ describe('Inspector', () => {
   });
 
   describe('multi-geometry terrain sections', () => {
-    it('shows section headers for Hex, Edge, Vertex', () => {
+    it('shows section headers for Hex, Edge, Vertex via tabs', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
       const sel: Selection = { type: 'none' };
       render(<Inspector selection={sel} model={model} />);
 
       expect(screen.getByText('HEX TERRAIN')).toBeDefined();
+      
+      fireEvent.click(screen.getByText('edge'));
       expect(screen.getByText('EDGE TERRAIN')).toBeDefined();
+      
+      fireEvent.click(screen.getByText('vertex'));
       expect(screen.getByText('VERTEX TERRAIN')).toBeDefined();
     });
 
@@ -329,6 +332,8 @@ describe('Inspector', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
       const sel: Selection = { type: 'none' };
       render(<Inspector selection={sel} model={model} />);
+      
+      fireEvent.click(screen.getByText('edge'));
       expect(screen.getByText('river')).toBeDefined();
     });
 
@@ -338,6 +343,7 @@ describe('Inspector', () => {
       const dispatched: MapCommand[] = [];
       render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
 
+      fireEvent.click(screen.getByText('edge'));
       const riverRow = screen.getByText('river').closest('.terrain-row');
       const deleteBtn = within(riverRow as HTMLElement).getByRole('button', { name: /delete terrain/i });
       fireEvent.click(deleteBtn);
@@ -356,7 +362,7 @@ describe('Inspector', () => {
       const dispatched: MapCommand[] = [];
       render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
 
-      // Find the "+ Add Edge Terrain" button
+      fireEvent.click(screen.getByText('edge'));
       const addBtn = screen.getByText('+ Add Edge Terrain');
       fireEvent.click(addBtn);
 
@@ -367,8 +373,6 @@ describe('Inspector', () => {
     });
 
     it('isPaintActive only highlights matching geometry (not same-name key in different section)', () => {
-      // If hex and edge both have a key with the same name, only the one matching
-      // the current paint geometry should be highlighted.
       const yaml = `
 hexmap: "1.0"
 layout:
@@ -394,7 +398,8 @@ features:
         />
       );
 
-      // There should be exactly 1 paint-active row (edge's river), not 2
+      fireEvent.click(screen.getByText('edge'));
+
       const activeRows = document.querySelectorAll('.terrain-row.paint-active');
       expect(activeRows).toHaveLength(1);
     });
@@ -414,14 +419,12 @@ features:
       expect(dispatched).toHaveLength(1);
       expect(dispatched[0].type).toBe('addFeature');
       if (dispatched[0].type === 'addFeature') {
-        // Should be a hex-path edge expression like "0101/NE"
         expect(dispatched[0].feature.at).toMatch(/\d{4}\/[A-Z]+/);
       }
     });
 
     it('vertex view "Add Feature Here" dispatches addFeature with vertex path', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
-      // Create a valid vertex ID from three adjacent hexes
       const h1 = Hex.offsetToCube(1, 1, 'flat-down');
       const h2 = Hex.hexNeighbor(h1, 0);
       const h3 = Hex.hexNeighbor(h1, 1);
@@ -436,7 +439,6 @@ features:
       expect(dispatched).toHaveLength(1);
       expect(dispatched[0].type).toBe('addFeature');
       if (dispatched[0].type === 'addFeature') {
-        // Should be a hex-path vertex expression like "0101.0"
         expect(dispatched[0].feature.at).toMatch(/\d{4}\.\d/);
       }
     });
@@ -457,8 +459,9 @@ features:
         />
       );
 
+      fireEvent.click(screen.getByText('edge'));
       const riverRow = screen.getByText('river').closest('.terrain-row');
-      const chip = (riverRow as HTMLElement).querySelector('.terrain-color-chip');
+      const chip = (riverRow as HTMLElement).querySelector('.terrain-chip');
       fireEvent.click(chip!);
 
       expect(paintKey).toBe('river');

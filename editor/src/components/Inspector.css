@@ -14,6 +14,17 @@
   border-bottom: 1px solid var(--border-accent);
 }
 
+.inspector-section-header {
+  padding: 0 0 8px 0;
+  margin-bottom: 0;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent-hex);
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--border-accent);
+}
+
 .inspector-content {
   flex: 1;
   overflow-y: auto;
@@ -100,6 +111,11 @@
   font-size: var(--font-size-sm);
 }
 
+.neighbor-grid span {
+  color: var(--text-primary);
+  text-align: center;
+}
+
 .terrain-list {
   list-style: none;
   padding: 0;
@@ -179,10 +195,67 @@
 }
 
 .terrain-color-chip.active {
-  box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 4px var(--accent-hex);
+  box-shadow: 0 0 0 2px var(--bg-elevated), 0 0 0 4px var(--accent-hex);
   transform: scale(1.2);
 }
 
 .terrain-row.paint-active .terrain-row-header {
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+.terrain-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: var(--space-sm);
+}
+
+.terrain-tab {
+  flex: 1;
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.terrain-tab:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-focus);
+}
+
+.terrain-tab.active.terrain-tab-hex {
+  color: var(--accent-hex);
+  border-color: var(--accent-hex);
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.terrain-tab.active.terrain-tab-edge {
+  color: var(--accent-edge);
+  border-color: var(--accent-edge);
+  background: rgba(255, 68, 255, 0.08);
+}
+
+.terrain-tab.active.terrain-tab-vertex {
+  color: var(--accent-vertex);
+  border-color: var(--accent-vertex);
+  background: rgba(255, 221, 0, 0.08);
+}
+
+.inspector-at-readonly {
+  display: block;
+  word-break: break-all;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.inspector-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }

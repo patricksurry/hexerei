@@ -85,4 +85,48 @@ describe('FeatureStack', () => {
     fireEvent.click(items[0]);
     expect(onSelect).toHaveBeenCalledWith([1], 'none');
   });
+
+  describe('label display priority', () => {
+    const base = {
+      isBase: false,
+      hexIds: [],
+      edgeIds: [],
+      vertexIds: [],
+      tags: [],
+      geometryType: 'hex' as const,
+      segments: [],
+    };
+
+    test('shows label when present', () => {
+      const features = [
+        { ...base, index: 0, terrain: 'forest', at: '0101', label: 'Woods', id: 'f1' },
+      ] as FeatureItem[];
+      render(<FeatureStack features={features} terrainColor={() => '#000'} />);
+      expect(screen.getByText('Woods')).toBeDefined();
+    });
+
+    test('shows id when no label', () => {
+      const features = [
+        { ...base, index: 0, terrain: 'forest', at: '0101', id: 'river-1' },
+      ] as FeatureItem[];
+      render(<FeatureStack features={features} terrainColor={() => '#000'} />);
+      expect(screen.getByText('river-1')).toBeDefined();
+    });
+
+    test('shows terrain when no label or id', () => {
+      const features = [
+        { ...base, index: 0, terrain: 'forest', at: '0101' },
+      ] as FeatureItem[];
+      render(<FeatureStack features={features} terrainColor={() => '#000'} />);
+      expect(screen.getByText('forest')).toBeDefined();
+    });
+
+    test('shows fallback when nothing else', () => {
+      const features = [
+        { ...base, index: 0, terrain: '', at: '0101' },
+      ] as FeatureItem[];
+      render(<FeatureStack features={features} terrainColor={() => '#000'} />);
+      expect(screen.getByText('Feature 0')).toBeDefined();
+    });
+  });
 });

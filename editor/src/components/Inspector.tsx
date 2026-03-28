@@ -1,6 +1,12 @@
-import { Hex, Feature, TerrainTypeDef } from '@hexmap/core';
+import { Hex, Feature, TerrainTypeDef, HexPath } from '@hexmap/core';
 import { Selection, MapModel, MapCommand, TerrainDef, boundaryIdToHexPath, vertexIdToHexPath } from '@hexmap/canvas';
 import { useState } from 'react';
+import { CollapsibleSection } from './CollapsibleSection';
+import { OrientationPicker } from './OrientationPicker';
+import { OriginPicker } from './OriginPicker';
+import { ColorPicker } from './ColorPicker';
+import { TerrainChip } from './TerrainChip';
+import { TerrainSelect } from './TerrainSelect';
 import './Inspector.css';
 
 const buildDef = (def: TerrainDef): TerrainTypeDef => ({
@@ -26,10 +32,16 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     geometry: 'hex' | 'edge' | 'vertex';
   } | null>(null);
 
+  const [terrainTab, setTerrainTab] = useState<'hex' | 'edge' | 'vertex'>('hex');
+
   if (!model)
     return (
       <div className="inspector">
-        <div className="inspector-content">Loading...</div>
+        <div className="inspector-header">INSPECTOR</div>
+        <div className="inspector-content">
+          <p className="placeholder-text">No map loaded</p>
+          <p className="placeholder-text">Press Cmd+N to create or Cmd+O to open</p>
+        </div>
       </div>
     );
 
@@ -38,13 +50,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     title: string,
     defs: Map<string, TerrainDef>
   ) => (
-    <section className="inspector-section">
-      <h3
-        className="inspector-header"
-        style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-      >
-        {title}
-      </h3>
+    <CollapsibleSection title={title}>
       <ul className="terrain-list">
         {Array.from(defs.entries()).map(([key, def]) => {
           const isExpanded = expandedTerrain?.key === key && expandedTerrain?.geometry === geometry;
@@ -59,18 +65,18 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             >
               <div
                 className="terrain-row-header"
-                onClick={() =>
+                onDoubleClick={() =>
                   setExpandedTerrain(isExpanded ? null : { key, geometry })
                 }
+                onClick={() => {
+                  onPaintActivate?.(isPaintActive ? null : key, geometry);
+                }}
               >
-                <div
-                  className={`terrain-color-chip ${isPaintActive ? 'active' : ''}`}
-                  style={{ backgroundColor: def.color }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPaintActivate?.(isPaintActive ? null : key, geometry);
-                  }}
-                  title="Click to paint with this terrain"
+                <TerrainChip
+                  color={def.color}
+                  geometry={geometry}
+                  active={isPaintActive}
+                  title={isPaintActive ? 'Click to exit paint mode' : 'Click to paint, double-click to edit'}
                 />
                 <span className="terrain-key">{key}</span>
                 {def.name !== key && <span className="terrain-name">{def.name}</span>}
@@ -146,22 +152,18 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                     </select>
                   </div>
                   <div className="inspector-row">
-                    <label htmlFor={`terrain-color-${key}`}>Color</label>
-                    <input
-                      id={`terrain-color-${key}`}
-                      type="color"
-                      aria-label="Terrain color"
-                      defaultValue={def.color}
-                      key={`tc-${key}-${def.color}`}
-                      onBlur={(e) => {
-                        if (e.target.value !== def.color) {
+                    <label>Color</label>
+                    <ColorPicker
+                      value={def.color}
+                      onChange={(newColor) => {
+                        if (newColor !== def.color) {
                           dispatch?.({
                             type: 'setTerrainType',
                             geometry,
                             key,
                             def: {
                               ...buildDef(def),
-                              style: { color: e.target.value },
+                              style: { color: newColor },
                             },
                           });
                         }
@@ -211,16 +213,12 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
         }}
       >
         + Add {geometry.charAt(0).toUpperCase() + geometry.slice(1)} Terrain
-      </button>
-    </section>
+      </button></CollapsibleSection>
   );
   const renderMetadata = () => (
     <div className="inspector-content">
       <section className="inspector-section">
-        <h3
-          className="inspector-header"
-          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-        >
+        <h3 className="inspector-section-header">
           MAP METADATA
         </h3>
         <div className="inspector-row">
@@ -269,28 +267,20 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
           />
         </div>
       </section>
-      <section className="inspector-section">
-        <h3
-          className="inspector-header"
-          style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-        >
-          LAYOUT
-        </h3>
+      <CollapsibleSection title="LAYOUT">
         <div className="inspector-row">
           <label>Orientation</label>
-          <select
-            className="inspector-select"
-            defaultValue={model.grid.orientation}
-            key={`layout-orientation-${model.grid.orientation}`}
-            onChange={(e) => {
-              dispatch?.({ type: 'setLayout', key: 'orientation', value: e.target.value });
-            }}
-          >
-            <option value="flat-down">flat-down</option>
-            <option value="flat-up">flat-up</option>
-            <option value="pointy-right">pointy-right</option>
-            <option value="pointy-left">pointy-left</option>
-          </select>
+          <OrientationPicker
+            value={model.grid.orientation}
+            onChange={(val) => dispatch?.({ type: 'setLayout', key: 'orientation', value: val })}
+          />
+        </div>
+        <div className="inspector-row">
+          <label>Origin</label>
+          <OriginPicker
+            value={(model.document.getLayout().origin as any) || 'top-left'}
+            onChange={(val) => dispatch?.({ type: 'setLayout', key: 'origin', value: val })}
+          />
         </div>
         <div className="inspector-row">
           <label>Label Format</label>
@@ -307,11 +297,21 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             <option value="XX.YY">XX.YY</option>
             <option value="AYY">AYY</option>
           </select>
-        </div>
-      </section>
-      {renderTerrainSection('hex', 'HEX TERRAIN', model.terrainDefs('hex'))}
-      {renderTerrainSection('edge', 'EDGE TERRAIN', model.terrainDefs('edge'))}
-      {renderTerrainSection('vertex', 'VERTEX TERRAIN', model.terrainDefs('vertex'))}
+        </div></CollapsibleSection>
+        <CollapsibleSection title="TERRAIN">
+          <div className="terrain-tabs">
+            {(['hex', 'edge', 'vertex'] as const).map(geo => (
+              <button
+                key={geo}
+                className={`terrain-tab ${terrainTab === geo ? 'active' : ''} terrain-tab-${geo}`}
+                onClick={() => setTerrainTab(geo)}
+              >
+                {geo}
+              </button>
+            ))}
+          </div>
+          {renderTerrainSection(terrainTab, `${terrainTab.toUpperCase()} TERRAIN`, model.terrainDefs(terrainTab))}
+        </CollapsibleSection>
     </div>
   );
 
@@ -324,10 +324,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
       return (
         <div className="inspector-content">
           <section className="inspector-section">
-            <h3
-              className="inspector-header"
-              style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-            >
+            <h3 className="inspector-section-header">
               MULTIPLE SELECTED
             </h3>
             <p className="placeholder-text">{indices.length} features selected</p>
@@ -360,13 +357,34 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
 
     const terrainKeys = Array.from(model.terrainDefs(feature.geometryType).keys());
 
+    const isAllFeature = feature.at.trim() === '@all';
+    let expandedAt = feature.at;
+    let atomCount: number | null = null;
+    if (model) {
+      try {
+        const hp = new HexPath(model.mesh, {
+          labelFormat: model.grid.labelFormat,
+          orientation: model.grid.orientation,
+          firstCol: model.grid.firstCol,
+          firstRow: model.grid.firstRow,
+        });
+        const resolved = hp.resolve(feature.at);
+        atomCount = resolved.items.length;
+        if (isAllFeature) {
+          expandedAt = hp.serialize(
+            resolved.items.map((id) => [id]),
+            resolved.type
+          );
+        }
+      } catch {
+        // If resolve fails, show raw text
+      }
+    }
+
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             FEATURE PROPERTIES
           </h3>
           <div className="inspector-row">
@@ -381,47 +399,57 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
           </div>
           <div className="inspector-row">
             <label>ID</label>
-            <input
-              type="text"
-              className="inspector-input font-mono"
-              defaultValue={feature.id || ''}
-              key={`id-${featureIndex}-${feature.id}`}
-              onBlur={(e) => handleFieldBlur('id', e.target.value)}
-            />
+            {isAllFeature ? (
+              <span className="font-mono">all</span>
+            ) : (
+              <input
+                type="text"
+                className="inspector-input font-mono"
+                defaultValue={feature.id || ''}
+                key={`id-${featureIndex}-${feature.id}`}
+                onBlur={(e) => handleFieldBlur('id', e.target.value)}
+              />
+            )}
           </div>
           <div className="inspector-row">
             <label>Terrain</label>
-            <select
-              className="inspector-select"
-              defaultValue={feature.terrain}
-              key={`terrain-${featureIndex}-${feature.terrain}`}
-              onChange={(e) => handleFieldBlur('terrain', e.target.value)}
-            >
-              <option value="">(none)</option>
-              {terrainKeys.map((key) => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              ))}
-            </select>
+            <TerrainSelect
+              value={feature.terrain || ''}
+              terrainDefs={model.terrainDefs(feature.geometryType)}
+              geometry={feature.geometryType}
+              onChange={(key) => handleFieldBlur('terrain', key)}
+            />
           </div>
         </section>
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             GEOMETRY
           </h3>
           <div className="inspector-row">
             <label>At</label>
-            <input
-              type="text"
-              className="inspector-input font-mono"
-              defaultValue={feature.at}
-              key={`at-${featureIndex}-${feature.at}`}
-              onBlur={(e) => handleFieldBlur('at', e.target.value)}
-            />
+            <div style={{ flex: 1 }}>
+              {isAllFeature ? (
+                <span className="font-mono inspector-at-readonly">{expandedAt}</span>
+              ) : (
+                <input
+                  type="text"
+                  className="inspector-input font-mono"
+                  defaultValue={feature.at}
+                  key={`at-${featureIndex}-${feature.at}`}
+                  onBlur={(e) => handleFieldBlur('at', e.target.value)}
+                />
+              )}
+              {atomCount !== null && (
+                <div className="inspector-hint">
+                  {atomCount}{' '}
+                  {feature.geometryType === 'hex'
+                    ? (atomCount !== 1 ? 'hexes' : 'hex')
+                    : feature.geometryType === 'edge'
+                    ? (atomCount !== 1 ? 'edges' : 'edge')
+                    : (atomCount !== 1 ? 'vertices' : 'vertex')}
+                </div>
+              )}
+            </div>
           </div>
           <div className="inspector-row">
             <label>Elevation</label>
@@ -473,10 +501,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             COORDINATE
           </h3>
           <div className="inspector-row">
@@ -485,10 +510,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
           </div>
         </section>
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             TERRAIN
           </h3>
           <div className="inspector-row">
@@ -511,13 +533,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             </div>
           </div>
         </section>
-        <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
-            CONTRIBUTING FEATURES
-          </h3>
+        <CollapsibleSection title="CONTRIBUTING FEATURES">
           <ul className="inspector-list">
             {state.contributingFeatures.map((f) => (
               <li
@@ -528,26 +544,19 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 {f.label || f.terrain} {f.isBase && '(Base)'}
               </li>
             ))}
-          </ul>
-        </section>
-        <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
-            NEIGHBORS
-          </h3>
+          </ul></CollapsibleSection>
+        <CollapsibleSection title="NEIGHBORS">
           <div className="neighbor-grid">
             {state.neighborLabels.map((l) => (
               <span key={l} className="font-mono">
                 {l}
               </span>
             ))}
-          </div>
-        </section>
+          </div></CollapsibleSection>
         <div className="inspector-actions">
           <button
-            className="btn-primary"
+            className="btn-secondary"
+            style={{ marginTop: '12px', width: '100%' }}
             onClick={() => {
               dispatch?.({ type: 'addFeature', feature: { at: state.label } });
             }}
@@ -568,10 +577,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             BOUNDARY
           </h3>
           <div className="inspector-row">
@@ -580,10 +586,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
           </div>
         </section>
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             TERRAIN
           </h3>
           <div className="inspector-row">
@@ -606,13 +609,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             </div>
           </div>
         </section>
-        <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
-            CONTRIBUTING FEATURES
-          </h3>
+        <CollapsibleSection title="CONTRIBUTING FEATURES">
           <ul className="inspector-list">
             {edgeFeatures.map((f) => (
               <li
@@ -623,13 +620,9 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 {f.label || f.terrain}
               </li>
             ))}
-          </ul>
-        </section>
+          </ul></CollapsibleSection>
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             ADJACENT HEXES
           </h3>
           <div className="inspector-row">
@@ -643,7 +636,8 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
         </section>
         <div className="inspector-actions">
           <button
-            className="btn-primary"
+            className="btn-secondary"
+            style={{ marginTop: '12px', width: '100%' }}
             onClick={() => {
               dispatch?.({
                 type: 'addFeature',
@@ -678,10 +672,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             JUNCTION
           </h3>
           <div className="inspector-row">
@@ -690,10 +681,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
           </div>
         </section>
         <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
+          <h3 className="inspector-section-header">
             TERRAIN
           </h3>
           <div className="inspector-row">
@@ -716,13 +704,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             </div>
           </div>
         </section>
-        <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
-            CONTRIBUTING FEATURES
-          </h3>
+        <CollapsibleSection title="CONTRIBUTING FEATURES">
           <ul className="inspector-list">
             {vertexFeatures.map((f) => (
               <li
@@ -733,26 +715,19 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 {f.label || f.terrain}
               </li>
             ))}
-          </ul>
-        </section>
-        <section className="inspector-section">
-          <h3
-            className="inspector-header"
-            style={{ padding: '0 0 8px 0', marginBottom: '12px', fontSize: '10px' }}
-          >
-            MEETING HEXES
-          </h3>
+          </ul></CollapsibleSection>
+        <CollapsibleSection title="MEETING HEXES">
           <ul className="inspector-list">
             {meetingHexes.map((l) => (
               <li key={l} className="font-mono">
                 {l}
               </li>
             ))}
-          </ul>
-        </section>
+          </ul></CollapsibleSection>
         <div className="inspector-actions">
           <button
-            className="btn-primary"
+            className="btn-secondary"
+            style={{ marginTop: '12px', width: '100%' }}
             onClick={() => {
               dispatch?.({
                 type: 'addFeature',
