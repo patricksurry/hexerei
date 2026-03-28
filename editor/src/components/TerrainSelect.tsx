@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
-import { TerrainChip } from './TerrainChip';
 import type { TerrainDef } from '@hexmap/canvas';
+import { useEffect, useRef, useState } from 'react';
+import { TerrainChip } from './TerrainChip';
 import './TerrainSelect.css';
 
 interface TerrainSelectProps {
@@ -30,11 +30,7 @@ export const TerrainSelect = ({ value, terrainDefs, geometry, onChange }: Terrai
 
   return (
     <div className="terrain-select" ref={ref}>
-      <button
-        className="terrain-select-trigger"
-        onClick={() => setOpen(!open)}
-        type="button"
-      >
+      <button className="terrain-select-trigger" onClick={() => setOpen(!open)} type="button">
         {currentDef ? (
           <>
             <TerrainChip color={currentDef.color} geometry={geometry} />
@@ -49,7 +45,10 @@ export const TerrainSelect = ({ value, terrainDefs, geometry, onChange }: Terrai
         <ul className="terrain-select-dropdown">
           <li
             className={`terrain-select-option ${!value ? 'selected' : ''}`}
-            onClick={() => { onChange(''); setOpen(false); }}
+            onClick={() => {
+              onChange('');
+              setOpen(false);
+            }}
           >
             <span className="terrain-select-label terrain-select-none">(none)</span>
           </li>
@@ -57,7 +56,10 @@ export const TerrainSelect = ({ value, terrainDefs, geometry, onChange }: Terrai
             <li
               key={key}
               className={`terrain-select-option ${key === value ? 'selected' : ''}`}
-              onClick={() => { onChange(key); setOpen(false); }}
+              onClick={() => {
+                onChange(key);
+                setOpen(false);
+              }}
             >
               <TerrainChip color={def.color} geometry={geometry} />
               <span className="terrain-select-label">{key}</span>

@@ -1,4 +1,4 @@
-import { FeatureItem, MapCommand } from '@hexmap/canvas';
+import type { FeatureItem, MapCommand } from '@hexmap/canvas';
 import { TerrainChip } from './TerrainChip';
 import './FeatureStack.css';
 
@@ -26,18 +26,21 @@ export const FeatureStack = ({
     return 'var(--text-muted)';
   };
 
-  const visibleFeatures = filteredIndices != null
-    ? features.filter((f) => filteredIndices.includes(f.index))
-    : features;
+  const visibleFeatures =
+    filteredIndices != null ? features.filter((f) => filteredIndices.includes(f.index)) : features;
 
   const displayFeatures = [...visibleFeatures].reverse();
 
   return (
     <div className="feature-stack">
       <div className="feature-stack-header">
-        {filteredIndices != null
-          ? <span>{filteredIndices.length} of {features.length} features</span>
-          : 'FEATURE STACK'}
+        {filteredIndices != null ? (
+          <span>
+            {filteredIndices.length} of {features.length} features
+          </span>
+        ) : (
+          'FEATURE STACK'
+        )}
         <button
           className="btn-icon"
           aria-label="Add feature"
@@ -47,19 +50,15 @@ export const FeatureStack = ({
           +
         </button>
       </div>
-      <ul className="feature-list" role="listbox" tabIndex={0}>
+      <ul className="feature-list">
         {displayFeatures.map((feature) => {
           const isSelected = selectedIndices.includes(feature.index);
           const label =
-            feature.label ||
-            feature.id ||
-            feature.terrain ||
-            `Feature ${feature.index}`;
+            feature.label || feature.id || feature.terrain || `Feature ${feature.index}`;
 
           return (
             <li
               key={feature.index}
-              role="listitem"
               aria-selected={isSelected}
               data-base={feature.isBase}
               className={`feature-item ${isSelected ? 'selected' : ''}`}

@@ -1,4 +1,5 @@
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
+import type React from 'react';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
 import './CommandBar.css';
 
 interface CommandBarProps {
@@ -51,10 +52,12 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
     const showGotoDropdown = mode === 'goto' && gotoSuggestions && gotoSuggestions.length > 0;
 
     const commandQuery = mode === 'command' ? value.substring(1).trim().toLowerCase() : '';
-    const filteredCommands = mode === 'command' && commandQuery
-      ? COMMANDS.filter((c) => c.label.startsWith(commandQuery))
-      : COMMANDS;
-    const isExactMatch = filteredCommands.length === 1 && filteredCommands[0].label === commandQuery;
+    const filteredCommands =
+      mode === 'command' && commandQuery
+        ? COMMANDS.filter((c) => c.label.startsWith(commandQuery))
+        : COMMANDS;
+    const isExactMatch =
+      filteredCommands.length === 1 && filteredCommands[0].label === commandQuery;
     const showCommandDropdown = mode === 'command' && filteredCommands.length > 0 && !isExactMatch;
 
     const renderTokens = () => {
@@ -116,7 +119,9 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
               type="text"
               role="combobox"
               aria-label="command"
-              aria-expanded={showKeyDropdown || showGotoDropdown || showCommandDropdown ? 'true' : 'false'}
+              aria-expanded={
+                showKeyDropdown || showGotoDropdown || showCommandDropdown ? 'true' : 'false'
+              }
               aria-haspopup="listbox"
               autoComplete="off"
               spellCheck="false"
@@ -124,7 +129,9 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
               onChange={(e) => onChange?.(e.target.value)}
               onKeyDown={handleKeyDown}
               className="command-input font-mono"
-              placeholder={placeholder || 'Type a HexPath, or > for commands, / to search, @ to jump…'}
+              placeholder={
+                placeholder || 'Type a HexPath, or > for commands, / to search, @ to jump…'
+              }
             />
           </div>
         </div>
@@ -133,7 +140,6 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
             {SEARCH_KEYS.map((key) => (
               <li
                 key={key}
-                role="option"
                 aria-selected={false}
                 className="command-dropdown-item"
                 onClick={() => onChange?.(`/${key}:`)}
@@ -145,10 +151,9 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
         )}
         {showGotoDropdown && (
           <ul className="command-dropdown" role="listbox">
-            {gotoSuggestions!.map((s) => (
+            {gotoSuggestions?.map((s) => (
               <li
                 key={s.index}
-                role="option"
                 aria-selected={false}
                 className="command-dropdown-item"
                 onClick={() => onSubmit?.(`@${s.label}`)}
@@ -163,7 +168,6 @@ export const CommandBar = forwardRef<CommandBarRef, CommandBarProps>(
             {filteredCommands.map((cmd) => (
               <li
                 key={cmd.label}
-                role="option"
                 aria-selected={false}
                 className="command-dropdown-item"
                 onClick={() => onChange?.(`>${cmd.label}`)}

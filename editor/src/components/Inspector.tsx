@@ -1,10 +1,17 @@
-import { Hex, Feature, TerrainTypeDef, HexPath } from '@hexmap/core';
-import { Selection, MapModel, MapCommand, TerrainDef, boundaryIdToHexPath, vertexIdToHexPath } from '@hexmap/canvas';
+import {
+  boundaryIdToHexPath,
+  type MapCommand,
+  type MapModel,
+  type Selection,
+  type TerrainDef,
+  vertexIdToHexPath,
+} from '@hexmap/canvas';
+import { type Feature, Hex, HexPath, type TerrainTypeDef } from '@hexmap/core';
 import { useState } from 'react';
 import { CollapsibleSection } from './CollapsibleSection';
+import { ColorPicker } from './ColorPicker';
 import { OrientationPicker } from './OrientationPicker';
 import { OriginPicker } from './OriginPicker';
-import { ColorPicker } from './ColorPicker';
 import { TerrainChip } from './TerrainChip';
 import { TerrainSelect } from './TerrainSelect';
 import './Inspector.css';
@@ -26,7 +33,15 @@ interface InspectorProps {
   onPaintActivate?: (key: string | null, geometry?: 'hex' | 'edge' | 'vertex') => void;
 }
 
-export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTerrainKey, paintGeometry, onPaintActivate }: InspectorProps) => {
+export const Inspector = ({
+  selection,
+  model,
+  onSelectFeature,
+  dispatch,
+  paintTerrainKey,
+  paintGeometry,
+  onPaintActivate,
+}: InspectorProps) => {
   const [expandedTerrain, setExpandedTerrain] = useState<{
     key: string;
     geometry: 'hex' | 'edge' | 'vertex';
@@ -54,7 +69,8 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
       <ul className="terrain-list">
         {Array.from(defs.entries()).map(([key, def]) => {
           const isExpanded = expandedTerrain?.key === key && expandedTerrain?.geometry === geometry;
-          const isPaintActive = paintTerrainKey === key && (!paintGeometry || paintGeometry === geometry);
+          const isPaintActive =
+            paintTerrainKey === key && (!paintGeometry || paintGeometry === geometry);
 
           return (
             <li
@@ -65,9 +81,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             >
               <div
                 className="terrain-row-header"
-                onDoubleClick={() =>
-                  setExpandedTerrain(isExpanded ? null : { key, geometry })
-                }
+                onDoubleClick={() => setExpandedTerrain(isExpanded ? null : { key, geometry })}
                 onClick={() => {
                   onPaintActivate?.(isPaintActive ? null : key, geometry);
                 }}
@@ -76,7 +90,11 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                   color={def.color}
                   geometry={geometry}
                   active={isPaintActive}
-                  title={isPaintActive ? 'Click to exit paint mode' : 'Click to paint, double-click to edit'}
+                  title={
+                    isPaintActive
+                      ? 'Click to exit paint mode'
+                      : 'Click to paint, double-click to edit'
+                  }
                 />
                 <span className="terrain-key">{key}</span>
                 {def.name !== key && <span className="terrain-name">{def.name}</span>}
@@ -213,14 +231,13 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
         }}
       >
         + Add {geometry.charAt(0).toUpperCase() + geometry.slice(1)} Terrain
-      </button></CollapsibleSection>
+      </button>
+    </CollapsibleSection>
   );
   const renderMetadata = () => (
     <div className="inspector-content">
       <section className="inspector-section">
-        <h3 className="inspector-section-header">
-          MAP METADATA
-        </h3>
+        <h3 className="inspector-section-header">MAP METADATA</h3>
         <div className="inspector-row">
           <label>Title</label>
           <input
@@ -297,21 +314,26 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
             <option value="XX.YY">XX.YY</option>
             <option value="AYY">AYY</option>
           </select>
-        </div></CollapsibleSection>
-        <CollapsibleSection title="TERRAIN">
-          <div className="terrain-tabs">
-            {(['hex', 'edge', 'vertex'] as const).map(geo => (
-              <button
-                key={geo}
-                className={`terrain-tab ${terrainTab === geo ? 'active' : ''} terrain-tab-${geo}`}
-                onClick={() => setTerrainTab(geo)}
-              >
-                {geo}
-              </button>
-            ))}
-          </div>
-          {renderTerrainSection(terrainTab, `${terrainTab.toUpperCase()} TERRAIN`, model.terrainDefs(terrainTab))}
-        </CollapsibleSection>
+        </div>
+      </CollapsibleSection>
+      <CollapsibleSection title="TERRAIN">
+        <div className="terrain-tabs">
+          {(['hex', 'edge', 'vertex'] as const).map((geo) => (
+            <button
+              key={geo}
+              className={`terrain-tab ${terrainTab === geo ? 'active' : ''} terrain-tab-${geo}`}
+              onClick={() => setTerrainTab(geo)}
+            >
+              {geo}
+            </button>
+          ))}
+        </div>
+        {renderTerrainSection(
+          terrainTab,
+          `${terrainTab.toUpperCase()} TERRAIN`,
+          model.terrainDefs(terrainTab)
+        )}
+      </CollapsibleSection>
     </div>
   );
 
@@ -324,9 +346,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
       return (
         <div className="inspector-content">
           <section className="inspector-section">
-            <h3 className="inspector-section-header">
-              MULTIPLE SELECTED
-            </h3>
+            <h3 className="inspector-section-header">MULTIPLE SELECTED</h3>
             <p className="placeholder-text">{indices.length} features selected</p>
           </section>
           <div className="inspector-actions">
@@ -355,7 +375,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
       }
     };
 
-    const terrainKeys = Array.from(model.terrainDefs(feature.geometryType).keys());
+    const _terrainKeys = Array.from(model.terrainDefs(feature.geometryType).keys());
 
     const isAllFeature = feature.at.trim() === '@all';
     let expandedAt = feature.at;
@@ -384,9 +404,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            FEATURE PROPERTIES
-          </h3>
+          <h3 className="inspector-section-header">FEATURE PROPERTIES</h3>
           <div className="inspector-row">
             <label>Label</label>
             <input
@@ -422,9 +440,7 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            GEOMETRY
-          </h3>
+          <h3 className="inspector-section-header">GEOMETRY</h3>
           <div className="inspector-row">
             <label>At</label>
             <div style={{ flex: 1 }}>
@@ -443,10 +459,16 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 <div className="inspector-hint">
                   {atomCount}{' '}
                   {feature.geometryType === 'hex'
-                    ? (atomCount !== 1 ? 'hexes' : 'hex')
+                    ? atomCount !== 1
+                      ? 'hexes'
+                      : 'hex'
                     : feature.geometryType === 'edge'
-                    ? (atomCount !== 1 ? 'edges' : 'edge')
-                    : (atomCount !== 1 ? 'vertices' : 'vertex')}
+                      ? atomCount !== 1
+                        ? 'edges'
+                        : 'edge'
+                      : atomCount !== 1
+                        ? 'vertices'
+                        : 'vertex'}
                 </div>
               )}
             </div>
@@ -501,18 +523,14 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            COORDINATE
-          </h3>
+          <h3 className="inspector-section-header">COORDINATE</h3>
           <div className="inspector-row">
             <label>Label</label>
             <span className="font-mono">{state.label}</span>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            TERRAIN
-          </h3>
+          <h3 className="inspector-section-header">TERRAIN</h3>
           <div className="inspector-row">
             <label>Name</label>
             <span>{state.terrain}</span>
@@ -544,7 +562,8 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 {f.label || f.terrain} {f.isBase && '(Base)'}
               </li>
             ))}
-          </ul></CollapsibleSection>
+          </ul>
+        </CollapsibleSection>
         <CollapsibleSection title="NEIGHBORS">
           <div className="neighbor-grid">
             {state.neighborLabels.map((l) => (
@@ -552,7 +571,8 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 {l}
               </span>
             ))}
-          </div></CollapsibleSection>
+          </div>
+        </CollapsibleSection>
         <div className="inspector-actions">
           <button
             className="btn-secondary"
@@ -577,18 +597,14 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            BOUNDARY
-          </h3>
+          <h3 className="inspector-section-header">BOUNDARY</h3>
           <div className="inspector-row">
             <label>ID</label>
             <span className="font-mono text-xs">{boundaryId}</span>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            TERRAIN
-          </h3>
+          <h3 className="inspector-section-header">TERRAIN</h3>
           <div className="inspector-row">
             <label>Name</label>
             <span>{terrain}</span>
@@ -620,11 +636,10 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 {f.label || f.terrain}
               </li>
             ))}
-          </ul></CollapsibleSection>
+          </ul>
+        </CollapsibleSection>
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            ADJACENT HEXES
-          </h3>
+          <h3 className="inspector-section-header">ADJACENT HEXES</h3>
           <div className="inspector-row">
             <label>Hex A</label>
             <span className="font-mono">{hexLabels[0]}</span>
@@ -672,18 +687,14 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
     return (
       <div className="inspector-content">
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            JUNCTION
-          </h3>
+          <h3 className="inspector-section-header">JUNCTION</h3>
           <div className="inspector-row">
             <label>ID</label>
             <span className="font-mono text-xs">{vertexId}</span>
           </div>
         </section>
         <section className="inspector-section">
-          <h3 className="inspector-section-header">
-            TERRAIN
-          </h3>
+          <h3 className="inspector-section-header">TERRAIN</h3>
           <div className="inspector-row">
             <label>Name</label>
             <span>{terrain}</span>
@@ -715,7 +726,8 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 {f.label || f.terrain}
               </li>
             ))}
-          </ul></CollapsibleSection>
+          </ul>
+        </CollapsibleSection>
         <CollapsibleSection title="MEETING HEXES">
           <ul className="inspector-list">
             {meetingHexes.map((l) => (
@@ -723,7 +735,8 @@ export const Inspector = ({ selection, model, onSelectFeature, dispatch, paintTe
                 {l}
               </li>
             ))}
-          </ul></CollapsibleSection>
+          </ul>
+        </CollapsibleSection>
         <div className="inspector-actions">
           <button
             className="btn-secondary"
