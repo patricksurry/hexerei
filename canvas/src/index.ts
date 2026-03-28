@@ -8,3 +8,4 @@ export * from './types.js';
 export * from './scene.js';
 export * from './selection.js';
 export * from './hit-test.js';
+export * from './constants.js';

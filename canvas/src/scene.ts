@@ -1,8 +1,8 @@
 import { Hex } from '@hexmap/core';
 import { Point, ViewportState, worldToScreen } from './viewport.js';
 import { MapModel } from './model.js';
-
-const HEX_SIZE = 1;
+import { HEX_SIZE, SCENE_CULL_PADDING_FACTOR } from './constants.js';
+import { ACCENT_HEX } from './selection.js';
 
 export interface SceneHighlight {
   type: 'hex' | 'edge' | 'vertex';
@@ -16,7 +16,7 @@ export interface SceneHighlight {
 export interface SceneOptions {
   background?: string;
   highlights?: SceneHighlight[];
-  segmentPath?: string[];
+  segments?: string[][];
 }
 
 export interface HexRenderItem {
@@ -97,12 +97,12 @@ export function buildScene(
 ): Scene {
   const background = options?.background ?? '#141414';
   const highlights = options?.highlights ?? [];
-  const segmentPath = options?.segmentPath ?? [];
+  const segments = options?.segments ?? [];
   const hexagons: HexRenderItem[] = [];
   const orientation = Hex.orientationTop(model.grid.orientation);
 
-  // Padding for culling: 1.5x size to be safe
-  const cullPadding = HEX_SIZE * 1.5 * viewport.zoom;
+  // Padding for culling
+  const cullPadding = HEX_SIZE * SCENE_CULL_PADDING_FACTOR * viewport.zoom;
 
   for (const area of model.mesh.getAllHexes()) {
     const cube = Hex.hexFromId(area.id);
@@ -122,11 +122,14 @@ export function buildScene(
     const worldCorners = Hex.hexCorners(worldCenter, HEX_SIZE, orientation);
     const screenCorners = worldCorners.map((p) => worldToScreen(p, viewport));
 
+    const terrainDef = model.terrainDefs('hex').get(area.terrain);
+    const isPath = !!terrainDef?.properties?.path;
+
     hexagons.push({
       hexId: area.id,
       corners: screenCorners,
       center: screenCenter,
-      fill: model.terrainColor('hex', area.terrain),
+      fill: isPath ? 'none' : model.terrainColor('hex', area.terrain),
       label: Hex.formatHexLabel(
         Hex.hexFromId(area.id),
         model.grid.labelFormat,
@@ -200,12 +203,13 @@ export function buildScene(
       const h2Id = ids[1];
       const h3Id = ids[2];
 
+      const isPointy = orientation === 'pointy';
       let cornerIdx = 0;
       for (let i = 0; i < 6; i++) {
         const n1 = Hex.hexId(Hex.hexNeighbor(h1, i));
         const n2 = Hex.hexId(Hex.hexNeighbor(h1, (i + 1) % 6));
         if ((n1 === h2Id && n2 === h3Id) || (n1 === h3Id && n2 === h2Id)) {
-          cornerIdx = i;
+          cornerIdx = (i - (isPointy ? 1 : 0) + 6) % 6;
           break;
         }
       }
@@ -219,13 +223,14 @@ export function buildScene(
   }
 
   const pathLines: PathLineRenderItem[] = [];
-  if (segmentPath.length > 1) {
-    const points = segmentPath.map((hexId) => {
+  for (const segment of segments) {
+    if (segment.length < 2) continue; // skip singletons
+    const points = segment.map((hexId) => {
       const cube = Hex.hexFromId(hexId);
       const world = Hex.hexToPixel(cube, HEX_SIZE, orientation);
       return worldToScreen(world, viewport);
     });
-    pathLines.push({ points, color: '#00D4FF' });
+    pathLines.push({ points, color: ACCENT_HEX });
   }
 
   // Edge terrain
@@ -278,12 +283,13 @@ export function buildScene(
       const h2Id = ids[1];
       const h3Id = ids[2];
 
+      const isPointy = orientation === 'pointy';
       let cornerIdx = 0;
       for (let i = 0; i < 6; i++) {
         const n1 = Hex.hexId(Hex.hexNeighbor(h1, i));
         const n2 = Hex.hexId(Hex.hexNeighbor(h1, (i + 1) % 6));
         if ((n1 === h2Id && n2 === h3Id) || (n1 === h3Id && n2 === h2Id)) {
-          cornerIdx = i;
+          cornerIdx = (i - (isPointy ? 1 : 0) + 6) % 6;
           break;
         }
       }

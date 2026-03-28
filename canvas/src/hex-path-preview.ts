@@ -3,7 +3,7 @@ import { MapModel } from './model.js';
 
 export interface HexPathPreview {
   hexIds: string[];
-  segmentPath?: string[]; // ordered hex IDs for drawing center-to-center line
+  segments?: string[][]; // connected segments for polyline rendering
   type: GeometryType;
   error?: {
     message: string;
@@ -16,7 +16,7 @@ export interface HexPathPreview {
  */
 export function parseHexPathInput(input: string, model: MapModel): HexPathPreview {
   if (!input.trim()) {
-    return { hexIds: [], type: 'hex' };
+    return { hexIds: [], segments: [], type: 'hex' };
   }
 
   const hexPath = new HexPath(model.mesh, {
@@ -30,7 +30,7 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
   if (/[./]$/.test(input.trim())) {
     return {
       hexIds: [],
-      segmentPath: [],
+      segments: [],
       type: 'hex',
       error: {
         message: `Incomplete expression: '${input.trim()}'`,
@@ -43,15 +43,14 @@ export function parseHexPathInput(input: string, model: MapModel): HexPathPrevie
     const result = hexPath.resolve(input);
     return {
       hexIds: result.type === 'hex' ? result.items : [],
-      // I2: use path (traversal order, allows repeated visits) instead of items (Set)
-      segmentPath: result.type === 'hex' ? (result.path ?? result.items) : [],
+      segments: result.segments ?? [],
       type: result.type,
     };
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Invalid expression';
     return {
       hexIds: [],
-      segmentPath: [],
+      segments: [],
       type: 'hex',
       error: {
         message,

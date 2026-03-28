@@ -1,4 +1,5 @@
 import { Hex } from '@hexmap/core';
+import { DEFAULT_FIT_PADDING } from './constants.js';
 
 export type Point = Hex.Point;
 
@@ -61,7 +62,7 @@ export function fitExtent(
   worldBounds: { min: Point; max: Point },
   width: number,
   height: number,
-  padding: number = 0.08
+  padding: number = DEFAULT_FIT_PADDING
 ): ViewportState {
   const worldWidth = worldBounds.max.x - worldBounds.min.x;
   const worldHeight = worldBounds.max.y - worldBounds.min.y;

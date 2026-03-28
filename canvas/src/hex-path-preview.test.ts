@@ -39,11 +39,14 @@ describe('HexPath Preview', () => {
     expect(result.error).toBeUndefined();
   });
 
-  it('returns segmentPath in path order for a sequential hex path', () => {
+  it('returns segments in path order for a sequential hex path', () => {
     const result = parseHexPathInput('0101 0201 0301', model);
-    expect(result.segmentPath).toHaveLength(3);
-    result.segmentPath?.forEach((id) => expect(id).toMatch(/^-?\d+,-?\d+,-?\d+$/));
-    expect(result.segmentPath![0]).not.toEqual(result.segmentPath![1]);
+    expect(result.segments).toHaveLength(3); // 3 singleton segments
+    result.segments?.forEach((seg) => {
+      expect(seg).toHaveLength(1);
+      expect(seg[0]).toMatch(/^-?\d+,-?\d+,-?\d+$/);
+    });
+    expect(result.segments![0][0]).not.toEqual(result.segments![1][0]);
   });
 
   // I1: trailing separator should be an error, not a silent partial result
@@ -59,12 +62,18 @@ describe('HexPath Preview', () => {
     expect(result.hexIds).toHaveLength(0);
   });
 
-  // I2: segmentPath must preserve traversal order including repeated visits
-  it('segmentPath preserves traversal order and includes repeated hex visits', () => {
-    // 0101 → 0201 → 0101: hexIds deduplicates to 2, but segmentPath should have 3
+  // I2: segments must preserve traversal order including repeated visits
+  it('segments preserve traversal order and include repeated hex visits', () => {
+    // 0101 → 0201 → 0101: hexIds deduplicates to 2, but segments should have 3
     const result = parseHexPathInput('0101 0201 0101', model);
     expect(result.hexIds).toHaveLength(2); // Set deduplication
-    expect(result.segmentPath).toHaveLength(3); // traversal order with repeats
-    expect(result.segmentPath![0]).toEqual(result.segmentPath![2]); // 0101 at start and end
+    expect(result.segments).toHaveLength(3); // traversal order with repeats
+    expect(result.segments![0][0]).toEqual(result.segments![2][0]); // 0101 at start and end
+  });
+
+  it('connected path produces a single segment with multiple items', () => {
+    const result = parseHexPathInput('0101 - 0103', model);
+    expect(result.segments).toHaveLength(1);
+    expect(result.segments![0]).toHaveLength(3);
   });
 });
