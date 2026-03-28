@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["vitest.workspace.ts"],
+      "vitest": false
+    },
+    "core": {
+      "entry": ["src/index.ts", "src/**/*.test.ts"],
+      "project": "src/**/*.ts"
+    },
+    "canvas": {
+      "entry": ["src/index.ts", "src/**/*.test.ts"],
+      "project": "src/**/*.ts"
+    },
+    "editor": {
+      "entry": ["src/main.tsx", "src/**/*.test.tsx", "src/**/*.test.ts"],
+      "project": "src/**/*.{ts,tsx}"
+    }
+  },
+  "ignore": ["renderer/**"]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schema.stryker-mutator.io/stryker-config.schema.json",
+  "packageManager": "npm",
+  "reporters": ["html", "clear-text", "progress"],
+  "testRunner": "vitest",
+  "coverageAnalysis": "perTest",
+  "mutate": ["core/src/**/*.ts", "!core/src/**/*.test.ts"],
+  "checkers": ["typescript"],
+  "tsconfigFile": "tsconfig.base.json",
+  "vitest": {
+    "configFile": "core/vitest.config.mts"
+  }
+}

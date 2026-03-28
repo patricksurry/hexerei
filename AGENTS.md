@@ -23,6 +23,15 @@ See `core/src/hexpath/hex-path.ts` for the API and JSDoc.
 - **Always** parse existing strings into structured segments before making modifications.
 - **Canonicalization:** The `serialize()` method ensures consistent spacing and separators.
 
+## 4. Hygiene Mandates
+- **All changes MUST pass `npm run hygiene`.**
+- **No new copy-pasted code above 50 tokens.** Prefer moving shared logic to `@hexmap/core`.
+- **Strict `kebab-case` for all new files.**
+- **Minimal API surface area.** Only export what is strictly necessary.
+- **Test Quality:**
+  - Maintain >80% code coverage for new logic.
+  - Core math changes should be verified with mutation testing (`npm run test:mutation`).
+
 # Interaction Protocol
 - **Inquiries:** Requests for analysis or advice. Agents should respond with research and a proposed strategy but **must not** modify files.
 - **Directives:** Explicit instructions to perform a task. Agents should follow the **Plan -> Act -> Validate** cycle.

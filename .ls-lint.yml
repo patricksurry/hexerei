@@ -1,0 +1,16 @@
+ls-lint:
+  ignore:
+    - .git
+    - node_modules
+    - dist
+    - build
+    - .serena
+    - .claude
+    - .worktrees
+
+  src:
+    .ts: kebab-case
+    .tsx: kebab-case
+    .css: kebab-case
+    .json: kebab-case
+    .md: kebab-case

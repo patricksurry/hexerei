@@ -1,0 +1,21 @@
+{
+  "threshold": 6,
+  "reporters": ["console", "html"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/tests/**",
+    "**/test/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/.worktrees/**",
+    "**/importer/**",
+    "**/renderer/**",
+    "**/rfc/**",
+    "**/maps/**"
+  ],
+  "absolute": true,
+  "min-tokens": 50,
+  "min-lines": 5
+}
