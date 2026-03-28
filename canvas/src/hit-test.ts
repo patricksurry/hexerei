@@ -1,10 +1,9 @@
 import { Hex } from '@hexmap/core';
 import { Point, ViewportState, screenToWorld } from './viewport.js';
 import { MapModel } from './model.js';
+import { HEX_SIZE, HIT_THRESHOLD_VERTEX, HIT_THRESHOLD_EDGE } from './constants.js';
 
 import { HitResult } from './types.js';
-
-const HEX_SIZE = 1;
 
 export interface HitTestOptions {
   includeOffBoard?: boolean;
@@ -43,22 +42,24 @@ export function hitTest(screenPt: Point, viewport: ViewportState, model: MapMode
     }
   });
 
-  if (minCornerDist < HEX_SIZE * 0.25) {
-    const n1Dir = minCornerIdx;
-    const n2Dir = (minCornerIdx + 1) % 6;
+  const isPointy = orientation === 'pointy';
+
+  if (minCornerDist < HIT_THRESHOLD_VERTEX) {
+    const n1Dir = (minCornerIdx + (isPointy ? 1 : 0)) % 6;
+    const n2Dir = (minCornerIdx + (isPointy ? 2 : 1)) % 6;
     const n1Id = Hex.hexId(Hex.hexNeighbor(cube, n1Dir));
     const n2Id = Hex.hexId(Hex.hexNeighbor(cube, n2Dir));
 
     if (isCenterOnMap || model.mesh.getHex(n1Id) || model.mesh.getHex(n2Id)) {
       return {
         type: 'vertex',
-        vertexId: Hex.getCanonicalVertexId(cube, minCornerIdx),
+        vertexId: Hex.getCanonicalVertexId(cube, minCornerIdx, orientation),
       };
     }
   }
 
-  if (minEdgeDist < HEX_SIZE * 0.3) {
-    const neighborDir = (minEdgeIdx + 1) % 6;
+  if (minEdgeDist < HIT_THRESHOLD_EDGE) {
+    const neighborDir = (minEdgeIdx + (isPointy ? 2 : 1)) % 6;
     const neighbor = Hex.hexNeighbor(cube, neighborDir);
     const nId = Hex.hexId(neighbor);
     const hasNeighbor = !!model.mesh.getHex(nId);

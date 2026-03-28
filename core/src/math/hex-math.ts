@@ -16,17 +16,17 @@
 export type Cube = { q: number; r: number; s: number };
 
 export const DIRECTIONS: Cube[] = [
-  { q: 1, r: -1, s: 0 }, // 0: NE (Flat), E (Pointy)
-  { q: 1, r: 0, s: -1 }, // 1: SE (Flat), NE (Pointy)
-  { q: 0, r: 1, s: -1 }, // 2: S (Flat), NW (Pointy)
-  { q: -1, r: 1, s: 0 }, // 3: SW (Flat), W (Pointy)
-  { q: -1, r: 0, s: 1 }, // 4: NW (Flat), SW (Pointy)
-  { q: 0, r: -1, s: 1 }, // 5: N (Flat), SE (Pointy)
+  { q: 1, r: -1, s: 0 }, // 0: NE (Flat), NE (Pointy)
+  { q: 1, r: 0, s: -1 }, // 1: SE (Flat), E (Pointy)
+  { q: 0, r: 1, s: -1 }, // 2: S (Flat), SE (Pointy)
+  { q: -1, r: 1, s: 0 }, // 3: SW (Flat), SW (Pointy)
+  { q: -1, r: 0, s: 1 }, // 4: NW (Flat), W (Pointy)
+  { q: 0, r: -1, s: 1 }, // 5: N (Flat), NW (Pointy)
 ];
 
 export const DIRECTION_NAMES = {
   flat: ['ne', 'se', 's', 'sw', 'nw', 'n'],
-  pointy: ['e', 'se', 'sw', 'w', 'nw', 'ne'],
+  pointy: ['ne', 'e', 'se', 'sw', 'w', 'nw'],
 };
 
 export function directionIndex(name: string, top: 'flat' | 'pointy'): number {
@@ -82,9 +82,10 @@ export function getCanonicalBoundaryId(a: Cube, b: Cube | null, dirFromA?: numbe
  * A vertex touches 3 hexes (in infinite grid).
  * Identified by the 3 hex IDs sorted.
  */
-export function getCanonicalVertexId(hex: Cube, corner: number): string {
-  const n1 = hexNeighbor(hex, corner);
-  const n2 = hexNeighbor(hex, (corner + 1) % 6);
+export function getCanonicalVertexId(hex: Cube, corner: number, orientation: HexOrientation = 'flat'): string {
+  const isPointy = orientation === 'pointy';
+  const n1 = hexNeighbor(hex, (corner + (isPointy ? 1 : 0)) % 6);
+  const n2 = hexNeighbor(hex, (corner + (isPointy ? 2 : 1)) % 6);
   const ids = [hexId(hex), hexId(n1), hexId(n2)].sort();
   return ids.join('^');
 }

@@ -454,6 +454,57 @@ describe('Hex Math', () => {
       expect(id1).toBe(id2);
       expect(id1).toBe(id3);
     });
+
+    it('should be stable across all 3 sharing hexes for pointy-top corner 0', () => {
+      const h1 = { q: 0, r: 0, s: 0 };
+      // For pointy, corner 0 touches neighbors at (corner+1)%6=1 and (corner+2)%6=2
+      const n1 = Hex.hexNeighbor(h1, 1);
+      const n2 = Hex.hexNeighbor(h1, 2);
+
+      const id1 = Hex.getCanonicalVertexId(h1, 0, 'pointy');
+
+      const parts = id1.split('^');
+      expect(parts).toHaveLength(3);
+      expect(parts).toContain(Hex.hexId(h1));
+      expect(parts).toContain(Hex.hexId(n1));
+      expect(parts).toContain(Hex.hexId(n2));
+
+      // Verify stability from the other two hexes
+      let id2;
+      let id3;
+      for (let i = 0; i < 6; i++) {
+        const id = Hex.getCanonicalVertexId(n1, i, 'pointy');
+        if (id.includes(Hex.hexId(h1)) && id.includes(Hex.hexId(n2))) {
+          id2 = id;
+        }
+      }
+      for (let i = 0; i < 6; i++) {
+        const id = Hex.getCanonicalVertexId(n2, i, 'pointy');
+        if (id.includes(Hex.hexId(h1)) && id.includes(Hex.hexId(n1))) {
+          id3 = id;
+        }
+      }
+
+      expect(id1).toBe(id2);
+      expect(id1).toBe(id3);
+    });
+
+    it('all 6 corners produce distinct vertex IDs for pointy orientation', () => {
+      const h = { q: 0, r: 0, s: 0 };
+      const ids = new Set<string>();
+      for (let i = 0; i < 6; i++) {
+        ids.add(Hex.getCanonicalVertexId(h, i, 'pointy'));
+      }
+      expect(ids.size).toBe(6);
+    });
+
+    it('pointy vertex IDs differ from flat vertex IDs for same corner', () => {
+      const h = { q: 0, r: 0, s: 0 };
+      // Corner 0 in flat and pointy should touch different neighbor sets
+      const flatId = Hex.getCanonicalVertexId(h, 0, 'flat');
+      const pointyId = Hex.getCanonicalVertexId(h, 0, 'pointy');
+      expect(flatId).not.toBe(pointyId);
+    });
   });
 
   describe('createRectangularGrid stagger parity', () => {

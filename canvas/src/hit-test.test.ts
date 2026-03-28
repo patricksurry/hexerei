@@ -113,3 +113,66 @@ describe('hitTest', () => {
     }
   });
 });
+
+const POINTY_YAML = `
+hexmap: "1.0"
+layout:
+  orientation: pointy-right
+  all: "0000 - 0202 fill"
+`;
+
+describe('hitTest (pointy orientation)', () => {
+  const pointyModel = MapModel.load(POINTY_YAML);
+  const vp: ViewportState = {
+    center: { x: 0, y: 0 },
+    zoom: 100,
+    width: 800,
+    height: 600,
+  };
+
+  it('hits the correct hex center in pointy orientation', () => {
+    const cube = Hex.createHex(0, 0, 0);
+    const pixel = Hex.hexToPixel(cube, 1, 'pointy');
+    const screenPt = worldToScreen(pixel, vp);
+
+    const hit = hitTest(screenPt, vp, pointyModel);
+    expect(hit.type).toBe('hex');
+    if (hit.type === 'hex') {
+      expect(hit.hexId).toBe(Hex.hexId(cube));
+    }
+  });
+
+  it('detects edge at edge midpoint in pointy orientation', () => {
+    const cube = Hex.createHex(0, 0, 0);
+    const pixel = Hex.hexToPixel(cube, 1, 'pointy');
+    const midpoints = Hex.hexEdgeMidpoints(pixel, 1, 'pointy');
+
+    // Nudge toward center to stay within edge detection zone
+    const mp = midpoints[0];
+    const nudged = {
+      x: mp.x * 0.95 + pixel.x * 0.05,
+      y: mp.y * 0.95 + pixel.y * 0.05,
+    };
+    const screenPt = worldToScreen(nudged, vp);
+
+    const hit = hitTest(screenPt, vp, pointyModel);
+    expect(hit.type).toBe('edge');
+  });
+
+  it('detects vertex at corner in pointy orientation', () => {
+    const cube = Hex.createHex(0, 0, 0);
+    const pixel = Hex.hexToPixel(cube, 1, 'pointy');
+    const corners = Hex.hexCorners(pixel, 1, 'pointy');
+
+    // Nudge slightly toward center
+    const corner = corners[0];
+    const nudged = {
+      x: corner.x * 0.95 + pixel.x * 0.05,
+      y: corner.y * 0.95 + pixel.y * 0.05,
+    };
+    const screenPt = worldToScreen(nudged, vp);
+
+    const hit = hitTest(screenPt, vp, pointyModel);
+    expect(hit.type).toBe('vertex');
+  });
+});
