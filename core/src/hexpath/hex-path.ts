@@ -57,20 +57,40 @@ function isLayoutLike(value: unknown): value is LayoutWithCoordinates {
   return true;
 }
 
+/** Options passed to HexPath constructor — all fields optional (defaults applied). */
 export interface HexPathOptions {
   labelFormat?: string; // "CCRR", "RRCC", "Axx", etc.
-  orientation: Hex.Orientation;
+  orientation?: Hex.Orientation;
   firstCol?: number;
   firstRow?: number;
   context?: Map<string, string[]>;
 }
 
+/** Resolved options with defaults applied — non-optional fields guaranteed. */
+interface ResolvedHexPathOptions {
+  labelFormat: string;
+  orientation: Hex.Orientation;
+  firstCol: number;
+  firstRow: number;
+  context?: Map<string, string[]>;
+}
+
 export class HexPath {
+  /**
+   * === HexPath Mutation Pattern ===
+   *
+   * All code that builds or modifies HexPath strings MUST use:
+   *   1. resolve(string) -> HexPathResult { items, segments, type }
+   *   2. Modify the segments array (append, remove, reorder)
+   *   3. serialize(segments, type) -> canonical string
+   *
+   * NEVER build HexPath strings via string concatenation or regex.
+   */
   private mesh: MeshMap;
 
-  private options: HexPathOptions;
+  private options: ResolvedHexPathOptions;
 
-  constructor(mesh: MeshMap, options?: Partial<HexPathOptions>) {
+  constructor(mesh: MeshMap, options?: HexPathOptions) {
     this.mesh = mesh;
     const rawLayout: unknown = mesh.layout;
     const layout: LayoutWithCoordinates = isLayoutLike(rawLayout) ? rawLayout : {};
@@ -332,6 +352,77 @@ export class HexPath {
     };
   }
 
+  /**
+   * Convert an internal geometry ID back to a HexPath atom string.
+   *
+   * - hex: cube ID "q,r,s" -> user label e.g. "0101"
+   * - edge: boundary ID "q1,r1,s1|q2,r2,s2" -> "label/DIR"
+   * - vertex: vertex ID "q1,r1,s1^q2,r2,s2^q3,r3,s3" -> "label.corner"
+   */
+  idToAtom(id: string, type: GeometryType): string {
+    const { labelFormat, orientation, firstCol, firstRow } = this.options;
+    const top = Hex.orientationTop(orientation);
+
+    if (type === 'hex') {
+      const cube = Hex.hexFromId(id);
+      return Hex.formatHexLabel(cube, labelFormat, orientation, firstCol, firstRow);
+    }
+
+    if (type === 'edge') {
+      const parsed = Hex.parseBoundaryId(id);
+      const label = Hex.formatHexLabel(parsed.hexA, labelFormat, orientation, firstCol, firstRow);
+      if (parsed.hexB === null && parsed.direction !== undefined) {
+        return `${label}/${Hex.directionName(parsed.direction, top).toUpperCase()}`;
+      }
+      if (parsed.hexB) {
+        for (let d = 0; d < 6; d++) {
+          if (Hex.hexId(Hex.hexNeighbor(parsed.hexA, d)) === Hex.hexId(parsed.hexB)) {
+            return `${label}/${Hex.directionName(d, top).toUpperCase()}`;
+          }
+        }
+      }
+      return label;
+    }
+
+    if (type === 'vertex') {
+      const parts = Hex.parseVertexId(id);
+      const label = Hex.formatHexLabel(parts[0], labelFormat, orientation, firstCol, firstRow);
+      const isPointy = top === 'pointy';
+      for (let i = 0; i < 6; i++) {
+        const n1 = Hex.hexId(Hex.hexNeighbor(parts[0], i));
+        const n2 = Hex.hexId(Hex.hexNeighbor(parts[0], (i + 1) % 6));
+        const ids = parts.map(Hex.hexId);
+        if (ids.includes(n1) && ids.includes(n2)) {
+          return `${label}.${(i - (isPointy ? 1 : 0) + 6) % 6}`;
+        }
+      }
+      return label;
+    }
+
+    return id; // fallback
+  }
+
+  /**
+   * Serialize structured segments back to a canonical HexPath string.
+   *
+   * Within a segment, consecutive IDs are joined with ` - ` (connected path).
+   * Segments are separated with `, ` (disconnected).
+   * Singleton segments are rendered as bare atoms.
+   *
+   * Design pattern: all HexPath mutations MUST go through
+   *   resolve(string) -> modify segments -> serialize(segments)
+   * Never build HexPath strings via concatenation.
+   */
+  serialize(segments: string[][], type: GeometryType): string {
+    if (segments.length === 0) return '';
+
+    const serializedSegments = segments.map((segment) => {
+      return segment.map((id) => this.idToAtom(id, type)).join(' - ');
+    });
+
+    return serializedSegments.join(', ');
+  }
+
   /** Purely syntactic check — does NOT call resolveAtom */
   private isAtomLike(token: string): boolean {
     // Relative steps: 3n, 2ne, sw, 3*s, etc.
@@ -473,7 +564,7 @@ export class HexPath {
   private resolveVertex(hexId: string, dirOrHour: string): string {
     const cube = Hex.hexFromId(hexId);
     const dirIndex = this.parseDirection(dirOrHour);
-    return Hex.getCanonicalVertexId(cube, dirIndex);
+    return Hex.getCanonicalVertexId(cube, dirIndex, Hex.orientationTop(this.options.orientation));
   }
 
   private getCubeFromId(id: string): Hex.Cube {
@@ -584,12 +675,12 @@ export class HexPath {
       n: 5,
     };
     const pointyMapping: Record<string, number> = {
-      e: 0,
-      ne: 1,
-      nw: 2,
-      w: 3,
-      sw: 4,
-      se: 5,
+      ne: 0,
+      e: 1,
+      se: 2,
+      sw: 3,
+      w: 4,
+      nw: 5,
     };
 
     // Validate orientation-specific cardinals
@@ -616,12 +707,12 @@ export class HexPath {
       '10': 4,
     };
     const clockMappingPointy: Record<string, number> = {
-      '1': 1,
-      '3': 0,
-      '5': 5,
-      '7': 4,
-      '9': 3,
-      '11': 2,
+      '1': 0,
+      '3': 1,
+      '5': 2,
+      '7': 3,
+      '9': 4,
+      '11': 5,
     };
 
     if (top === 'flat' && clockMappingFlat[d] !== undefined) return clockMappingFlat[d];

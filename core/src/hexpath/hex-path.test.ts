@@ -172,38 +172,38 @@ describe('HexPath RFC Compliance', () => {
       pointyPath = new HexPath(pointyMesh);
     });
 
-    it('ne step should move to DIRECTIONS[1] on pointy-top', () => {
-      // From 0,0,0: NE on pointy = DIRECTIONS[1] = (1,0,-1)
+    it('ne step should move to DIRECTIONS[0] on pointy-top', () => {
+      // From 0,0,0: NE on pointy = DIRECTIONS[0] = (1,-1,0)
       const result = pointyPath.resolve('0000 - 1ne');
-      expect(result.items).toContain(Hex.hexId({ q: 1, r: 0, s: -1 }));
-    });
-
-    it('se step should move to DIRECTIONS[5] on pointy-top', () => {
-      // From 0,0,0: SE on pointy = DIRECTIONS[5] = (0,-1,1)
-      const result = pointyPath.resolve('0000 - 1se');
-      expect(result.items).toContain(Hex.hexId({ q: 0, r: -1, s: 1 }));
-    });
-
-    it('sw step should move to DIRECTIONS[4] on pointy-top', () => {
-      // From 0,0,0: SW on pointy = DIRECTIONS[4] = (-1,0,1)
-      const result = pointyPath.resolve('0000 - 1sw');
-      expect(result.items).toContain(Hex.hexId({ q: -1, r: 0, s: 1 }));
-    });
-
-    it('nw step should move to DIRECTIONS[2] on pointy-top', () => {
-      // From 0,0,0: NW on pointy = DIRECTIONS[2] = (0,1,-1)
-      const result = pointyPath.resolve('0000 - 1nw');
-      expect(result.items).toContain(Hex.hexId({ q: 0, r: 1, s: -1 }));
-    });
-
-    it('e step should move to DIRECTIONS[0] on pointy-top', () => {
-      const result = pointyPath.resolve('0000 - 1e');
       expect(result.items).toContain(Hex.hexId({ q: 1, r: -1, s: 0 }));
     });
 
-    it('w step should move to DIRECTIONS[3] on pointy-top', () => {
-      const result = pointyPath.resolve('0000 - 1w');
+    it('se step should move to DIRECTIONS[2] on pointy-top', () => {
+      // From 0,0,0: SE on pointy = DIRECTIONS[2] = (0,1,-1)
+      const result = pointyPath.resolve('0000 - 1se');
+      expect(result.items).toContain(Hex.hexId({ q: 0, r: 1, s: -1 }));
+    });
+
+    it('sw step should move to DIRECTIONS[3] on pointy-top', () => {
+      // From 0,0,0: SW on pointy = DIRECTIONS[3] = (-1,1,0)
+      const result = pointyPath.resolve('0000 - 1sw');
       expect(result.items).toContain(Hex.hexId({ q: -1, r: 1, s: 0 }));
+    });
+
+    it('nw step should move to DIRECTIONS[5] on pointy-top', () => {
+      // From 0,0,0: NW on pointy = DIRECTIONS[5] = (0,-1,1)
+      const result = pointyPath.resolve('0000 - 1nw');
+      expect(result.items).toContain(Hex.hexId({ q: 0, r: -1, s: 1 }));
+    });
+
+    it('e step should move to DIRECTIONS[1] on pointy-top', () => {
+      const result = pointyPath.resolve('0000 - 1e');
+      expect(result.items).toContain(Hex.hexId({ q: 1, r: 0, s: -1 }));
+    });
+
+    it('w step should move to DIRECTIONS[4] on pointy-top', () => {
+      const result = pointyPath.resolve('0000 - 1w');
+      expect(result.items).toContain(Hex.hexId({ q: -1, r: 0, s: 1 }));
     });
   });
 
@@ -649,6 +649,158 @@ describe('HexPath RFC Compliance', () => {
       const result = hexPath.resolve('0101 - 0103 include 0201 - 0203');
       expect(result.segments).toBeDefined();
       expect(result.segments!.length).toBe(2);
+    });
+  });
+
+  describe('idToAtom', () => {
+    // hexPath is the shared instance with flat-down, XXYY, first=[0,0] from beforeEach
+
+    it('converts hex cube ID to label', () => {
+      const cube = Hex.offsetToCube(1, 1, 'flat-down'); // col=1,row=1 → "0101"
+      const id = Hex.hexId(cube);
+      expect(hexPath.idToAtom(id, 'hex')).toBe('0101');
+    });
+
+    it('converts boundary ID to edge atom', () => {
+      const cube = Hex.offsetToCube(1, 1, 'flat-down');
+      const neighbor = Hex.hexNeighbor(cube, 1); // SE in flat
+      const boundaryId = Hex.getCanonicalBoundaryId(cube, neighbor, 1);
+      const atom = hexPath.idToAtom(boundaryId, 'edge');
+      // Should be "0101/SE" or equivalent with canonical hex
+      expect(atom).toMatch(/^\d{4}\/[A-Z]+$/);
+    });
+
+    it('converts vertex ID to vertex atom', () => {
+      const cube = Hex.offsetToCube(1, 1, 'flat-down');
+      const vertexId = Hex.getCanonicalVertexId(cube, 0, 'flat');
+      const atom = hexPath.idToAtom(vertexId, 'vertex');
+      expect(atom).toMatch(/^\d{4}\.\d$/);
+    });
+
+    it('round-trips hex through resolve and idToAtom', () => {
+      const result = hexPath.resolve('0101');
+      expect(result.items).toHaveLength(1);
+      const atom = hexPath.idToAtom(result.items[0], 'hex');
+      expect(atom).toBe('0101');
+    });
+
+    it('round-trips edge through resolve and idToAtom', () => {
+      const result = hexPath.resolve('0101/SE');
+      expect(result.items).toHaveLength(1);
+      const atom = hexPath.idToAtom(result.items[0], 'edge');
+      expect(atom).toBe('0101/SE');
+    });
+
+    it('round-trips vertex through resolve and idToAtom', () => {
+      const result = hexPath.resolve('0101.0');
+      expect(result.items).toHaveLength(1);
+      const atom = hexPath.idToAtom(result.items[0], 'vertex');
+      expect(atom).toBe('0101.0');
+    });
+  });
+
+  describe('serialize', () => {
+    it('serializes a single hex atom', () => {
+      const result = hexPath.resolve('0101');
+      const output = hexPath.serialize(result.segments!, result.type);
+      expect(output).toBe('0101');
+    });
+
+    it('serializes disconnected hex atoms with comma separator', () => {
+      // Two separate singleton segments
+      const result = hexPath.resolve('0101, 0301');
+      const output = hexPath.serialize(result.segments!, result.type);
+      expect(output).toBe('0101, 0301');
+    });
+
+    it('serializes a connected hex path with dash connector', () => {
+      const result = hexPath.resolve('0101 - 0103');
+      const output = hexPath.serialize(result.segments!, result.type);
+      // Connected segment: atoms joined with " - "
+      const re = hexPath.resolve(output);
+      expect(re.items.sort()).toEqual(result.items.sort());
+      expect(re.segments).toEqual(result.segments);
+    });
+
+    it('serializes mixed segments (connected + disconnected)', () => {
+      const result = hexPath.resolve('0101 - 0103, 0501');
+      const output = hexPath.serialize(result.segments!, result.type);
+      const re = hexPath.resolve(output);
+      expect(re.items.sort()).toEqual(result.items.sort());
+      expect(re.segments!.length).toBe(result.segments!.length);
+    });
+
+    it('serializes edge atoms', () => {
+      const result = hexPath.resolve('0101/SE');
+      const output = hexPath.serialize(result.segments!, result.type);
+      expect(output).toBe('0101/SE');
+    });
+
+    it('serializes multiple edge atoms', () => {
+      const result = hexPath.resolve('0101/SE, 0201/NE');
+      const output = hexPath.serialize(result.segments!, result.type);
+      const re = hexPath.resolve(output);
+      expect(re.items.sort()).toEqual(result.items.sort());
+    });
+
+    it('serializes vertex atoms', () => {
+      const result = hexPath.resolve('0101.0');
+      const output = hexPath.serialize(result.segments!, result.type);
+      expect(output).toBe('0101.0');
+    });
+
+    it('returns empty string for empty segments', () => {
+      expect(hexPath.serialize([], 'hex')).toBe('');
+    });
+  });
+
+  describe('serialize/resolve round-trip', () => {
+    const cases = [
+      '0101',
+      '0101, 0201, 0301',
+      '0101 - 0201 - 0301',
+      '0101 - 0301, 0501',
+      '0101/SE, 0201/NE',
+      '0101.0, 0201.3',
+    ];
+
+    for (const input of cases) {
+      it(`round-trips: ${input}`, () => {
+        const result = hexPath.resolve(input);
+        const output = hexPath.serialize(result.segments!, result.type);
+        const result2 = hexPath.resolve(output);
+        expect(result2.items.sort()).toEqual(result.items.sort());
+        expect(result2.segments!.length).toEqual(result.segments!.length);
+      });
+    }
+  });
+
+  describe('@all segments', () => {
+    it('@all produces empty segments (no path lines)', () => {
+      const result = hexPath.resolve('@all');
+      expect(result.segments).toEqual([]);
+      expect(result.items.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('fill segments', () => {
+    it('fill produces a boundary segment', () => {
+      // Small rectangle: 0101 - 0301 - 0303 - 0103 fill
+      const result = hexPath.resolve('0101 - 0301 - 0303 - 0103 fill');
+      expect(result.segments).toBeDefined();
+      // The boundary path should be a single segment (closed loop)
+      expect(result.segments!.length).toBe(1);
+      // The segment should include the boundary hexes
+      const boundarySegment = result.segments![0];
+      expect(boundarySegment.length).toBeGreaterThan(0);
+      // Interior hexes are in items but NOT in any segment
+      const segmentIds = new Set(boundarySegment);
+      const interiorOnly = result.items.filter((id) => !segmentIds.has(id));
+      // For a 3x3 rectangle (0101-0301-0303-0103), 0202 is the center.
+      const centerHex = Hex.hexId(Hex.offsetToCube(2, 2, 'flat-down'));
+      expect(result.items).toContain(centerHex);
+      expect(segmentIds.has(centerHex)).toBe(false);
+      expect(interiorOnly).toContain(centerHex);
     });
   });
 });
