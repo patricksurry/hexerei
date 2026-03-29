@@ -316,11 +316,14 @@ export const App = () => {
       const newAt = hp.serialize(segments, hit.type);
       dispatch({ type: 'updateFeature', index: targetIndex, changes: { at: newAt } });
       setCommandValue(newAt);
+      handleSelectFeature([targetIndex]);
     } else {
       // New paint session — create new feature
       dispatch({ type: 'addFeature', feature: { at: atomId, terrain: paintState.terrainKey } });
-      setPaintState({ ...paintState, targetFeatureIndex: model.features.length });
+      const newIndex = model.features.length;
+      setPaintState({ ...paintState, targetFeatureIndex: newIndex });
       setCommandValue(atomId);
+      handleSelectFeature([newIndex]);
     }
   };
 
