@@ -60,6 +60,15 @@ export const Inspector = ({
       </div>
     );
 
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    } else if (e.key === 'Escape') {
+      e.currentTarget.value = e.currentTarget.defaultValue;
+      e.currentTarget.blur();
+    }
+  };
+
   const renderTerrainSection = (
     geometry: 'hex' | 'edge' | 'vertex',
     title: string,
@@ -124,6 +133,7 @@ export const Inspector = ({
                       className="inspector-input"
                       defaultValue={key}
                       key={`tk-${key}`}
+                      onKeyDown={handleInputKeyDown}
                       onBlur={(e) => {
                         const newKey = e.target.value.trim();
                         if (newKey && newKey !== key) {
@@ -195,6 +205,7 @@ export const Inspector = ({
                       className="inspector-input"
                       defaultValue={def.name}
                       key={`tn-${key}-${def.name}`}
+                      onKeyDown={handleInputKeyDown}
                       onBlur={(e) => {
                         const newName = e.target.value || undefined;
                         if (newName !== def.name) {
@@ -245,6 +256,7 @@ export const Inspector = ({
             className="inspector-input"
             defaultValue={model.metadata.title || ''}
             key={`meta-title-${model.metadata.title}`}
+            onKeyDown={handleInputKeyDown}
             onBlur={(e) => {
               const value = e.target.value || undefined;
               if (value !== (model.metadata.title || undefined)) {
@@ -260,6 +272,7 @@ export const Inspector = ({
             className="inspector-input"
             defaultValue={model.metadata.designer || ''}
             key={`meta-designer-${model.metadata.designer}`}
+            onKeyDown={handleInputKeyDown}
             onBlur={(e) => {
               const value = e.target.value || undefined;
               if (value !== (model.metadata.designer || undefined)) {
@@ -275,6 +288,7 @@ export const Inspector = ({
             className="inspector-input"
             defaultValue={model.metadata.description || ''}
             key={`meta-description-${model.metadata.description}`}
+            onKeyDown={handleInputKeyDown}
             onBlur={(e) => {
               const value = e.target.value || undefined;
               if (value !== (model.metadata.description || undefined)) {
@@ -412,6 +426,7 @@ export const Inspector = ({
               className="inspector-input"
               defaultValue={feature.label || ''}
               key={`label-${featureIndex}-${feature.label}`}
+              onKeyDown={handleInputKeyDown}
               onBlur={(e) => handleFieldBlur('label', e.target.value)}
             />
           </div>
@@ -425,6 +440,7 @@ export const Inspector = ({
                 className="inspector-input font-mono"
                 defaultValue={feature.id || ''}
                 key={`id-${featureIndex}-${feature.id}`}
+                onKeyDown={handleInputKeyDown}
                 onBlur={(e) => handleFieldBlur('id', e.target.value)}
               />
             )}
@@ -452,6 +468,7 @@ export const Inspector = ({
                   className="inspector-input font-mono"
                   defaultValue={feature.at}
                   key={`at-${featureIndex}-${feature.at}`}
+                  onKeyDown={handleInputKeyDown}
                   onBlur={(e) => handleFieldBlur('at', e.target.value)}
                 />
               )}
@@ -480,6 +497,7 @@ export const Inspector = ({
               className="inspector-input"
               defaultValue={feature.elevation ?? ''}
               key={`elevation-${featureIndex}-${feature.elevation}`}
+              onKeyDown={handleInputKeyDown}
               onBlur={(e) => {
                 const val = e.target.value ? Number(e.target.value) : undefined;
                 handleFieldBlur('elevation', val);

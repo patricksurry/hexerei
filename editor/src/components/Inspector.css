@@ -59,6 +59,7 @@
 .inspector-row label {
   color: var(--text-secondary);
   flex-shrink: 0;
+  min-width: 48px;
 }
 
 .inspector-row span {
@@ -260,4 +261,9 @@
   font-size: 10px;
   color: var(--text-muted);
   margin-top: 2px;
+}
+
+.inspector-input {
+  flex: 1;
+  min-width: 0;
 }
