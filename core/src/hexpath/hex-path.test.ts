@@ -843,4 +843,35 @@ describe('HexPath RFC Compliance', () => {
       expect(interiorOnly).toContain(centerHex);
     });
   });
+
+  describe('edge shortest path', () => {
+    it('adjacent edges connected with -', () => {
+      const result = hexPath.resolve('0101/NE - 0101/SE');
+      expect(result.type).toBe('edge');
+      expect(result.items.length).toBe(2);
+      expect(result.segments?.length).toBe(1);
+      expect(result.segments![0].length).toBe(2);
+    });
+
+    it('distant edges produce shortest path', () => {
+      const result = hexPath.resolve('0101/NE - 0101/SW');
+      expect(result.type).toBe('edge');
+      // NE to SW are opposite edges — shortest path goes around one side
+      // (NE -> SE -> S -> SW = 4 edges total, BFS distance 3 hops)
+      expect(result.items.length).toBe(4);
+    });
+
+    it('~ produces alternate path for ties', () => {
+      const result1 = hexPath.resolve('0101/NE - 0101/SW');
+      const result2 = hexPath.resolve('0101/NE ~ 0101/SW');
+      expect(result1.items.length).toBe(result2.items.length);
+      expect(result1.items).not.toEqual(result2.items);
+    });
+
+    it('single edge atom resolves normally', () => {
+      const result = hexPath.resolve('0101/NE');
+      expect(result.type).toBe('edge');
+      expect(result.items.length).toBe(1);
+    });
+  });
 });

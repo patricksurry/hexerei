@@ -326,8 +326,14 @@ export class HexPath {
 
         if (cursor.lastHex && cursor.pendingConnector !== 'none') {
           const flip = cursor.pendingConnector === 'flipped';
-          const pathBetween = this.resolveShortestPath(cursor.lastHex, cube, flip);
-          applyIds(pathBetween.slice(1).map((c) => this.formatId(c, cursor.type)));
+          if (cursor.type === 'edge' && cursor.currentSegment.length > 0) {
+            const lastEdgeId = cursor.currentSegment[cursor.currentSegment.length - 1];
+            const edgePath = this.resolveEdgeShortestPath(lastEdgeId, id, flip);
+            applyIds(edgePath.slice(1));
+          } else {
+            const pathBetween = this.resolveShortestPath(cursor.lastHex, cube, flip);
+            applyIds(pathBetween.slice(1).map((c) => this.formatId(c, cursor.type)));
+          }
         } else {
           flushSegment();
           cursor.segmentStart = cube;
@@ -606,6 +612,52 @@ export class HexPath {
     let nudge = (base * parity) as 1 | -1;
     if (flip) nudge = nudge === 1 ? -1 : 1;
     return Hex.hexLine(start, end, nudge);
+  }
+
+  /**
+   * BFS shortest path between two edges in the edge adjacency graph.
+   * Two edges are adjacent if they share a vertex.
+   * Returns the sequence of boundary IDs from start to end (inclusive).
+   */
+  private resolveEdgeShortestPath(startId: string, endId: string, flip: boolean = false): string[] {
+    if (startId === endId) return [startId];
+
+    const MAX_VISITED = 1000;
+    const visited = new Set<string>([startId]);
+    const queue: string[][] = [[startId]];
+    const foundPaths: string[][] = [];
+    let foundDepth = -1;
+
+    while (queue.length > 0 && visited.size < MAX_VISITED) {
+      const path = queue.shift()!;
+
+      // If we already found paths at a certain depth, don't go deeper
+      if (foundDepth >= 0 && path.length > foundDepth) break;
+
+      const current = path[path.length - 1];
+      const neighbors = Hex.getEdgeNeighbors(current);
+
+      for (const neighbor of neighbors) {
+        if (neighbor === endId) {
+          const newPath = [...path, neighbor];
+          foundPaths.push(newPath);
+          foundDepth = newPath.length;
+          if (foundPaths.length >= 2) break;
+          continue;
+        }
+
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push([...path, neighbor]);
+        }
+      }
+
+      if (foundPaths.length >= 2) break;
+    }
+
+    if (foundPaths.length === 0) return [startId]; // unreachable
+
+    return flip && foundPaths.length > 1 ? foundPaths[1] : foundPaths[0];
   }
 
   private fill(boundaryIds: string[]): string[] {

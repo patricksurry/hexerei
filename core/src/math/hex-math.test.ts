@@ -96,7 +96,8 @@ describe('Hex Math', () => {
     it('Boundary and Vertex ID codecs', () => {
       const bId = parseBoundaryId('0,0,0|1,-1,0');
       expect(hexId(bId.hexA)).toBe('0,0,0');
-      expect(hexId(bId.hexB!)).toBe('1,-1,0');
+      if (bId.hexB === null) throw new Error('hexB should not be null');
+      expect(hexId(bId.hexB)).toBe('1,-1,0');
 
       const bIdVoid = parseBoundaryId('0,0,0|VOID|3');
       expect(hexId(bIdVoid.hexA)).toBe('0,0,0');
@@ -375,7 +376,8 @@ describe('Hex Math', () => {
     it('should parse boundary IDs correctly', () => {
       const bId = Hex.parseBoundaryId('0,0,0|1,-1,0');
       expect(Hex.hexId(bId.hexA)).toBe('0,0,0');
-      expect(Hex.hexId(bId.hexB!)).toBe('1,-1,0');
+      if (bId.hexB === null) throw new Error('hexB should not be null');
+      expect(Hex.hexId(bId.hexB)).toBe('1,-1,0');
       expect(bId.direction).toBeUndefined();
 
       const bIdVoid = Hex.parseBoundaryId('0,0,0|VOID|3');
@@ -552,6 +554,26 @@ describe('Hex Math', () => {
           expect(back.y).toBe(r);
         }
       }
+    });
+  });
+
+  describe('getEdgeNeighbors', () => {
+    it('edge has 4 neighbors (2 per endpoint vertex)', () => {
+      const origin: Hex.Cube = { q: 0, r: 0, s: 0 };
+      const neighbor = Hex.hexNeighbor(origin, 0);
+      const edgeId = Hex.getCanonicalBoundaryId(origin, neighbor, 0);
+      const neighbors = Hex.getEdgeNeighbors(edgeId);
+      expect(neighbors.length).toBe(4);
+      for (const n of neighbors) expect(n).toMatch(/\|/);
+      expect(neighbors).not.toContain(edgeId);
+    });
+
+    it('edge neighbors are distinct', () => {
+      const origin: Hex.Cube = { q: 0, r: 0, s: 0 };
+      const neighbor = Hex.hexNeighbor(origin, 0);
+      const edgeId = Hex.getCanonicalBoundaryId(origin, neighbor, 0);
+      const neighbors = Hex.getEdgeNeighbors(edgeId);
+      expect(new Set(neighbors).size).toBe(4);
     });
   });
 });

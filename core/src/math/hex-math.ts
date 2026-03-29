@@ -418,3 +418,43 @@ export function edgeEndpoints(
     vertexPoint(hex, corner2, size, orientation),
   ];
 }
+
+/**
+ * Get the 4 neighboring edges of a given edge (edges sharing a vertex).
+ * Each edge endpoint is a vertex where 3 edges meet; the 2 other edges
+ * at each vertex are neighbors. Returns canonical boundary IDs.
+ */
+export function getEdgeNeighbors(boundaryId: string): string[] {
+  const parsed = parseBoundaryId(boundaryId);
+  if (!parsed.hexB) return []; // map-edge boundary, no neighbors
+
+  const { hexA, hexB } = parsed;
+
+  // Find the direction index from hexA to hexB
+  let dirFromA = -1;
+  for (let d = 0; d < 6; d++) {
+    if (hexId(hexNeighbor(hexA, d)) === hexId(hexB)) {
+      dirFromA = d;
+      break;
+    }
+  }
+  if (dirFromA === -1) return [];
+
+  // The two vertices of this edge are at corners dirFromA and (dirFromA+1)%6 of hexA.
+  // At each vertex, 3 edges meet. We want the other 2 at each vertex.
+  const neighbors: string[] = [];
+
+  // Vertex 1: between directions (dirFromA-1) and dirFromA
+  const prevDir = (dirFromA - 1 + 6) % 6;
+  const prevNeighbor = hexNeighbor(hexA, prevDir);
+  neighbors.push(getCanonicalBoundaryId(hexA, prevNeighbor, prevDir));
+  neighbors.push(getCanonicalBoundaryId(hexB, prevNeighbor));
+
+  // Vertex 2: between directions dirFromA and (dirFromA+1)
+  const nextDir = (dirFromA + 1) % 6;
+  const nextNeighbor = hexNeighbor(hexA, nextDir);
+  neighbors.push(getCanonicalBoundaryId(hexA, nextNeighbor, nextDir));
+  neighbors.push(getCanonicalBoundaryId(hexB, nextNeighbor));
+
+  return neighbors;
+}
