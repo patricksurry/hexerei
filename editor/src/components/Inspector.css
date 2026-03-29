@@ -307,3 +307,11 @@
 .terrain-edit-form-grid {
   grid-column: 1 / -1;
 }
+
+.terrain-edit-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}

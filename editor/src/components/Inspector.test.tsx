@@ -217,6 +217,113 @@ describe('Inspector', () => {
     });
   });
 
+  it('shows Close and Delete terrain buttons inside expanded edit form', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    render(<Inspector selection={sel} model={model} />);
+
+    // Double-click "forest" to expand edit form
+    const forestCell = screen.getByText('forest').closest('.terrain-grid-cell') as HTMLElement;
+    fireEvent.doubleClick(forestCell);
+
+    expect(screen.getByText('Close')).toBeInTheDocument();
+    expect(screen.getByText('Delete terrain')).toBeInTheDocument();
+  });
+
+  it('Close button collapses the edit form', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    render(<Inspector selection={sel} model={model} />);
+
+    // Expand edit form
+    fireEvent.doubleClick(screen.getByText('forest').closest('.terrain-grid-cell') as HTMLElement);
+    expect(screen.getByLabelText('Key')).toBeInTheDocument();
+
+    // Click Close
+    fireEvent.click(screen.getByText('Close'));
+    expect(screen.queryByLabelText('Key')).not.toBeInTheDocument();
+  });
+
+  it('terrain delete requires confirmation when terrain is in use', async () => {
+    // MOCK_YAML: "forest" is used by 1 feature (index 1)
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    // Expand "forest" edit form
+    const forestCell = screen.getByText('forest').closest('.terrain-grid-cell') as HTMLElement;
+    fireEvent.doubleClick(forestCell);
+
+    // Click Delete terrain
+    fireEvent.click(screen.getByText('Delete terrain'));
+
+    // confirm dialog should have been called with usage message
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"forest" is used by 1 feature')
+    );
+    // Since we returned false from confirm, no dispatch should have occurred
+    expect(dispatched).toHaveLength(0);
+
+    confirmSpy.mockRestore();
+  });
+
+  it('terrain delete proceeds when confirmed', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    // Expand "forest" edit form (forest is used by 1 feature)
+    const forestCell = screen.getByText('forest').closest('.terrain-grid-cell') as HTMLElement;
+    fireEvent.doubleClick(forestCell);
+
+    // Click Delete terrain
+    fireEvent.click(screen.getByText('Delete terrain'));
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0]).toEqual({ type: 'deleteTerrainType', geometry: 'hex', key: 'forest' });
+    confirmSpy.mockRestore();
+  });
+
+  it('terrain delete without usage skips confirmation', () => {
+    const unusedTerrainYaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    clear: { style: { color: "#ffffff" } }
+    unused: { style: { color: "#888888" } }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+    const model = MapModel.load(unusedTerrainYaml);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+
+    const confirmSpy = vi.spyOn(window, 'confirm');
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    // Expand "unused" edit form
+    const unusedCell = screen.getByText('unused').closest('.terrain-grid-cell') as HTMLElement;
+    fireEvent.doubleClick(unusedCell);
+
+    // Click Delete terrain — should NOT show confirm because usage count is 0
+    fireEvent.click(screen.getByText('Delete terrain'));
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0]).toEqual({ type: 'deleteTerrainType', geometry: 'hex', key: 'unused' });
+    confirmSpy.mockRestore();
+  });
+
   it('dispatches setLayout when label format dropdown changes', () => {
     const model = MapModel.load(METADATA_YAML);
     const sel: Selection = { type: 'none' };

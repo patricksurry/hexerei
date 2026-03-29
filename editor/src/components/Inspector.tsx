@@ -60,6 +60,13 @@ export const Inspector = ({
       </div>
     );
 
+  const terrainUsageCount = (key: string, geometry: 'hex' | 'edge' | 'vertex'): number => {
+    if (!model) return 0;
+    return model.features.filter(
+      (f) => f.geometryType === geometry && f.terrain === key
+    ).length;
+  };
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.currentTarget.blur();
@@ -206,6 +213,34 @@ export const Inspector = ({
                         }
                       }}
                     />
+                  </div>
+                  <div className="terrain-edit-actions">
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setExpandedTerrain(null)}
+                    >
+                      Close
+                    </button>
+                    <button
+                      className="btn-danger"
+                      onClick={() => {
+                        const count = terrainUsageCount(key, geometry);
+                        if (count > 0) {
+                          if (!window.confirm(
+                            `"${key}" is used by ${count} feature${count !== 1 ? 's' : ''}. ` +
+                            `Deleting will remove terrain from those features. Continue?`
+                          )) return;
+                        }
+                        dispatch?.({
+                          type: 'deleteTerrainType',
+                          geometry,
+                          key,
+                        });
+                        setExpandedTerrain(null);
+                      }}
+                    >
+                      Delete terrain
+                    </button>
                   </div>
                 </div>
               )}
