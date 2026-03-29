@@ -442,18 +442,26 @@ export class HexPath {
     const rawTokens = path.split(/\s+/).filter((t) => t.length > 0);
     const tokens: string[] = [];
 
-    for (const t of rawTokens) {
+    for (let t of rawTokens) {
+      // Strip trailing comma — serialize produces "A, B" which after whitespace
+      // split yields ["A,", "B"]. The comma must become its own token.
+      let trailingComma = false;
+      if (t.endsWith(',')) {
+        t = t.slice(0, -1);
+        trailingComma = true;
+      }
+
       const tl = t.toLowerCase();
       if (/^(include|exclude|close|~close|fill|~fill|-|~|,)$/i.test(tl)) {
         tokens.push(tl);
-        continue;
-      }
-      if (this.isAtomLike(t)) {
+      } else if (this.isAtomLike(t)) {
         tokens.push(t);
-        continue;
+      } else {
+        const pieces = t.split(/([,\-~])/).filter((p) => p.length > 0);
+        tokens.push(...pieces);
       }
-      const pieces = t.split(/([,\-~])/).filter((p) => p.length > 0);
-      tokens.push(...pieces);
+
+      if (trailingComma) tokens.push(',');
     }
     return tokens;
   }
@@ -720,6 +728,6 @@ export class HexPath {
 
     const numeric = parseInt(dir, 10);
     if (!Number.isNaN(numeric)) return ((numeric % 6) + 6) % 6;
-    return 0;
+    throw new Error(`Unrecognized direction: '${dir}'`);
   }
 }

@@ -783,6 +783,46 @@ describe('HexPath RFC Compliance', () => {
     });
   });
 
+  describe('edge paint round-trip', () => {
+    it('tokenizer handles comma-attached atoms from serialize output', () => {
+      // This is what serialize produces — commas stick to previous token after whitespace split
+      const result = hexPath.resolve('0101/SE, 0101/S, 0101/SW');
+      expect(result.items.length).toBe(3);
+      expect(result.type).toBe('edge');
+    });
+
+    it('serialize then resolve preserves multiple edge segments', () => {
+      // Simulate painting 3 edges one by one, serializing and re-resolving between each
+      // First edge
+      const r1 = hexPath.resolve('0101/SE');
+      expect(r1.items.length).toBe(1);
+
+      // Add second edge
+      const r2 = hexPath.resolve('0101/S');
+      const segments2 = [...r1.segments!, r2.segments![0]];
+      const serialized2 = hexPath.serialize(segments2, 'edge');
+
+      // Round-trip: resolve the serialized string
+      const rt2 = hexPath.resolve(serialized2);
+      expect(rt2.items.length).toBe(2);
+      expect(rt2.segments!.length).toBe(2);
+
+      // Add third edge
+      const r3 = hexPath.resolve('0101/SW');
+      const segments3 = [...rt2.segments!, r3.segments![0]];
+      const serialized3 = hexPath.serialize(segments3, 'edge');
+
+      // Round-trip: resolve the serialized string
+      const rt3 = hexPath.resolve(serialized3);
+      expect(rt3.items.length).toBe(3);
+      expect(rt3.segments!.length).toBe(3);
+
+      // Verify the edges are distinct (not all collapsed to direction 0)
+      const items3 = new Set(rt3.items);
+      expect(items3.size).toBe(3);
+    });
+  });
+
   describe('fill segments', () => {
     it('fill produces a boundary segment', () => {
       // Small rectangle: 0101 - 0301 - 0303 - 0103 fill
