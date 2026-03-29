@@ -5,9 +5,10 @@ interface TerrainChipProps {
   geometry: 'hex' | 'edge' | 'vertex';
   active?: boolean;
   title?: string;
+  size?: number;
 }
 
-export const TerrainChip = ({ color, geometry, active, title }: TerrainChipProps) => {
+export const TerrainChip = ({ color, geometry, active, title, size = 16 }: TerrainChipProps) => {
   const content = (() => {
     switch (geometry) {
       case 'hex':
@@ -29,8 +30,9 @@ export const TerrainChip = ({ color, geometry, active, title }: TerrainChipProps
     <div
       className={`terrain-chip terrain-chip-${geometry} ${active ? 'active' : ''}`}
       title={title}
+      style={{ width: size + 4, height: size + 4 }}
     >
-      <svg viewBox="0 0 16 16" width="16" height="16">
+      <svg viewBox="0 0 16 16" width={size} height={size}>
         <g
           fill={geometry === 'edge' ? 'none' : color}
           stroke={geometry === 'edge' ? color : 'none'}

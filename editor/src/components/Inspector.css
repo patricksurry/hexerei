@@ -267,3 +267,43 @@
   flex: 1;
   min-width: 0;
 }
+
+.terrain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+}
+
+.terrain-grid-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.terrain-grid-cell:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.terrain-grid-cell.paint-active {
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.terrain-grid-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terrain-edit-form-grid {
+  grid-column: 1 / -1;
+}

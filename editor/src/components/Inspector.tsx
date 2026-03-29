@@ -75,56 +75,44 @@ export const Inspector = ({
     defs: Map<string, TerrainDef>
   ) => (
     <CollapsibleSection title={title}>
-      <ul className="terrain-list">
+      <div className="terrain-grid">
         {Array.from(defs.entries()).map(([key, def]) => {
           const isExpanded = expandedTerrain?.key === key && expandedTerrain?.geometry === geometry;
           const isPaintActive =
             paintTerrainKey === key && (!paintGeometry || paintGeometry === geometry);
 
           return (
-            <li
-              key={key}
-              className={`terrain-row ${isExpanded ? 'expanded' : ''} ${
-                isPaintActive ? 'paint-active' : ''
-              }`}
-            >
+            <div key={key} style={{ display: 'contents' }}>
               <div
-                className="terrain-row-header"
-                onDoubleClick={() => setExpandedTerrain(isExpanded ? null : { key, geometry })}
-                onClick={() => {
-                  onPaintActivate?.(isPaintActive ? null : key, geometry);
+                role="button"
+                tabIndex={0}
+                className={`terrain-grid-cell ${isPaintActive ? 'paint-active' : ''}`}
+                onClick={() => onPaintActivate?.(isPaintActive ? null : key, geometry)}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedTerrain(isExpanded ? null : { key, geometry });
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    onPaintActivate?.(isPaintActive ? null : key, geometry);
+                  }
+                }}
+                title={
+                  isPaintActive
+                    ? 'Click to exit paint mode'
+                    : `${key}${def.name !== key ? ` (${def.name})` : ''} — click to paint, double-click to edit`
+                }
               >
                 <TerrainChip
                   color={def.color}
                   geometry={geometry}
                   active={isPaintActive}
-                  title={
-                    isPaintActive
-                      ? 'Click to exit paint mode'
-                      : 'Click to paint, double-click to edit'
-                  }
+                  size={48}
                 />
-                <span className="terrain-key">{key}</span>
-                {def.name !== key && <span className="terrain-name">{def.name}</span>}
-                <button
-                  className="btn-icon btn-danger-icon"
-                  aria-label="Delete terrain"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    dispatch?.({
-                      type: 'deleteTerrainType',
-                      geometry,
-                      key,
-                    });
-                    if (isExpanded) setExpandedTerrain(null);
-                  }}
-                >
-                  x
-                </button>
+                <span className="terrain-grid-label">{key}</span>
               </div>
               {isExpanded && (
-                <div className="terrain-edit-form">
+                <div className="terrain-edit-form terrain-edit-form-grid">
                   <div className="inspector-row">
                     <label htmlFor={`terrain-key-${key}`}>Key</label>
                     <input
@@ -221,10 +209,10 @@ export const Inspector = ({
                   </div>
                 </div>
               )}
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
       <button
         className="btn-secondary"
         style={{ marginTop: '12px', width: '100%' }}

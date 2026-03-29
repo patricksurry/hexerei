@@ -16,3 +16,10 @@ test('renders vertex geometry as dot', () => {
   const { container } = render(<TerrainChip color="#FFD600" geometry="vertex" />);
   expect(container.querySelector('circle')).toBeInTheDocument();
 });
+
+test('renders at custom size', () => {
+  const { container } = render(<TerrainChip color="#ff0000" geometry="hex" size={48} />);
+  const svg = container.querySelector('svg');
+  expect(svg?.getAttribute('width')).toBe('48');
+  expect(svg?.getAttribute('height')).toBe('48');
+});

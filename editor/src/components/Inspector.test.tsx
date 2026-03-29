@@ -1,6 +1,6 @@
 import { type MapCommand, MapModel, type Selection } from '@hexmap/canvas';
 import { Hex } from '@hexmap/core';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, test, vi } from 'vitest';
 import { Inspector } from './Inspector';
 
@@ -72,26 +72,18 @@ describe('Inspector', () => {
     expect(screen.getByText('forest')).toBeDefined();
   });
 
-  it('dispatches deleteTerrainType when delete button is clicked', () => {
+  it('opens edit form when terrain grid cell is double-clicked', () => {
     const model = MapModel.load(MOCK_YAML);
     const sel: Selection = { type: 'none' };
-    const dispatched: MapCommand[] = [];
-    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+    render(<Inspector selection={sel} model={model} />);
 
-    // Find the delete button next to "forest"
-    const forestRow = screen.getByText('forest').closest('.terrain-row');
-    expect(forestRow).not.toBeNull();
-    const deleteBtn = within(forestRow as HTMLElement).getByRole('button', {
-      name: /delete terrain/i,
-    });
-    fireEvent.click(deleteBtn);
+    // Double-click "forest" cell to open edit form
+    const forestCell = screen.getByText('forest').closest('.terrain-grid-cell') as HTMLElement;
+    expect(forestCell).not.toBeNull();
+    fireEvent.doubleClick(forestCell);
 
-    expect(dispatched).toHaveLength(1);
-    expect(dispatched[0]).toEqual({
-      type: 'deleteTerrainType',
-      geometry: 'hex',
-      key: 'forest',
-    });
+    // Edit form should now be visible with Key input
+    expect(screen.getByLabelText('Key')).toBeInTheDocument();
   });
 
   it('dispatches setMetadata when title is changed', () => {
@@ -291,14 +283,14 @@ describe('Inspector', () => {
     expect(onPaintActivate).toHaveBeenCalledWith(null, 'hex');
   });
 
-  it('applies paint-active class to active terrain row', () => {
+  it('applies paint-active class to active terrain grid cell', () => {
     const model = MapModel.load(MOCK_YAML);
     const sel: Selection = { type: 'none' };
     render(<Inspector selection={sel} model={model} paintTerrainKey="clear" />);
 
-    const activeRow = document.querySelector('.terrain-row.paint-active');
-    expect(activeRow).not.toBeNull();
-    expect(activeRow?.textContent).toContain('clear');
+    const activeCell = document.querySelector('.terrain-grid-cell.paint-active');
+    expect(activeCell).not.toBeNull();
+    expect(activeCell?.textContent).toContain('clear');
   });
 
   describe('multi-geometry terrain sections', () => {
@@ -325,25 +317,19 @@ describe('Inspector', () => {
       expect(screen.getByText('river')).toBeDefined();
     });
 
-    it('dispatches deleteTerrainType with correct geometry for edge terrain', () => {
+    it('opens edit form for edge terrain when double-clicked', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
       const sel: Selection = { type: 'none' };
       const dispatched: MapCommand[] = [];
       render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
 
       fireEvent.click(screen.getByText('edge'));
-      const riverRow = screen.getByText('river').closest('.terrain-row');
-      const deleteBtn = within(riverRow as HTMLElement).getByRole('button', {
-        name: /delete terrain/i,
-      });
-      fireEvent.click(deleteBtn);
+      const riverCell = screen.getByText('river').closest('.terrain-grid-cell') as HTMLElement;
+      expect(riverCell).not.toBeNull();
+      fireEvent.doubleClick(riverCell);
 
-      expect(dispatched).toHaveLength(1);
-      expect(dispatched[0]).toEqual({
-        type: 'deleteTerrainType',
-        geometry: 'edge',
-        key: 'river',
-      });
+      // Edit form should appear
+      expect(screen.getByLabelText('Key')).toBeInTheDocument();
     });
 
     it('dispatches add terrain with correct geometry for edge section', () => {
@@ -385,8 +371,8 @@ features:
 
       fireEvent.click(screen.getByText('edge'));
 
-      const activeRows = document.querySelectorAll('.terrain-row.paint-active');
-      expect(activeRows).toHaveLength(1);
+      const activeCells = document.querySelectorAll('.terrain-grid-cell.paint-active');
+      expect(activeCells).toHaveLength(1);
     });
 
     it('edge view "Add Feature Here" dispatches addFeature with edge path', () => {
@@ -428,7 +414,7 @@ features:
       }
     });
 
-    it('activates paint with geometry when edge terrain chip is clicked', () => {
+    it('activates paint with geometry when edge terrain grid cell is clicked', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
       const sel: Selection = { type: 'none' };
       let paintKey: string | null = null;
@@ -445,9 +431,8 @@ features:
       );
 
       fireEvent.click(screen.getByText('edge'));
-      const riverRow = screen.getByText('river').closest('.terrain-row');
-      const chip = (riverRow as HTMLElement).querySelector('.terrain-chip');
-      fireEvent.click(chip!);
+      const riverCell = screen.getByText('river').closest('.terrain-grid-cell') as HTMLElement;
+      fireEvent.click(riverCell);
 
       expect(paintKey).toBe('river');
       expect(paintGeometry).toBe('edge');
