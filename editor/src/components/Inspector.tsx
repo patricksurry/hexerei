@@ -484,7 +484,18 @@ export const Inspector = ({
             <label>At</label>
             <div style={{ flex: 1 }}>
               {isAllFeature ? (
-                <span className="font-mono inspector-at-readonly">{expandedAt}</span>
+                atomCount !== null && atomCount > 20 ? (
+                  <details className="inspector-at-details">
+                    <summary className="font-mono inspector-at-readonly">
+                      @all ({atomCount} {feature.geometryType === 'hex'
+                        ? 'hexes' : feature.geometryType === 'edge'
+                        ? 'edges' : 'vertices'})
+                    </summary>
+                    <span className="font-mono inspector-at-readonly">{expandedAt}</span>
+                  </details>
+                ) : (
+                  <span className="font-mono inspector-at-readonly">{expandedAt}</span>
+                )
               ) : (
                 <input
                   type="text"

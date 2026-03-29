@@ -250,11 +250,22 @@
 
 .inspector-at-readonly {
   display: block;
-  word-break: break-all;
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-align: left;
   font-size: var(--font-size-sm);
   color: var(--text-primary);
   max-height: 80px;
   overflow-y: auto;
+}
+
+.inspector-at-details summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.inspector-at-details summary:hover {
+  color: var(--accent-hex);
 }
 
 .inspector-hint {
