@@ -2,18 +2,18 @@
   /* Backgrounds */
   --bg-base: #0a0e14;
   --bg-surface: #0d1117;
-  --bg-elevated: #151b23;
+  --bg-elevated: #1c2333;
   --bg-canvas: #080c12;
 
   /* Borders & Rules */
-  --border-subtle: #1a2332;
-  --border-focus: #2a3a4a;
+  --border-subtle: #30363d;
+  --border-focus: #3a4a5a;
   --border-accent: rgba(0, 212, 255, 0.25);
 
   /* Text */
   --text-primary: #e6edf3;
   --text-secondary: #8b949e;
-  --text-muted: #484f58;
+  --text-muted: #7d8590;
   --text-glow: rgba(0, 212, 255, 0.6);
 
   /* Accents (geometry-typed) */
