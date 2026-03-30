@@ -575,5 +575,15 @@ describe('Hex Math', () => {
       const neighbors = Hex.getEdgeNeighbors(edgeId);
       expect(new Set(neighbors).size).toBe(4);
     });
+
+    it('works with non-origin hex', () => {
+      const hex: Hex.Cube = { q: 2, r: -1, s: -1 };
+      const neighbor = Hex.hexNeighbor(hex, 3);
+      const edgeId = Hex.getCanonicalBoundaryId(hex, neighbor, 3);
+      const neighbors = Hex.getEdgeNeighbors(edgeId);
+      expect(neighbors.length).toBe(4);
+      expect(new Set(neighbors).size).toBe(4);
+      expect(neighbors).not.toContain(edgeId);
+    });
   });
 });

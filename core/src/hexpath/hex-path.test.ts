@@ -873,5 +873,9 @@ describe('HexPath RFC Compliance', () => {
       expect(result.type).toBe('edge');
       expect(result.items.length).toBe(1);
     });
+
+    it('throws on unrecognized direction', () => {
+      expect(() => hexPath.resolve('0101/BOGUS')).toThrow('Unrecognized direction');
+    });
   });
 });

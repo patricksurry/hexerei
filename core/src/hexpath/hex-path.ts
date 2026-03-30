@@ -618,6 +618,10 @@ export class HexPath {
    * BFS shortest path between two edges in the edge adjacency graph.
    * Two edges are adjacent if they share a vertex.
    * Returns the sequence of boundary IDs from start to end (inclusive).
+   *
+   * Note: flip (~ operator) is best-effort — BFS marks nodes visited globally,
+   * so alternate paths sharing intermediate nodes with the first path won't be
+   * found. This matches the hex path ~ semantics (best-effort alternate).
    */
   private resolveEdgeShortestPath(startId: string, endId: string, flip: boolean = false): string[] {
     if (startId === endId) return [startId];
