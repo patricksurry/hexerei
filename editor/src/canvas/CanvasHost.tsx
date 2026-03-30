@@ -187,14 +187,17 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
       scheduleRender();
     };
 
-    // Initial fit
+    // Fit viewport when the map identity changes (new/open), not on every render.
+    // model.mesh is the stable identity — it changes only when a new map is loaded.
+    const meshId = model?.mesh;
     useEffect(() => {
       fitExtent();
-    }, [fitExtent]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [meshId]);
 
     useEffect(() => {
       scheduleRender();
-    }, [scheduleRender]);
+    });
 
     useEffect(() => {
       const container = containerRef.current;

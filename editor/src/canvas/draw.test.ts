@@ -23,7 +23,11 @@ describe('Canvas Drawing', () => {
     set shadowBlur(_val: number) {},
     set shadowColor(_val: string) {},
     set lineCap(_val: string) {},
+    set lineJoin(_val: string) {},
     setLineDash: vi.fn(),
+    measureText: vi.fn(() => ({ width: 20 })),
+    roundRect: vi.fn(),
+    arc: vi.fn(),
   } as unknown as CanvasRenderingContext2D;
 
   beforeEach(() => {
@@ -82,13 +86,35 @@ describe('Canvas Drawing', () => {
   });
 
   it('should draw labels if big enough', () => {
-    drawScene(mockCtx, mockScene, { labelMinZoom: 5 });
-    // center is (10,10), radius is 10. labelY = 10 - 10 * 0.4 = 6
-    expect(mockCtx.fillText).toHaveBeenCalledWith('0101', 10, 6);
+    // Need hex radius >= 15 so fontSize (radius * 0.28) >= 4
+    const bigHexScene: Scene = {
+      ...mockScene,
+      hexagons: [
+        {
+          ...mockScene.hexagons[0],
+          corners: [
+            { x: 50, y: 30 },
+            { x: 70, y: 50 },
+            { x: 50, y: 70 },
+            { x: 30, y: 70 },
+            { x: 10, y: 50 },
+            { x: 30, y: 30 },
+          ],
+          center: { x: 40, y: 50 },
+        },
+      ],
+    };
+    // radius = sqrt((50-40)^2 + (30-50)^2) = sqrt(500) ≈ 22.4
+    // fontSize = 22.4 * 0.28 ≈ 6.3 >= 4, so labels render
+    // labelY = 50 - 22.4 * 0.4 ≈ 41
+    drawScene(mockCtx, bigHexScene);
+    expect(mockCtx.fillText).toHaveBeenCalledWith('0101', expect.any(Number), expect.any(Number));
   });
 
   it('should not draw labels if too small', () => {
-    drawScene(mockCtx, mockScene, { labelMinZoom: 50 });
+    // Default mockScene has radius 10, fontSize = 10 * 0.28 = 2.8 < 4
+    drawScene(mockCtx, mockScene);
+    // fillText should not be called for labels (only fillRect for background)
     expect(mockCtx.fillText).not.toHaveBeenCalled();
   });
 

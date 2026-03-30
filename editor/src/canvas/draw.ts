@@ -3,14 +3,17 @@ import type { Scene } from '@hexmap/canvas';
 export interface CanvasTheme {
   background: string;
   gridStroke: string;
+  gridGlow: string | null;
   gridLineWidth: number;
   terrainOpacity: number;
   labelColor: string;
   labelGlow: string | null;
+  labelPillColor: string;
   selectionGlow: number;
   hoverGlow: number;
   featureLabelColor: string;
   featureLabelShadow: string;
+  featureLabelPillColor: string;
   accentHex: string;
   accentEdge: string;
   accentVertex: string;
@@ -25,14 +28,17 @@ export interface CanvasTheme {
 const DEFAULT_THEME: CanvasTheme = {
   background: '#141414',
   gridStroke: '#3A3A3A',
+  gridGlow: null,
   gridLineWidth: 1,
   terrainOpacity: 1.0,
   labelColor: '#888888',
   labelGlow: null,
+  labelPillColor: 'rgba(0, 0, 0, 0)',
   selectionGlow: 0,
   hoverGlow: 0,
   featureLabelColor: '#ffffff',
   featureLabelShadow: 'rgba(0,0,0,0.8)',
+  featureLabelPillColor: 'rgba(0, 0, 0, 0)',
   accentHex: '#00D4FF',
   accentEdge: '#FF44FF',
   accentVertex: '#FFDD00',
@@ -88,6 +94,10 @@ export function drawScene(
   }
 
   // Second pass: Grid Stroke (on top of fills)
+  if (theme.gridGlow) {
+    ctx.shadowColor = theme.gridGlow;
+    ctx.shadowBlur = 3;
+  }
   ctx.strokeStyle = gridStroke;
   ctx.lineWidth = gridLineWidth;
   for (const hex of scene.hexagons) {
@@ -102,6 +112,7 @@ export function drawScene(
     ctx.closePath();
     ctx.stroke();
   }
+  ctx.shadowBlur = 0;
 
   // Draw edge terrain
   for (const edge of scene.edgeTerrain) {
@@ -268,55 +279,85 @@ export function drawScene(
     ctx.shadowBlur = 0;
   }
 
-  // Draw labels
+  // Draw labels — scale with world space (like printing on the map)
   if (scene.hexagons.length > 0) {
     const h0 = scene.hexagons[0];
     const hexScreenRadius = Math.sqrt(
       (h0.corners[0].x - h0.center.x) ** 2 + (h0.corners[0].y - h0.center.y) ** 2
     );
 
-    if (hexScreenRadius > labelMinZoom) {
-      const fontSize = Math.max(8, hexScreenRadius * theme.hexLabelScale);
+    // Pure world-space scaling: labels shrink/grow with zoom
+    const fontSize = hexScreenRadius * theme.hexLabelScale;
 
-      if (theme.labelGlow) {
-        ctx.shadowColor = theme.labelGlow;
-        ctx.shadowBlur = 4;
-      }
-
-      ctx.fillStyle = labelColor;
+    // Only render when labels would be legible (≥4px)
+    if (fontSize >= 4) {
       ctx.font = `${fontSize}px var(--font-mono)`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
+      const padH = fontSize * 0.3;
+      const padV = fontSize * 0.15;
+      const pillRadius = fontSize * 0.2;
+
       for (const hex of scene.hexagons) {
         const labelY = hex.center.y - hexScreenRadius * theme.hexLabelOffset;
+        const metrics = ctx.measureText(hex.label);
+        const pillW = metrics.width + padH * 2;
+        const pillH = fontSize + padV * 2;
+        const pillX = hex.center.x - pillW / 2;
+        const pillY = labelY - pillH / 2;
+
+        // Pill background
+        ctx.fillStyle = theme.labelPillColor;
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius);
+        ctx.fill();
+
+        // Label text
+        if (theme.labelGlow) {
+          ctx.shadowColor = theme.labelGlow;
+          ctx.shadowBlur = 4;
+        }
+        ctx.fillStyle = labelColor;
         ctx.fillText(hex.label, hex.center.x, labelY);
+        ctx.shadowBlur = 0;
       }
-      ctx.shadowBlur = 0;
     }
   }
 
-  // Feature labels
+  // Feature labels — also world-space scaled
   if (scene.featureLabels.length > 0 && scene.hexagons.length > 0) {
     const h0 = scene.hexagons[0];
     const hexScreenRadius = Math.sqrt(
       (h0.corners[0].x - h0.center.x) ** 2 + (h0.corners[0].y - h0.center.y) ** 2
     );
-    if (hexScreenRadius > (options.labelMinZoom ?? 12)) {
-      const fontSize = Math.max(7, hexScreenRadius * theme.featureLabelScale);
+    const fontSize = hexScreenRadius * theme.featureLabelScale;
+
+    if (fontSize >= 4) {
       ctx.font = `600 ${fontSize}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      for (const fl of scene.featureLabels) {
-        if (theme.featureLabelShadow) {
-          ctx.shadowColor = theme.featureLabelShadow;
-          ctx.shadowBlur = 6;
-        }
+      const padH = fontSize * 0.4;
+      const padV = fontSize * 0.2;
+      const pillRadius = fontSize * 0.25;
 
+      for (const fl of scene.featureLabels) {
+        const metrics = ctx.measureText(fl.text);
+        const pillW = metrics.width + padH * 2;
+        const pillH = fontSize + padV * 2;
+        const pillX = fl.point.x - pillW / 2;
+        const pillY = fl.point.y - pillH / 2;
+
+        // Pill background
+        ctx.fillStyle = theme.featureLabelPillColor;
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius);
+        ctx.fill();
+
+        // Label text
         ctx.fillStyle = theme.featureLabelColor;
         ctx.fillText(fl.text, fl.point.x, fl.point.y);
-        ctx.shadowBlur = 0;
       }
     }
   }
