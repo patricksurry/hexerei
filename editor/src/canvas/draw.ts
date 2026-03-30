@@ -94,10 +94,6 @@ export function drawScene(
   }
 
   // Second pass: Grid Stroke (on top of fills)
-  if (theme.gridGlow) {
-    ctx.shadowColor = theme.gridGlow;
-    ctx.shadowBlur = 3;
-  }
   ctx.strokeStyle = gridStroke;
   ctx.lineWidth = gridLineWidth;
   for (const hex of scene.hexagons) {
@@ -112,7 +108,6 @@ export function drawScene(
     ctx.closePath();
     ctx.stroke();
   }
-  ctx.shadowBlur = 0;
 
   // Draw edge terrain
   for (const edge of scene.edgeTerrain) {
@@ -295,15 +290,14 @@ export function drawScene(
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      const padH = fontSize * 0.3;
-      const padV = fontSize * 0.15;
+      const pad = fontSize * 0.2;
       const pillRadius = fontSize * 0.2;
 
       for (const hex of scene.hexagons) {
         const labelY = hex.center.y - hexScreenRadius * theme.hexLabelOffset;
         const metrics = ctx.measureText(hex.label);
-        const pillW = metrics.width + padH * 2;
-        const pillH = fontSize + padV * 2;
+        const pillW = metrics.width + pad * 2;
+        const pillH = fontSize + pad * 2;
         const pillX = hex.center.x - pillW / 2;
         const pillY = labelY - pillH / 2;
 
@@ -338,14 +332,13 @@ export function drawScene(
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      const padH = fontSize * 0.4;
-      const padV = fontSize * 0.2;
+      const fpad = fontSize * 0.25;
       const pillRadius = fontSize * 0.25;
 
       for (const fl of scene.featureLabels) {
         const metrics = ctx.measureText(fl.text);
-        const pillW = metrics.width + padH * 2;
-        const pillH = fontSize + padV * 2;
+        const pillW = metrics.width + fpad * 2;
+        const pillH = fontSize + fpad * 2;
         const pillX = fl.point.x - pillW / 2;
         const pillY = fl.point.y - pillH / 2;
 

@@ -26,10 +26,10 @@
   --accent-command: #00d4ff;
 
   /* Canvas-specific */
-  --canvas-grid-stroke: rgba(0, 180, 220, 0.18);
-  --canvas-grid-line-width: 0.75;
+  --canvas-grid-stroke: rgba(0, 180, 220, 0.30);
+  --canvas-grid-line-width: 1.0;
   --canvas-terrain-opacity: 0.6;
-  --canvas-label-color: rgba(0, 180, 220, 0.35);
+  --canvas-label-color: rgba(0, 180, 220, 0.50);
   --canvas-selection-glow: 8;
   --canvas-hover-glow: 4;
 
