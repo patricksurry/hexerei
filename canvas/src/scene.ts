@@ -193,6 +193,27 @@ function buildHighlights(
   return { highlightItems, edgeHighlights, vertexHighlights };
 }
 
+function idToPixel(id: string, orientation: 'flat' | 'pointy'): { x: number; y: number } {
+  if (id.includes('|')) {
+    // Boundary (edge) ID: midpoint between two hex centers
+    const parsed = Hex.parseBoundaryId(id);
+    const pA = Hex.hexToPixel(parsed.hexA, HEX_SIZE, orientation);
+    if (!parsed.hexB) return pA;
+    const pB = Hex.hexToPixel(parsed.hexB, HEX_SIZE, orientation);
+    return { x: (pA.x + pB.x) / 2, y: (pA.y + pB.y) / 2 };
+  }
+  if (id.includes('^')) {
+    // Vertex ID: centroid of the 3 meeting hexes
+    const hexes = Hex.parseVertexId(id);
+    const points = hexes.map((h) => Hex.hexToPixel(h, HEX_SIZE, orientation));
+    return {
+      x: points.reduce((s, p) => s + p.x, 0) / points.length,
+      y: points.reduce((s, p) => s + p.y, 0) / points.length,
+    };
+  }
+  return Hex.hexToPixel(Hex.hexFromId(id), HEX_SIZE, orientation);
+}
+
 function buildPathLines(
   segments: string[][],
   viewport: ViewportState,
@@ -201,9 +222,7 @@ function buildPathLines(
   return segments
     .filter((s) => s.length >= 2)
     .map((segment) => ({
-      points: segment.map((hexId) =>
-        worldToScreen(Hex.hexToPixel(Hex.hexFromId(hexId), HEX_SIZE, orientation), viewport)
-      ),
+      points: segment.map((id) => worldToScreen(idToPixel(id, orientation), viewport)),
       color: ACCENT_HEX,
     }));
 }
