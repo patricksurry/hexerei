@@ -11,7 +11,7 @@ export function resolveCanvasTheme(): CanvasTheme {
   return {
     background: get('--bg-canvas') || '#080C12',
     gridStroke: get('--canvas-grid-stroke') || 'rgba(0, 180, 220, 0.25)',
-    gridGlow: get('--canvas-grid-glow') || null,
+    gridGlow: get('--canvas-grid-glow') || 'rgba(0, 0, 0, 0.10)',
     gridLineWidth: getNum('--canvas-grid-line-width', 1.0),
     terrainOpacity: getNum('--canvas-terrain-opacity', 0.6),
     labelColor: get('--canvas-label-color') || 'rgba(0, 180, 220, 0.5)',
@@ -30,5 +30,7 @@ export function resolveCanvasTheme(): CanvasTheme {
     hexLabelScale: getNum('--canvas-hex-label-scale', 0.32),
     hexLabelOffset: getNum('--canvas-hex-label-offset', 0.4),
     featureLabelScale: getNum('--canvas-feature-label-scale', 0.22),
+    fontMono: get('--font-mono') || 'ui-monospace, "Cascadia Code", monospace',
+    fontSans: get('--font-sans') || 'sans-serif',
   };
 }

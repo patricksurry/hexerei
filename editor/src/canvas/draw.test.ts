@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { drawScene } from './draw.js';
 
 describe('Canvas Drawing', () => {
+  let _currentFont = '10px sans-serif';
   const mockCtx = {
     canvas: { width: 800, height: 600 },
     fillRect: vi.fn(),
@@ -16,7 +17,7 @@ describe('Canvas Drawing', () => {
     set fillStyle(_val: string) {},
     set strokeStyle(_val: string) {},
     set lineWidth(_val: number) {},
-    set font(_val: string) {},
+    set font(val: string) { _currentFont = val; },
     set textAlign(_val: string) {},
     set textBaseline(_val: string) {},
     set globalAlpha(_val: number) {},
@@ -25,7 +26,12 @@ describe('Canvas Drawing', () => {
     set lineCap(_val: string) {},
     set lineJoin(_val: string) {},
     setLineDash: vi.fn(),
-    measureText: vi.fn(() => ({ width: 20 })),
+    measureText: vi.fn(() => {
+      // Scale measureText width with current font size (like a real browser)
+      const match = _currentFont.match(/(\d+(?:\.\d+)?)px/);
+      const size = match ? parseFloat(match[1]) : 10;
+      return { width: size * 2.4 };
+    }),
     roundRect: vi.fn(),
     arc: vi.fn(),
   } as unknown as CanvasRenderingContext2D;
@@ -116,6 +122,124 @@ describe('Canvas Drawing', () => {
     drawScene(mockCtx, mockScene);
     // fillText should not be called for labels (only fillRect for background)
     expect(mockCtx.fillText).not.toHaveBeenCalled();
+  });
+
+  it('should scale font size proportionally to hex screen radius', () => {
+    // Track font assignments
+    const fontValues: string[] = [];
+    const spyCtx = {
+      ...mockCtx,
+      set font(val: string) { fontValues.push(val); },
+      set fillStyle(_v: string) {},
+      set strokeStyle(_v: string) {},
+      set lineWidth(_v: number) {},
+      set textAlign(_v: string) {},
+      set textBaseline(_v: string) {},
+      set globalAlpha(_v: number) {},
+      set shadowBlur(_v: number) {},
+      set shadowColor(_v: string) {},
+      set lineCap(_v: string) {},
+      set lineJoin(_v: string) {},
+    } as unknown as CanvasRenderingContext2D;
+
+    // Scene with radius ~20 (simulating zoom level A)
+    const makeScene = (radius: number): Scene => ({
+      ...mockScene,
+      hexagons: [{
+        hexId: '0,0,0',
+        corners: [
+          { x: 100, y: 100 - radius },
+          { x: 100 + radius, y: 100 },
+          { x: 100, y: 100 + radius },
+          { x: 100 - radius, y: 100 + radius },
+          { x: 100 - radius, y: 100 },
+          { x: 100 - radius, y: 100 - radius },
+        ],
+        center: { x: 100, y: 100 },
+        fill: '#fff',
+        label: '0101',
+      }],
+    });
+
+    // Zoom level A: radius 20
+    fontValues.length = 0;
+    drawScene(spyCtx, makeScene(20));
+    const fontA = fontValues.find(f => f.includes('px'));
+    expect(fontA).toBeDefined();
+    const sizeA = parseFloat(fontA!);
+
+    // Zoom level B: radius 60 (3x zoom)
+    fontValues.length = 0;
+    drawScene(spyCtx, makeScene(60));
+    const fontB = fontValues.find(f => f.includes('px'));
+    expect(fontB).toBeDefined();
+    const sizeB = parseFloat(fontB!);
+
+    // Font size should scale proportionally (3x radius = 3x font)
+    expect(sizeB / sizeA).toBeCloseTo(3, 0);
+    // Sanity: both should be > 4px threshold
+    expect(sizeA).toBeGreaterThanOrEqual(4);
+    expect(sizeB).toBeGreaterThanOrEqual(4);
+  });
+
+  it('should produce consistent pill aspect ratio at different zoom levels', () => {
+    // Track roundRect calls to check pill dimensions
+    const pillCalls: { w: number; h: number }[] = [];
+    const spyCtx = {
+      ...mockCtx,
+      roundRect: vi.fn((_x: number, _y: number, w: number, h: number) => {
+        pillCalls.push({ w, h });
+      }),
+      measureText: vi.fn(() => {
+        const match = _currentFont.match(/(\d+(?:\.\d+)?)px/);
+        const size = match ? parseFloat(match[1]) : 10;
+        return { width: size * 2.4 };
+      }),
+      set font(val: string) { _currentFont = val; },
+      set fillStyle(_v: string) {},
+      set strokeStyle(_v: string) {},
+      set lineWidth(_v: number) {},
+      set textAlign(_v: string) {},
+      set textBaseline(_v: string) {},
+      set globalAlpha(_v: number) {},
+      set shadowBlur(_v: number) {},
+      set shadowColor(_v: string) {},
+      set lineCap(_v: string) {},
+      set lineJoin(_v: string) {},
+    } as unknown as CanvasRenderingContext2D;
+
+    const makeScene = (radius: number): Scene => ({
+      ...mockScene,
+      hexagons: [{
+        hexId: '0,0,0',
+        corners: [
+          { x: 100, y: 100 - radius },
+          { x: 100 + radius, y: 100 },
+          { x: 100, y: 100 + radius },
+          { x: 100 - radius, y: 100 + radius },
+          { x: 100 - radius, y: 100 },
+          { x: 100 - radius, y: 100 - radius },
+        ],
+        center: { x: 100, y: 100 },
+        fill: '#fff',
+        label: '0101',
+      }],
+    });
+
+    // Zoom A: radius 20
+    pillCalls.length = 0;
+    drawScene(spyCtx, makeScene(20));
+    expect(pillCalls.length).toBeGreaterThan(0);
+    const ratioA = pillCalls[0].w / pillCalls[0].h;
+
+    // Zoom B: radius 60
+    pillCalls.length = 0;
+    drawScene(spyCtx, makeScene(60));
+    expect(pillCalls.length).toBeGreaterThan(0);
+    const ratioB = pillCalls[0].w / pillCalls[0].h;
+
+    // Aspect ratios should be equal (within floating point tolerance)
+    expect(ratioA).toBeCloseTo(ratioB, 1);
   });
 
   it('should draw labels near the top of the hex, not at center', () => {

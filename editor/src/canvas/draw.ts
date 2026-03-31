@@ -23,6 +23,9 @@ export interface CanvasTheme {
   hexLabelScale: number;
   hexLabelOffset: number;
   featureLabelScale: number;
+  // Resolved font families (Canvas 2D cannot use CSS variables)
+  fontMono: string;
+  fontSans: string;
 }
 
 const DEFAULT_THEME: CanvasTheme = {
@@ -47,6 +50,8 @@ const DEFAULT_THEME: CanvasTheme = {
   hexLabelScale: 0.28,
   hexLabelOffset: 0.4,
   featureLabelScale: 0.22,
+  fontMono: 'ui-monospace, "Cascadia Code", monospace',
+  fontSans: 'sans-serif',
 };
 
 interface DrawOptions {
@@ -94,6 +99,23 @@ export function drawScene(
   }
 
   // Second pass: Grid Stroke (on top of fills)
+  // Shadow underlay: wider dark stroke for contrast against terrain fills
+  if (theme.gridGlow) {
+    ctx.strokeStyle = theme.gridGlow;
+    ctx.lineWidth = gridLineWidth + 2;
+    for (const hex of scene.hexagons) {
+      ctx.beginPath();
+      const { corners } = hex;
+      if (corners.length < 6) continue;
+      ctx.moveTo(corners[0].x, corners[0].y);
+      for (let i = 1; i < 6; i++) {
+        ctx.lineTo(corners[i].x, corners[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+  // Colored grid on top
   ctx.strokeStyle = gridStroke;
   ctx.lineWidth = gridLineWidth;
   for (const hex of scene.hexagons) {
@@ -286,7 +308,7 @@ export function drawScene(
 
     // Only render when labels would be legible (≥4px)
     if (fontSize >= 4) {
-      ctx.font = `${fontSize}px var(--font-mono)`;
+      ctx.font = `${fontSize}px ${theme.fontMono}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -328,7 +350,7 @@ export function drawScene(
     const fontSize = hexScreenRadius * theme.featureLabelScale;
 
     if (fontSize >= 4) {
-      ctx.font = `600 ${fontSize}px sans-serif`;
+      ctx.font = `600 ${fontSize}px ${theme.fontSans}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
