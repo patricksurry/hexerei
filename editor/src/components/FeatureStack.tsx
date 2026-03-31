@@ -10,6 +10,7 @@ interface FeatureStackProps {
   onSelect?: (indices: number[], modifier: 'none' | 'shift' | 'cmd') => void;
   onHover?: (index: number | null) => void;
   dispatch?: (command: MapCommand) => void;
+  orientation?: 'flat' | 'pointy';
 }
 
 export const FeatureStack = ({
@@ -20,6 +21,7 @@ export const FeatureStack = ({
   onSelect,
   onHover,
   dispatch,
+  orientation,
 }: FeatureStackProps) => {
   const getTerrainColor = (terrain: string, geometry: string) => {
     if (terrainColor) return terrainColor(terrain, geometry);
@@ -75,6 +77,7 @@ export const FeatureStack = ({
                 <TerrainChip
                   color={getTerrainColor(feature.terrain, feature.geometryType)}
                   geometry={feature.geometryType}
+                  orientation={orientation}
                 />
                 <div className="feature-info">
                   <div className="feature-label truncate">{label}</div>

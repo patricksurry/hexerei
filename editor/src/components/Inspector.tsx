@@ -115,6 +115,7 @@ export const Inspector = ({
                   geometry={geometry}
                   active={isPaintActive}
                   size={48}
+                  orientation={model?.grid.orientation}
                 />
                 <span className="terrain-grid-label">{key}</span>
               </div>
@@ -474,6 +475,7 @@ export const Inspector = ({
               value={feature.terrain || ''}
               terrainDefs={model.terrainDefs(feature.geometryType)}
               geometry={feature.geometryType}
+              orientation={model.grid.orientation}
               onChange={(key) => handleFieldBlur('terrain', key)}
             />
           </div>

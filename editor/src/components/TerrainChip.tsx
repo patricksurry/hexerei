@@ -6,13 +6,17 @@ interface TerrainChipProps {
   active?: boolean;
   title?: string;
   size?: number;
+  orientation?: 'flat' | 'pointy';
 }
 
-export const TerrainChip = ({ color, geometry, active, title, size = 16 }: TerrainChipProps) => {
+export const TerrainChip = ({ color, geometry, active, title, size = 16, orientation = 'flat' }: TerrainChipProps) => {
   const content = (() => {
     switch (geometry) {
       case 'hex':
-        return <polygon points="8,1 15,5 15,11 8,15 1,11 1,5" />;
+        // pointy-top: vertex at top/bottom; flat-top: edge at top/bottom
+        return orientation === 'pointy'
+          ? <polygon points="8,1 15,5 15,11 8,15 1,11 1,5" />
+          : <polygon points="1,8 5,1 11,1 15,8 11,15 5,15" />;
       case 'edge':
         return (
           <>

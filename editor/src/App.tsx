@@ -539,6 +539,7 @@ export const App = () => {
             onSelect={handleSelectFeature}
             onHover={setHoverIndex}
             dispatch={dispatch}
+            orientation={model?.grid.orientation}
           />
         }
         canvas={

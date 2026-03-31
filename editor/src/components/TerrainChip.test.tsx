@@ -23,3 +23,11 @@ test('renders at custom size', () => {
   expect(svg?.getAttribute('width')).toBe('48');
   expect(svg?.getAttribute('height')).toBe('48');
 });
+
+test('renders flat-top hex with different points than pointy-top', () => {
+  const { container: flat } = render(<TerrainChip color="#2d6a1e" geometry="hex" orientation="flat" />);
+  const { container: pointy } = render(<TerrainChip color="#2d6a1e" geometry="hex" orientation="pointy" />);
+  const flatPoints = flat.querySelector('polygon')?.getAttribute('points');
+  const pointyPoints = pointy.querySelector('polygon')?.getAttribute('points');
+  expect(flatPoints).not.toBe(pointyPoints);
+});

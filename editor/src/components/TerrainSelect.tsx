@@ -7,10 +7,11 @@ interface TerrainSelectProps {
   value: string;
   terrainDefs: Map<string, TerrainDef>;
   geometry: 'hex' | 'edge' | 'vertex';
+  orientation?: 'flat' | 'pointy';
   onChange: (key: string) => void;
 }
 
-export const TerrainSelect = ({ value, terrainDefs, geometry, onChange }: TerrainSelectProps) => {
+export const TerrainSelect = ({ value, terrainDefs, geometry, orientation, onChange }: TerrainSelectProps) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -33,7 +34,7 @@ export const TerrainSelect = ({ value, terrainDefs, geometry, onChange }: Terrai
       <button className="terrain-select-trigger" onClick={() => setOpen(!open)} type="button">
         {currentDef ? (
           <>
-            <TerrainChip color={currentDef.color} geometry={geometry} />
+            <TerrainChip color={currentDef.color} geometry={geometry} orientation={orientation} />
             <span className="terrain-select-label">{value}</span>
           </>
         ) : (
@@ -61,7 +62,7 @@ export const TerrainSelect = ({ value, terrainDefs, geometry, onChange }: Terrai
                 setOpen(false);
               }}
             >
-              <TerrainChip color={def.color} geometry={geometry} />
+              <TerrainChip color={def.color} geometry={geometry} orientation={orientation} />
               <span className="terrain-select-label">{key}</span>
               {def.name !== key && <span className="terrain-select-name">{def.name}</span>}
             </li>

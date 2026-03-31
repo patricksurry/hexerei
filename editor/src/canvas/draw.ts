@@ -47,8 +47,8 @@ const DEFAULT_THEME: CanvasTheme = {
   accentVertex: '#FFDD00',
   pathLineWidth: 5,
   vertexRadius: 5,
-  hexLabelScale: 0.28,
-  hexLabelOffset: 0.4,
+  hexLabelScale: 0.22,
+  hexLabelOffset: 0.55,
   featureLabelScale: 0.22,
   fontMono: 'ui-monospace, "Cascadia Code", monospace',
   fontSans: 'sans-serif',
@@ -321,7 +321,8 @@ export function drawScene(
         const pillW = metrics.width + pad * 2;
         const pillH = fontSize + pad * 2;
         const pillX = hex.center.x - pillW / 2;
-        const pillY = labelY - pillH / 2;
+        // Shift pill down slightly — font visual center sits above math midpoint
+        const pillY = labelY - pillH / 2 + fontSize * 0.05;
 
         // Pill background
         ctx.fillStyle = theme.labelPillColor;
