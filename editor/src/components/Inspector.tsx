@@ -413,8 +413,6 @@ export const Inspector = ({
       }
     };
 
-    const _terrainKeys = Array.from(model.terrainDefs(feature.geometryType).keys());
-
     const isAllFeature = feature.at.trim() === '@all';
     let expandedAt = feature.at;
     let atomCount: number | null = null;

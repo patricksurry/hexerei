@@ -451,8 +451,7 @@ features:
 
       expect(dispatched).toHaveLength(1);
       expect(dispatched[0].type).toBe('setTerrainType');
-      // @ts-expect-error
-      expect(dispatched[0].geometry).toBe('edge');
+      expect(dispatched[0].type === 'setTerrainType' && dispatched[0].geometry).toBe('edge');
     });
 
     it('isPaintActive only highlights matching geometry (not same-name key in different section)', () => {

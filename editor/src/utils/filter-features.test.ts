@@ -3,13 +3,16 @@ import { describe, expect, test } from 'vitest';
 import { filterFeatures } from './filter-features';
 
 const mockFeatures: FeatureItem[] = [
-  { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [], label: 'Base' },
+  { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], edgeIds: [], vertexIds: [], geometryType: 'hex', tags: [], label: 'Base' },
   {
     index: 1,
     terrain: 'forest',
     at: '0201',
     isBase: false,
     hexIds: [],
+    edgeIds: [],
+    vertexIds: [],
+    geometryType: 'hex',
     tags: ['dense'],
     label: 'Dark Forest',
   },
@@ -19,6 +22,9 @@ const mockFeatures: FeatureItem[] = [
     at: '0101/E',
     isBase: false,
     hexIds: [],
+    edgeIds: [],
+    vertexIds: [],
+    geometryType: 'edge',
     tags: ['waterway'],
     label: 'Elbe',
   },
@@ -28,6 +34,9 @@ const mockFeatures: FeatureItem[] = [
     at: '0301',
     isBase: false,
     hexIds: [],
+    edgeIds: [],
+    vertexIds: [],
+    geometryType: 'hex',
     tags: [],
     label: 'Light Forest',
   },

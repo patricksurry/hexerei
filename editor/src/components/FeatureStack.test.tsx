@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, test, vi } from 'vitest';
 import { FeatureStack } from './FeatureStack';
 
+const featureBase = { hexIds: [] as string[], edgeIds: [] as string[], vertexIds: [] as string[], geometryType: 'hex' as const, tags: [] as string[] };
+
 describe('FeatureStack', () => {
   it('renders empty list', () => {
     const { container } = render(<FeatureStack features={[]} terrainColor={() => '#000'} />);
@@ -25,62 +27,30 @@ describe('FeatureStack', () => {
   });
 
   test('shows all features when filteredIndices is null', () => {
-    const features = [
-      { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [] },
-      {
-        index: 1,
-        terrain: 'forest',
-        at: '0201',
-        isBase: false,
-        hexIds: [],
-        tags: [],
-        label: 'Woods',
-      },
-    ] as FeatureItem[];
+    const features: FeatureItem[] = [
+      { ...featureBase, index: 0, terrain: 'clear', at: '@all', isBase: true },
+      { ...featureBase, index: 1, terrain: 'forest', at: '0201', isBase: false, label: 'Woods' },
+    ];
     render(<FeatureStack features={features} filteredIndices={null} terrainColor={() => '#000'} />);
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
   test('shows only matching features when filteredIndices is set', () => {
-    const features = [
-      { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [] },
-      {
-        index: 1,
-        terrain: 'forest',
-        at: '0201',
-        isBase: false,
-        hexIds: [],
-        tags: [],
-        label: 'Woods',
-      },
-    ] as FeatureItem[];
+    const features: FeatureItem[] = [
+      { ...featureBase, index: 0, terrain: 'clear', at: '@all', isBase: true },
+      { ...featureBase, index: 1, terrain: 'forest', at: '0201', isBase: false, label: 'Woods' },
+    ];
     render(<FeatureStack features={features} filteredIndices={[1]} terrainColor={() => '#000'} />);
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
     expect(screen.getByText('Woods')).toBeDefined();
   });
 
   test('shows match count in header when filtering', () => {
-    const features = [
-      { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [] },
-      {
-        index: 1,
-        terrain: 'forest',
-        at: '0201',
-        isBase: false,
-        hexIds: [],
-        tags: [],
-        label: 'Woods',
-      },
-      {
-        index: 2,
-        terrain: 'forest',
-        at: '0301',
-        isBase: false,
-        hexIds: [],
-        tags: [],
-        label: 'Grove',
-      },
-    ] as FeatureItem[];
+    const features: FeatureItem[] = [
+      { ...featureBase, index: 0, terrain: 'clear', at: '@all', isBase: true },
+      { ...featureBase, index: 1, terrain: 'forest', at: '0201', isBase: false, label: 'Woods' },
+      { ...featureBase, index: 2, terrain: 'forest', at: '0301', isBase: false, label: 'Grove' },
+    ];
     render(
       <FeatureStack features={features} filteredIndices={[1, 2]} terrainColor={() => '#000'} />
     );
@@ -88,18 +58,10 @@ describe('FeatureStack', () => {
   });
 
   test('renders features in reverse visual order', () => {
-    const features = [
-      { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [], label: 'Base' },
-      {
-        index: 1,
-        terrain: 'forest',
-        at: '0201',
-        isBase: false,
-        hexIds: [],
-        tags: [],
-        label: 'Top',
-      },
-    ] as FeatureItem[];
+    const features: FeatureItem[] = [
+      { ...featureBase, index: 0, terrain: 'clear', at: '@all', isBase: true, label: 'Base' },
+      { ...featureBase, index: 1, terrain: 'forest', at: '0201', isBase: false, label: 'Top' },
+    ];
     render(<FeatureStack features={features} filteredIndices={null} terrainColor={() => '#000'} />);
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(2);
@@ -109,18 +71,10 @@ describe('FeatureStack', () => {
   });
 
   test('click on top visual item dispatches onSelect with the correct last data index', () => {
-    const features = [
-      { index: 0, terrain: 'clear', at: '@all', isBase: true, hexIds: [], tags: [], label: 'Base' },
-      {
-        index: 1,
-        terrain: 'forest',
-        at: '0201',
-        isBase: false,
-        hexIds: [],
-        tags: [],
-        label: 'Top',
-      },
-    ] as FeatureItem[];
+    const features: FeatureItem[] = [
+      { ...featureBase, index: 0, terrain: 'clear', at: '@all', isBase: true, label: 'Base' },
+      { ...featureBase, index: 1, terrain: 'forest', at: '0201', isBase: false, label: 'Top' },
+    ];
     const onSelect = vi.fn();
     render(
       <FeatureStack

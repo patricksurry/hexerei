@@ -15,7 +15,8 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@hexmap/core": ["../core/src/index.ts"]
+      "@hexmap/core": ["../core/src/index.ts"],
+      "@hexmap/canvas": ["../canvas/src/index.ts"]
     }
   },
   "include": ["src"]

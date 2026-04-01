@@ -4,7 +4,7 @@ import { TerrainChip } from './TerrainChip';
 import './FeatureStack.css';
 
 interface FeatureStackProps {
-  features: FeatureItem[];
+  features: readonly FeatureItem[];
   filteredIndices?: number[] | null; // null = no filter, [] = nothing matches
   selectedIndices?: number[];
   terrainColor?: (terrain: string, geometry: string) => string;

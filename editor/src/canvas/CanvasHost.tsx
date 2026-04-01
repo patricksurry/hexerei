@@ -384,7 +384,6 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
           return Hex.hexToPixel(cube, 1, orientation); // HEX_SIZE = 1
         });
         const bounds = computeWorldBounds(centers, 1, orientation);
-        const _vp = viewportRef.current;
         // Center on the midpoint of the bounds, keep current zoom
         const targetCenter = {
           x: (bounds.min.x + bounds.max.x) / 2,

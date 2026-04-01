@@ -1,6 +1,6 @@
 import type { FeatureItem } from '@hexmap/canvas';
 
-export function filterFeatures(features: FeatureItem[], query: string): number[] {
+export function filterFeatures(features: readonly FeatureItem[], query: string): number[] {
   const q = query.toLowerCase();
 
   // Key:value search (e.g., "terrain:forest")

@@ -265,7 +265,7 @@ describe('Canvas Drawing', () => {
       vertexTerrain: [],
       pathTerrain: [],
     };
-    drawScene(mockCtx, sceneWithBigHex, { labelMinZoom: 12 });
+    drawScene(mockCtx, sceneWithBigHex);
     const { calls } = (mockCtx.fillText as any).mock;
     expect(calls).toHaveLength(1);
     const [_text, _x, labelY] = calls[0];

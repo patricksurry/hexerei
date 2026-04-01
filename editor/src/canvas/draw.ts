@@ -55,7 +55,7 @@ const DEFAULT_THEME: CanvasTheme = {
 };
 
 interface DrawOptions {
-  labelMinZoom?: number;
+
   theme?: CanvasTheme;
 }
 
@@ -64,7 +64,6 @@ export function drawScene(
   scene: Scene,
   options: DrawOptions = {}
 ): void {
-  const { labelMinZoom = 12 } = options;
   const theme = options.theme || DEFAULT_THEME;
 
   const background = theme.background || scene.background.trim() || DEFAULT_THEME.background;

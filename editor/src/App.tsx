@@ -230,8 +230,8 @@ export const App = () => {
       const matchingHexIds = new Set(
         filteredIndices.flatMap((idx) => model.features[idx]?.hexIds ?? [])
       );
-      const allHexIds = model.mesh.getAllHexes().map((h) => h.id);
-      const dimHexIds = allHexIds.filter((id) => !matchingHexIds.has(id));
+      const allHexIds = Array.from(model.mesh.getAllHexes()).map((h: { id: string }) => h.id);
+      const dimHexIds = allHexIds.filter((id: string) => !matchingHexIds.has(id));
       if (dimHexIds.length > 0) {
         dimHighlights.push({ type: 'hex', hexIds: dimHexIds, color: '#000000', style: 'dim' });
       }
