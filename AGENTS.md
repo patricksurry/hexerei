@@ -28,6 +28,7 @@ See `core/src/hexpath/hex-path.ts` for the API and JSDoc.
 - **No new copy-pasted code above 50 tokens.** Prefer moving shared logic to `@hexmap/core`.
 - **Strict `kebab-case` for all new files.**
 - **Minimal API surface area.** Only export what is strictly necessary.
+- **No bare string constants for domain values.** Use exported TypeScript types or const unions defined in `@hexmap/core` (or `@hexmap/canvas` for UI-only concepts). During code review, flag any inline string union that duplicates an existing type. `labelFormat` is an exception (user-defined, extensible).
 - **Test Quality:**
   - Maintain >80% code coverage for new logic.
   - Core math changes should be verified with mutation testing (`npm run test:mutation`).
