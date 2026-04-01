@@ -51,8 +51,7 @@ export function executeCommand(command: MapCommand, state: MapState): CommandRes
       const current = currentFeatures[command.index];
       const previousValues: Partial<Feature> = {};
       for (const key of Object.keys(command.changes) as (keyof Feature)[]) {
-        // Store the previous value with proper typing
-        previousValues[key] = current[key];
+        (previousValues as Record<string, unknown>)[key] = current[key];
       }
       doc.updateFeature(command.index, command.changes);
       inverse = { type: 'updateFeature', index: command.index, changes: previousValues };

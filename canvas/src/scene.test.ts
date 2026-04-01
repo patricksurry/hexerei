@@ -2,7 +2,8 @@ import { Hex } from '@hexmap/core';
 import { describe, expect, it } from 'vitest';
 import { hitTest } from './hit-test.js';
 import { MapModel } from './model.js';
-import { buildScene, type SceneHighlight } from './scene.js';
+import { buildScene } from './scene.js';
+import type { SceneHighlight } from './types.js';
 import { type ViewportState, worldToScreen } from './viewport.js';
 
 const MOCK_YAML = `

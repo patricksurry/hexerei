@@ -283,7 +283,7 @@ describe('MapModel', () => {
       const model = MapModel.load(EDGE_FEATURE_YAML);
       const riverFeature = model.features.find((f) => f.terrain === 'river');
       const firstEdgeId = riverFeature?.edgeIds[0];
-      const features = model.featuresAtEdge(firstEdgeId);
+      const features = model.featuresAtEdge(firstEdgeId!);
       expect(features.length).toBe(1);
       expect(features[0].terrain).toBe('river');
     });
@@ -292,7 +292,7 @@ describe('MapModel', () => {
       const model = MapModel.load(EDGE_FEATURE_YAML);
       const bridgeFeature = model.features.find((f) => f.terrain === 'bridge');
       const firstVertexId = bridgeFeature?.vertexIds[0];
-      const features = model.featuresAtVertex(firstVertexId);
+      const features = model.featuresAtVertex(firstVertexId!);
       expect(features.length).toBe(1);
       expect(features[0].terrain).toBe('bridge');
     });
