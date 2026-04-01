@@ -1,4 +1,5 @@
 import type { TerrainDef } from '@hexmap/canvas';
+import type { Hex } from '@hexmap/core';
 import { useEffect, useRef, useState } from 'react';
 import { TerrainChip } from './TerrainChip';
 import './TerrainSelect.css';
@@ -7,7 +8,7 @@ interface TerrainSelectProps {
   value: string;
   terrainDefs: Map<string, TerrainDef>;
   geometry: 'hex' | 'edge' | 'vertex';
-  orientation?: string;
+  orientation?: Hex.Orientation;
   onChange: (key: string) => void;
 }
 

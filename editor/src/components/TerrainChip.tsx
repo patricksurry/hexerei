@@ -1,3 +1,4 @@
+import { Hex } from '@hexmap/core';
 import './TerrainChip.css';
 
 interface TerrainChipProps {
@@ -6,11 +7,11 @@ interface TerrainChipProps {
   active?: boolean;
   title?: string;
   size?: number;
-  orientation?: string;
+  orientation?: Hex.Orientation;
 }
 
-export const TerrainChip = ({ color, geometry, active, title, size = 16, orientation = 'flat' }: TerrainChipProps) => {
-  const isPointy = orientation.startsWith('pointy');
+export const TerrainChip = ({ color, geometry, active, title, size = 16, orientation = 'flat-down' }: TerrainChipProps) => {
+  const isPointy = Hex.orientationTop(orientation) === 'pointy';
   const content = (() => {
     switch (geometry) {
       case 'hex':

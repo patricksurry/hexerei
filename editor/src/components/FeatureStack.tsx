@@ -1,4 +1,5 @@
 import type { FeatureItem, MapCommand } from '@hexmap/canvas';
+import type { Hex } from '@hexmap/core';
 import { TerrainChip } from './TerrainChip';
 import './FeatureStack.css';
 
@@ -10,7 +11,7 @@ interface FeatureStackProps {
   onSelect?: (indices: number[], modifier: 'none' | 'shift' | 'cmd') => void;
   onHover?: (index: number | null) => void;
   dispatch?: (command: MapCommand) => void;
-  orientation?: string;
+  orientation?: Hex.Orientation;
 }
 
 export const FeatureStack = ({
