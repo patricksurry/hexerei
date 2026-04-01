@@ -1,3 +1,5 @@
+import type { FeatureSide, GeometryType } from '@hexmap/core';
+
 export type HighlightStyle = 'select' | 'hover' | 'ghost' | 'dim';
 
 // Redefined HitResult
@@ -15,18 +17,18 @@ export interface FeatureItem {
   tags: string[];
   at: string;
   isBase: boolean;
-  geometryType: 'hex' | 'edge' | 'vertex';
+  geometryType: GeometryType;
   hexIds: string[];
   edgeIds: string[];
   vertexIds: string[];
   segments?: string[][]; // from HexPathResult.segments, for path rendering
   elevation?: number;
   properties?: Record<string, unknown>;
-  side?: 'both' | 'in' | 'out' | 'left' | 'right';
+  side?: FeatureSide;
 }
 
 export interface SceneHighlight {
-  type: 'hex' | 'edge' | 'vertex';
+  type: GeometryType;
   hexIds?: string[];
   boundaryId?: string;
   vertexId?: string;

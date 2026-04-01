@@ -1,5 +1,6 @@
 import {
   type Feature,
+  type GeometryType,
   HexMapDocument,
   type HexMapLayout,
   type HexMapMetadata,
@@ -14,13 +15,8 @@ export type MapCommand =
   | { type: 'reorderFeature'; fromIndex: number; toIndex: number }
   | { type: 'setMetadata'; key: keyof HexMapMetadata; value: unknown }
   | { type: 'setLayout'; key: keyof HexMapLayout; value: unknown }
-  | {
-      type: 'setTerrainType';
-      geometry: 'hex' | 'edge' | 'vertex';
-      key: string;
-      def: TerrainTypeDef;
-    }
-  | { type: 'deleteTerrainType'; geometry: 'hex' | 'edge' | 'vertex'; key: string };
+  | { type: 'setTerrainType'; geometry: GeometryType; key: string; def: TerrainTypeDef }
+  | { type: 'deleteTerrainType'; geometry: GeometryType; key: string };
 
 export interface MapState {
   document: HexMapDocument;
