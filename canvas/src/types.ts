@@ -1,3 +1,5 @@
+export type HighlightStyle = 'select' | 'hover' | 'ghost' | 'dim';
+
 // Redefined HitResult
 export type HitResult =
   | { type: 'none' }
@@ -29,7 +31,7 @@ export interface SceneHighlight {
   boundaryId?: string;
   vertexId?: string;
   color: string;
-  style: 'select' | 'hover' | 'ghost' | 'dim';
+  style: HighlightStyle;
 }
 
 export type Selection =
