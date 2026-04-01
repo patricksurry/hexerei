@@ -46,16 +46,18 @@ npm test -w editor
 
 The editor is designed as a high-performance, reactive spatial environment. It uses a decoupled architecture where the mathematical model, visual scene, and UI state are clearly separated.
 
-### Core Model (`/src/model/`)
+### Model Layer (from `@hexmap/canvas`)
 - **`MapModel`**: The primary source of truth. It wraps the `@hexmap/core` mesh and provides high-level queries for features, terrain, and labels.
 - **`Scene`**: A render-ready representation of the map. The `buildScene` function performs **frustum culling** and transforms world coordinates to screen space based on the current viewport.
 - **`Viewport`**: Manages the camera state (zoom, center). Contains pure mathematical functions for coordinate projection and camera manipulation.
 - **`HitTest`**: Precise geometric hit-testing for Hexes, Edges, and Vertices using screen-space distances and thresholds.
 - **`Selection`**: Manages the multi-modal selection state (Hex, Edge, Vertex, or Feature) and generates visual highlights.
+- **`Commands`**: Immutable command/inverse pattern for undoable map edits.
 
-### Canvas Rendering (`/src/canvas/`)
+### Canvas Rendering (`/src/canvas/`) — editor-specific
 - **`CanvasHost`**: A React component that manages the HTML5 Canvas element, handles input events (mouse, wheel, keyboard), and orchestrates the render loop.
 - **`draw.ts`**: Pure, side-effect-free functions that paint the `Scene` onto a `CanvasRenderingContext2D`. It handles high-DPI scaling, dashed "ghost" geometry, and scalable labels.
+- **`resolve-theme.ts`**: Resolves CSS custom properties into a concrete theme object for the canvas renderer.
 
 ### UI Components (`/src/components/`)
 - **`CommandBar`**: The primary input for the "Spatial IDE". Supports live HexPath parsing, syntax highlighting, and command execution (e.g., `>zoom fit`).

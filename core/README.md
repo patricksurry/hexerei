@@ -68,6 +68,21 @@ doc.setMetadata("title", "Updated Title");
 const updatedYaml = doc.toString();
 ```
 
+## Architecture
+
+`@hexmap/core` is the foundation layer with zero DOM or framework dependencies.
+
+```
+@hexmap/core  ← you are here (pure logic, no DOM)
+ └── @hexmap/canvas (model, scene, interaction — framework-agnostic)
+      └── apps (editor, game engines, analysis tools)
+```
+
+### Dependencies
+
+- `yaml` — YAML parsing for `.hexmap.yaml` documents
+- No DOM, no framework, no rendering dependencies
+
 ## RFC Compliance
 
 Current compliance status:
