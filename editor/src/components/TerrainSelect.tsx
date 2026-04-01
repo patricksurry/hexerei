@@ -7,7 +7,7 @@ interface TerrainSelectProps {
   value: string;
   terrainDefs: Map<string, TerrainDef>;
   geometry: 'hex' | 'edge' | 'vertex';
-  orientation?: 'flat' | 'pointy';
+  orientation?: string;
   onChange: (key: string) => void;
 }
 

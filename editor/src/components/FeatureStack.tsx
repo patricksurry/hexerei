@@ -10,7 +10,7 @@ interface FeatureStackProps {
   onSelect?: (indices: number[], modifier: 'none' | 'shift' | 'cmd') => void;
   onHover?: (index: number | null) => void;
   dispatch?: (command: MapCommand) => void;
-  orientation?: 'flat' | 'pointy';
+  orientation?: string;
 }
 
 export const FeatureStack = ({

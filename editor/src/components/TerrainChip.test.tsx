@@ -25,8 +25,8 @@ test('renders at custom size', () => {
 });
 
 test('renders flat-top hex with different points than pointy-top', () => {
-  const { container: flat } = render(<TerrainChip color="#2d6a1e" geometry="hex" orientation="flat" />);
-  const { container: pointy } = render(<TerrainChip color="#2d6a1e" geometry="hex" orientation="pointy" />);
+  const { container: flat } = render(<TerrainChip color="#2d6a1e" geometry="hex" orientation="flat-down" />);
+  const { container: pointy } = render(<TerrainChip color="#2d6a1e" geometry="hex" orientation="pointy-right" />);
   const flatPoints = flat.querySelector('polygon')?.getAttribute('points');
   const pointyPoints = pointy.querySelector('polygon')?.getAttribute('points');
   expect(flatPoints).not.toBe(pointyPoints);
