@@ -14,10 +14,10 @@ export const TerrainChip = ({ color, geometry, active, title, size = 16, orienta
   const content = (() => {
     switch (geometry) {
       case 'hex':
-        // pointy-top: vertex at top/bottom; flat-top: edge at top/bottom
+        // Regular hexagon vertices, circumradius 7, centered at (8,8)
         return isPointy
-          ? <polygon points="8,1 15,5 15,11 8,15 1,11 1,5" />
-          : <polygon points="1,8 5,1 11,1 15,8 11,15 5,15" />;
+          ? <polygon points="8,1 14.1,4.5 14.1,11.5 8,15 1.9,11.5 1.9,4.5" />
+          : <polygon points="15,8 11.5,14.1 4.5,14.1 1,8 4.5,1.9 11.5,1.9" />;
       case 'edge':
         return (
           <>
