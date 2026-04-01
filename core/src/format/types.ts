@@ -1,5 +1,9 @@
 import type { Orientation } from '../math/hex-math.js';
 
+export type LayoutOrigin = 'top-left' | 'bottom-left' | 'top-right' | 'bottom-right';
+export type TerrainTypeClass = 'base' | 'modifier';
+export type FeatureSide = 'both' | 'in' | 'out' | 'left' | 'right';
+
 export interface GeoReference {
   scale?: number;
   anchor?: { lat: number; lng: number };
@@ -12,7 +16,7 @@ export interface HexMapLayout {
   orientation: Orientation;
   all: string;
   label?: string;
-  origin?: 'top-left' | 'bottom-left' | 'top-right' | 'bottom-right';
+  origin?: LayoutOrigin;
   georef?: GeoReference;
 }
 
@@ -36,7 +40,7 @@ export interface TerrainStyle {
 
 export interface TerrainTypeDef {
   name?: string;
-  type?: 'base' | 'modifier';
+  type?: TerrainTypeClass;
   onesided?: boolean;
   style?: TerrainStyle;
   properties?: Record<string, unknown>;
@@ -55,6 +59,6 @@ export interface Feature {
   label?: string;
   id?: string;
   tags?: string;
-  side?: 'both' | 'in' | 'out' | 'left' | 'right';
+  side?: FeatureSide;
   properties?: Record<string, unknown>;
 }
