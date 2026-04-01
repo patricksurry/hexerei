@@ -190,7 +190,7 @@ export class HexPath {
     const handleCloseOrFill = (flip: boolean, doFill: boolean) => {
       if (cursor.segmentStart && cursor.lastHex) {
         const pathBack = this.resolveShortestPath(cursor.lastHex, cursor.segmentStart, flip);
-        const ids = pathBack.slice(1).map((c) => this.formatId(c, cursor.type));
+        const ids = pathBack.slice(1).map((c) => this.formatId(c));
         applyIds(ids);
 
         if (doFill) {
@@ -283,7 +283,7 @@ export class HexPath {
           for (let i = 0; i < count; i++) {
             cursor.lastHex = Hex.hexNeighbor(cursor.lastHex, dir);
             if (i === 0) firstStepped = cursor.lastHex;
-            applyIds([this.formatId(cursor.lastHex, cursor.type)]);
+            applyIds([this.formatId(cursor.lastHex)]);
           }
           if (!cursor.segmentStart && firstStepped) cursor.segmentStart = firstStepped;
         } else {
@@ -313,12 +313,12 @@ export class HexPath {
           }
           cursor.lastHex = startPoint;
           if (!cursor.segmentStart) cursor.segmentStart = startPoint;
-          applyIds([this.formatId(startPoint, cursor.type)]);
+          applyIds([this.formatId(startPoint)]);
 
           for (const { dir, count } of cursor.floatingSteps) {
             for (let j = 0; j < count; j++) {
               cursor.lastHex = Hex.hexNeighbor(cursor.lastHex, dir);
-              applyIds([this.formatId(cursor.lastHex, cursor.type)]);
+              applyIds([this.formatId(cursor.lastHex)]);
             }
           }
           cursor.floatingSteps = [];
@@ -332,7 +332,7 @@ export class HexPath {
             applyIds(edgePath.slice(1));
           } else {
             const pathBetween = this.resolveShortestPath(cursor.lastHex, cube, flip);
-            applyIds(pathBetween.slice(1).map((c) => this.formatId(c, cursor.type)));
+            applyIds(pathBetween.slice(1).map((c) => this.formatId(c)));
           }
         } else {
           flushSegment();

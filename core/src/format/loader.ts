@@ -1,5 +1,6 @@
 import { HexPath } from '../hexpath/hex-path.js';
 import type { Orientation } from '../math/hex-math.js';
+import type { HexMapLayout } from './types.js';
 import * as Hex from '../math/hex-math.js';
 import { HexMesh } from '../mesh/hex-mesh.js';
 import { HexMapDocument } from './document.js';
@@ -65,7 +66,12 @@ export class HexMapLoader {
     const validHexes = HexMapLoader.resolveValidHexes(layout, options);
     const validHexIdSet = new Set(validHexes.map(Hex.hexId));
 
-    const mesh = new HexMesh(validHexes, { ...options, layout });
+    const hexMapLayout: HexMapLayout = {
+      orientation: options.orientation,
+      all: layout.all ?? '',
+      label: layout.label,
+    };
+    const mesh = new HexMesh(validHexes, { ...options, layout: hexMapLayout });
     const meshHexPath = new HexPath(mesh, options);
 
     const { terrainMap, elevationMap, tagsMap } = HexMapLoader.processFeatures(
