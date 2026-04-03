@@ -1,6 +1,6 @@
 # API Boundary Review & Cleanup Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Clean API boundaries between core/canvas/editor, fix all TS errors, write README for canvas.
 
@@ -33,20 +33,20 @@
 - Modify: `core/src/hexpath/hex-path.ts`
 - Modify: `core/src/format/loader.ts`
 
-- [ ] **Step 1: Remove extra arg from `formatId` calls**
+- [x] **Step 1: Remove extra arg from `formatId` calls**
 
 `formatId` takes 1 argument but is called with 2 at lines 193, 286, 316, 321, 335. Remove the second `cursor.type` argument from all 5 call sites.
 
-- [ ] **Step 2: Fix loader.ts orientation type**
+- [x] **Step 2: Fix loader.ts orientation type**
 
 In `ParsedLayout`, orientation is `string | undefined`. When constructing the HexMesh options, validate and default:
 ```typescript
 const orientation = (layout.orientation ?? 'flat-down') as Orientation;
 ```
 
-- [ ] **Step 3: Run `npx tsc --noEmit -p core/tsconfig.json` — expect 0 errors**
+- [x] **Step 3: Run `npx tsc --noEmit -p core/tsconfig.json` — expect 0 errors**
 
-- [ ] **Step 4: Run tests, commit**
+- [x] **Step 4: Run tests, commit**
 
 ---
 
@@ -57,24 +57,24 @@ const orientation = (layout.orientation ?? 'flat-down') as Orientation;
 - Modify: `canvas/src/model.test.ts`
 - Modify: `canvas/src/scene.test.ts`
 
-- [ ] **Step 1: Fix command.ts Feature key indexing**
+- [x] **Step 1: Fix command.ts Feature key indexing**
 
 Line 55: Add type assertion for the indexed access:
 ```typescript
 (previousValues as Record<string, unknown>)[key] = current[key];
 ```
 
-- [ ] **Step 2: Fix model.test.ts string | undefined**
+- [x] **Step 2: Fix model.test.ts string | undefined**
 
 Lines 286, 295: Add non-null assertion `!` on the values that are known to be defined in test fixtures.
 
-- [ ] **Step 3: Fix scene.test.ts import**
+- [x] **Step 3: Fix scene.test.ts import**
 
 Change `import { buildScene, type SceneHighlight } from './scene.js'` to import `SceneHighlight` from `./types.js` (or from the package index since it's re-exported).
 
-- [ ] **Step 4: Run `npx tsc --noEmit -p canvas/tsconfig.json` — expect 0 errors (excluding core pass-through)**
+- [x] **Step 4: Run `npx tsc --noEmit -p canvas/tsconfig.json` — expect 0 errors (excluding core pass-through)**
 
-- [ ] **Step 5: Run tests, commit**
+- [x] **Step 5: Run tests, commit**
 
 ---
 
@@ -89,28 +89,28 @@ Change `import { buildScene, type SceneHighlight } from './scene.js'` to import 
 - Modify: `editor/src/utils/filter-features.ts`
 - Modify: `editor/tsconfig.json` (if needed for path mapping)
 
-- [ ] **Step 1: Fix module resolution for `@hexmap/canvas`**
+- [x] **Step 1: Fix module resolution for `@hexmap/canvas`**
 
 Check `editor/tsconfig.json` paths — canvas may need a `paths` entry or the `references` config may be incomplete. This is likely a build config issue.
 
-- [ ] **Step 2: Fix implicit `any` parameters**
+- [x] **Step 2: Fix implicit `any` parameters**
 
 Add explicit types to all 16 implicit `any` parameters:
 - `App.tsx`: lines 233, 234, 264, 265, 269, 273, 274, 418, 488 — these are `.map`/`.filter` callbacks on arrays. Add types matching the array element type.
 - `Inspector.tsx`: lines 66, 610, 623, 684, 774 — same pattern.
 - `filter-features.ts`: lines 23, 39
 
-- [ ] **Step 3: Remove unused variables**
+- [x] **Step 3: Remove unused variables**
 
 - `draw.ts:67`: Remove `labelMinZoom` destructuring (now unused since label rendering uses hexScreenRadius threshold)
 - `CanvasHost.tsx:387`: Remove `_vp` variable
 - `Inspector.tsx:416`: Remove `_terrainKeys`
 
-- [ ] **Step 4: Remove unused `@ts-expect-error`**
+- [x] **Step 4: Remove unused `@ts-expect-error`**
 
 `Inspector.test.tsx:454`: Remove the directive since the error it suppressed no longer exists.
 
-- [ ] **Step 5: Run full test suite + `npx tsc --noEmit`, commit**
+- [x] **Step 5: Run full test suite + `npx tsc --noEmit`, commit**
 
 ---
 
@@ -119,7 +119,7 @@ Add explicit types to all 16 implicit `any` parameters:
 **Files:**
 - Create: `canvas/README.md`
 
-- [ ] **Step 1: Write README**
+- [x] **Step 1: Write README**
 
 ```markdown
 # @hexmap/canvas
@@ -223,7 +223,7 @@ const { state: newState, inverse } = executeCommand(cmd, currentState);
 | `GeometryType` | Re-exported from core |
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ---
 
@@ -233,7 +233,7 @@ const { state: newState, inverse } = executeCommand(cmd, currentState);
 - Modify: `core/README.md` — add architecture layer diagram, dependency note
 - Modify: `editor/README.md` — fix outdated section references (`/src/model/` → `@hexmap/canvas`)
 
-- [ ] **Step 1: Add architecture section to core README**
+- [x] **Step 1: Add architecture section to core README**
 
 Add after the Key Concepts section:
 ```markdown
@@ -253,13 +253,13 @@ Add after the Key Concepts section:
 - No DOM, no framework, no rendering dependencies
 ```
 
-- [ ] **Step 2: Fix editor README outdated references**
+- [x] **Step 2: Fix editor README outdated references**
 
 The "Core Model" section references `/src/model/` but MapModel, Scene, Viewport, HitTest, and Selection are all in `@hexmap/canvas`. Update to reflect the actual architecture:
 - MapModel, Scene, Viewport, HitTest, Selection → from `@hexmap/canvas`
 - draw.ts, resolve-theme.ts, CanvasHost → editor-specific Canvas2D rendering
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ---
 
