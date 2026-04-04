@@ -2,7 +2,7 @@ import { CommandHistory, MapModel } from '@hexmap/canvas';
 import { HexMapDocument } from '@hexmap/core';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from './App';
 
 beforeEach(() => {
@@ -294,4 +294,140 @@ test('alt-click removal: removing from multi-atom segment preserves others', () 
     .filter((seg) => seg.length > 0);
 
   expect(filtered).toEqual([['a', 'c']]);
+});
+
+describe('state machine transitions', () => {
+  async function createTestMap() {
+    render(<App />);
+    const dialog = screen.getByRole('dialog');
+    const titleInput = within(dialog).getByLabelText(/title/i);
+    await userEvent.type(titleInput, 'Test');
+    const createBtn = within(dialog).getByRole('button', { name: /create/i });
+    await userEvent.click(createBtn);
+    await screen.findByTitle('flat-down');
+  }
+
+  test('command bar > prefix enters command mode and shows commands', async () => {
+    await createTestMap();
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '>');
+    // COMMAND mode badge should appear (mode.toUpperCase() = 'COMMAND')
+    expect(screen.getByText('COMMAND')).toBeInTheDocument();
+    // Command list should be visible with 'save' command
+    expect(screen.getByText('save')).toBeInTheDocument();
+  });
+
+  test('Escape clears command bar input', async () => {
+    await createTestMap();
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '0101');
+    expect(input).toHaveValue('0101');
+
+    await userEvent.keyboard('{Escape}');
+    expect(input).toHaveValue('');
+  });
+
+  test('selecting feature shows editing placeholder in command bar', async () => {
+    await createTestMap();
+    // Add a feature via command bar
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '0101{enter}');
+
+    // Select the newly added feature (items[0] is newest, since stack is displayed in reverse)
+    const featureStack = screen.getByRole('complementary', { name: /features/i });
+    const items = within(featureStack).getAllByRole('listitem');
+    await userEvent.click(items[0]);
+
+    // Command bar placeholder should mention Editing
+    expect(input).toHaveAttribute('placeholder', expect.stringContaining('Editing'));
+  });
+
+  test('Escape cascading: clears command bar first, then clears selection', async () => {
+    await createTestMap();
+
+    // Add a feature and select it
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '0101{enter}');
+
+    // Select the newly added feature (displayed first in stack since list is reversed)
+    const featureStack = screen.getByRole('complementary', { name: /features/i });
+    const items = within(featureStack).getAllByRole('listitem');
+    await userEvent.click(items[0]); // items[0] is newest (last in original order, first after reverse)
+
+    // Command bar should now have the feature's at value
+    expect(input).toHaveValue('0101');
+
+    // First Escape: clears command bar value
+    await userEvent.keyboard('{Escape}');
+    expect(input).toHaveValue('');
+
+    // Second Escape: clears selection — placeholder returns to default (no Editing)
+    await userEvent.keyboard('{Escape}');
+    expect(input).not.toHaveAttribute('placeholder', expect.stringContaining('Editing'));
+  });
+
+  test('mod+z undoes last action', async () => {
+    await createTestMap();
+    const input = screen.getByRole('combobox', { name: /command/i });
+
+    // Add a feature
+    await userEvent.type(input, '0101{enter}');
+    const featureStack = screen.getByRole('complementary', { name: /features/i });
+    const countBefore = within(featureStack).getAllByRole('listitem').length;
+
+    // Undo
+    await userEvent.keyboard('{Meta>}z{/Meta}');
+
+    const countAfter = within(featureStack).getAllByRole('listitem').length;
+    expect(countAfter).toBe(countBefore - 1);
+  });
+
+  test('mod+shift+z redoes undone action', async () => {
+    await createTestMap();
+    const input = screen.getByRole('combobox', { name: /command/i });
+
+    // Add a feature
+    await userEvent.type(input, '0101{enter}');
+    const featureStack = screen.getByRole('complementary', { name: /features/i });
+    const countWithFeature = within(featureStack).getAllByRole('listitem').length;
+
+    // Undo
+    await userEvent.keyboard('{Meta>}z{/Meta}');
+
+    // Redo
+    await userEvent.keyboard('{Meta>}{Shift>}z{/Shift}{/Meta}');
+
+    const countAfterRedo = within(featureStack).getAllByRole('listitem').length;
+    expect(countAfterRedo).toBe(countWithFeature);
+  });
+
+  test('>save command triggers download', async () => {
+    const createObjectUrlMock = vi.fn().mockReturnValue('blob:mock');
+    const originalCreateObjectUrl = window.URL.createObjectURL;
+    const originalRevokeObjectUrl = window.URL.revokeObjectURL;
+    window.URL.createObjectURL = createObjectUrlMock;
+    window.URL.revokeObjectURL = vi.fn();
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    try {
+      await createTestMap();
+      const input = screen.getByRole('combobox', { name: /command/i });
+      await userEvent.type(input, '>save{enter}');
+
+      expect(clickSpy).toHaveBeenCalled();
+      expect(createObjectUrlMock).toHaveBeenCalled();
+    } finally {
+      window.URL.createObjectURL = originalCreateObjectUrl;
+      window.URL.revokeObjectURL = originalRevokeObjectUrl;
+      clickSpy.mockRestore();
+    }
+  });
+
+  test('>new command opens new map dialog', async () => {
+    await createTestMap();
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '>new{enter}');
+
+    expect(await screen.findByRole('dialog', { name: /create new map/i })).toBeInTheDocument();
+  });
 });
