@@ -103,7 +103,7 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
         yaml += `    ${t}: { style: { color: "${TERRAIN_COLORS[t] || '#cccccc'}" } }\n`;
       }
     } else {
-      yaml += `    clear: { style: { color: "#ffffff" } }\n`;
+      yaml += `    clear: { style: { color: "#f5f0e8" } }\n`;
     }
 
     // Path terrain goes under terrain.hex with path: true property
