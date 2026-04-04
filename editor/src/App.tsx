@@ -320,7 +320,12 @@ export const App = () => {
       } else {
         // New disconnected atom (singleton segment)
         const newAtomResult = hp.resolve(atomId);
-        segments.push(newAtomResult.items.map((id) => id));
+        const newId = newAtomResult.items[0];
+        // Deduplicate: skip if this atom already exists in any segment
+        const allIds = segments.flat();
+        if (!allIds.includes(newId)) {
+          segments.push([newId]);
+        }
       }
 
       const newAt = hp.serialize(segments, hit.type);

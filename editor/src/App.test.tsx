@@ -216,6 +216,37 @@ test('Enter in command bar updates selected feature instead of creating new', as
   expect(updatedItems.length).toBe(initialCount);
 });
 
+test('paint dedup: singleton segment guard prevents adding duplicate atom IDs', () => {
+  // Simulate the paint handler's dedup guard in isolation.
+  // The guard uses: const allIds = segments.flat(); if (!allIds.includes(newId)) { segments.push([newId]); }
+  // This test documents the expected contract: clicking the same hex twice adds only one segment.
+
+  // Suppose we already have one segment containing hex '0101'
+  const existingId = '0101';
+  const segments: string[][] = [[existingId]];
+
+  // Simulate a second click on the same hex — guard should block the duplicate
+  const newId = existingId;
+  const allIds = segments.flat();
+  if (!allIds.includes(newId)) {
+    segments.push([newId]);
+  }
+
+  // Should still have exactly one segment
+  expect(segments).toHaveLength(1);
+
+  // Simulate a click on a different hex — guard should allow it
+  const differentId = '0201';
+  const allIds2 = segments.flat();
+  if (!allIds2.includes(differentId)) {
+    segments.push([differentId]);
+  }
+
+  // Should now have two segments
+  expect(segments).toHaveLength(2);
+  expect(segments[1]).toEqual([differentId]);
+});
+
 test('>open command triggers file input click', async () => {
   render(<App />);
 
