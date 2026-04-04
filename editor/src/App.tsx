@@ -284,7 +284,7 @@ export const App = () => {
       .map((f) => ({ label: f.label ?? f.id ?? `Feature ${f.index}`, index: f.index }));
   }, [commandValue, model]);
 
-  const handlePaintClick = (hit: HitResult, shiftKey: boolean) => {
+  const handlePaintClick = (hit: HitResult, shiftKey: boolean, altKey: boolean) => {
     if (!(paintState && model) || hit.type === 'none') return;
     if (hit.type !== paintState.geometry) return;
 
@@ -304,6 +304,26 @@ export const App = () => {
     if (!atomId) return;
 
     const targetIndex = paintState.targetFeatureIndex;
+
+    // Alt-click: remove atom from feature
+    if (altKey && targetIndex !== null) {
+      const feature = model.features[targetIndex];
+      const existing = feature.at ? hp.resolve(feature.at) : { segments: [], type: hit.type };
+      const segments = [...(existing.segments ?? [])];
+      const newAtomResult = hp.resolve(atomId);
+      const removeId = newAtomResult.items[0];
+
+      // Remove from segments: filter out matching IDs, drop empty segments
+      const filtered = segments
+        .map((seg) => seg.filter((id) => id !== removeId))
+        .filter((seg) => seg.length > 0);
+
+      const newAt = hp.serialize(filtered, hit.type);
+      dispatch({ type: 'updateFeature', index: targetIndex, changes: { at: newAt } });
+      setCommandValue(newAt);
+      handleSelectFeature([targetIndex]);
+      return;
+    }
 
     if (targetIndex !== null) {
       const feature = model.features[targetIndex];

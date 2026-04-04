@@ -36,7 +36,7 @@ interface CanvasHostProps {
   paintTerrainKey?: string | null;
   paintTerrainColor?: string | null;
   paintGeometry?: 'hex' | 'edge' | 'vertex' | null;
-  onPaintClick?: (hit: HitResult, shiftKey: boolean) => void;
+  onPaintClick?: (hit: HitResult, shiftKey: boolean, altKey: boolean) => void;
 }
 
 export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
@@ -283,7 +283,7 @@ export const CanvasHost = forwardRef<CanvasHostRef, CanvasHostProps>(
         );
 
         if (paintTerrainKey) {
-          if (onPaintClick) onPaintClick(hit, e.shiftKey);
+          if (onPaintClick) onPaintClick(hit, e.shiftKey, e.altKey);
         } else {
           if (onHitTest) onHitTest(hit);
         }

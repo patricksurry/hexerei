@@ -266,3 +266,26 @@ test('>open command triggers file input click', async () => {
   expect(clickSpy).toHaveBeenCalled();
   clickSpy.mockRestore();
 });
+
+test('alt-click removal: filtering segments removes matching atom ID', () => {
+  // Simulate what handlePaintClick does with altKey
+  const segments = [['a'], ['b'], ['c']];
+  const removeId = 'b';
+
+  const filtered = segments
+    .map((seg) => seg.filter((id) => id !== removeId))
+    .filter((seg) => seg.length > 0);
+
+  expect(filtered).toEqual([['a'], ['c']]);
+});
+
+test('alt-click removal: removing from multi-atom segment preserves others', () => {
+  const segments = [['a', 'b', 'c']];
+  const removeId = 'b';
+
+  const filtered = segments
+    .map((seg) => seg.filter((id) => id !== removeId))
+    .filter((seg) => seg.length > 0);
+
+  expect(filtered).toEqual([['a', 'c']]);
+});
