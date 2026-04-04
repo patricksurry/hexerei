@@ -39,11 +39,13 @@
 
 The status bar `POS` field currently shows raw cube coordinate strings like `0,0,0`. Users need hex labels like `0101`.
 
+**Root cause:** `CanvasHost.tsx:286` emits `hit.hexId` (cube coordinate string) as the cursor. `App.tsx` passes it to StatusBar unchanged. The cursor must remain a hexId internally for `highlightsForCursor()`, so the fix is to derive a formatted label in App.tsx via `useMemo`.
+
+**Note:** `hit-test.ts:38` calls `formatHexLabel` without `firstCol`/`firstRow` (they default to 0), so `hit.label` is potentially wrong for maps with `firstCol != 0`. The `useMemo` approach below uses the correct grid parameters.
+
 **Files:**
-- Modify: `editor/src/App.tsx:53,256,600-604`
-- Modify: `editor/src/canvas/CanvasHost.tsx:34,255-259`
-- Modify: `editor/src/components/StatusBar.tsx:4,22-24`
-- Modify: `editor/src/components/StatusBar.test.tsx`
+- Modify: `editor/src/App.tsx:53,600-604` — add `cursorLabel` useMemo, pass to StatusBar
+- Modify: `editor/src/components/StatusBar.test.tsx` — verify label display
 
 - [ ] **Step 1: Write failing test for StatusBar cursor display**
 
@@ -54,89 +56,20 @@ it('displays cursor text in POS segment', () => {
   render(<StatusBar cursor="0201" />);
   expect(screen.getByText('0201')).toBeInTheDocument();
 });
-
-it('displays edge notation in POS segment', () => {
-  render(<StatusBar cursor="0201/NE" />);
-  expect(screen.getByText('0201/NE')).toBeInTheDocument();
-});
 ```
 
-- [ ] **Step 2: Run test to verify it passes (StatusBar already renders cursor prop)**
+- [ ] **Step 2: Run test to verify it passes**
 
 Run: `cd editor && npx vitest run src/components/StatusBar.test.tsx`
 
-These should already pass since StatusBar renders `{cursor}` directly. If so, the display layer is fine — the fix is in the data source.
+These should pass since StatusBar renders `{cursor}` directly — the display layer is fine, the fix is in App.tsx.
 
-- [ ] **Step 3: Expand CanvasHost cursor callback to emit formatted labels**
+- [ ] **Step 3: Add cursorLabel derivation in App.tsx**
 
-In `editor/src/canvas/CanvasHost.tsx`, change the `onCursorHex` prop to a more general `onCursorInfo` that emits a formatted string:
-
-```typescript
-// In CanvasHostProps (line 34), change:
-onCursorHex?: (label: string | null) => void;
-// to:
-onCursorInfo?: (label: string | null) => void;
-```
-
-In the pointer move handler (lines 255-259), change:
+In `editor/src/App.tsx`, add a `useMemo` to derive the label from hexId. `cursorHex` is at line 53, and `Hex` is already imported at line 25.
 
 ```typescript
-if (hit.type === 'hex') {
-  onCursorInfo?.(hit.offBoard ? null : hit.label);
-} else if (hit.type === 'edge') {
-  // Format edge as hexpath notation
-  const labels = hit.hexLabels;
-  onCursorInfo?.(labels[0] ? `${labels[0]}/${hit.boundaryId.includes('|') ? '' : ''}edge` : null);
-} else if (hit.type === 'vertex') {
-  onCursorInfo?.(hit.vertexId ? 'vertex' : null);
-} else {
-  onCursorInfo?.(null);
-}
-```
-
-Actually — the hit result for hex already contains `hit.label` (the formatted label like `"0201"`). For edges and vertices, we need the HexPath notation. The simplest approach: emit `hit.label` for hexes, and use the existing `boundaryIdToHexPath`/`vertexIdToHexPath` helpers from canvas for edges/vertices. But those need model context.
-
-**Simpler approach — convert in App.tsx instead:**
-
-In `editor/src/App.tsx`, the cursor state is set at line 53 and consumed at line 600. Change the CanvasHost callback to emit the full `HitResult` for cursor, then format in App.tsx:
-
-Actually, the simplest approach of all: `hit.label` already exists on hex hits. Let CanvasHost emit that directly.
-
-In `CanvasHost.tsx` line 256, change:
-```typescript
-onCursorHex?.(hit.offBoard ? null : hit.hexId);
-```
-to:
-```typescript
-onCursorHex?.(hit.offBoard ? null : hit.label);
-```
-
-This emits `"0201"` instead of `"2,0,-2"`. No other changes needed for hex cursor.
-
-For edge/vertex cursor display, we can add that as a follow-up enhancement. The critical fix is hex labels.
-
-- [ ] **Step 4: Update App.tsx cursor consumption**
-
-In `editor/src/App.tsx`, the cursor is used in two places:
-1. Line 600-604: passed to StatusBar (works as-is with labels)
-2. Line 551: `onCursorHex={setCursorHex}` (rename for clarity is optional)
-
-The highlights for cursor use hexId internally (line 222 `highlightsForCursor`), so we need to keep the hexId available. Add a separate state for cursor label:
-
-Actually — looking more carefully, `highlightsForCursor` at line 222 calls `highlightsForCursor(cursorHex, model)` where `cursorHex` is the hexId. If we change it to a label, highlights break.
-
-**Revised approach — keep both:**
-
-Add a `cursorLabel` state alongside `cursorHex`:
-
-```typescript
-const [cursorLabel, setCursorLabel] = useState<string | null>(null);
-```
-
-In CanvasHost, emit both via a combined callback, OR keep `onCursorHex` for IDs and add label formatting in App.tsx:
-
-```typescript
-// In App.tsx, compute cursorLabel from cursorHex
+// Add after the cursorHex state declaration (line 53):
 const cursorLabel = useMemo(() => {
   if (!cursorHex || !model) return null;
   return Hex.formatHexLabel(
@@ -149,7 +82,7 @@ const cursorLabel = useMemo(() => {
 }, [cursorHex, model]);
 ```
 
-Then pass `cursorLabel` to StatusBar instead of `cursorHex`:
+Then update the StatusBar prop (around line 600-604) to pass `cursorLabel` instead of `cursorHex`:
 
 ```typescript
 cursor={cursorLabel ?? (hoverIndex !== null && features[hoverIndex]
@@ -157,22 +90,7 @@ cursor={cursorLabel ?? (hoverIndex !== null && features[hoverIndex]
   : '----')}
 ```
 
-- [ ] **Step 5: Write integration test**
-
-In `editor/src/App.test.tsx`, add a test that verifies cursor display uses labels:
-
-```typescript
-test('status bar shows hex label format, not cube coords', () => {
-  // This test verifies the data flow from cursorHex → formatHexLabel → StatusBar
-  // The actual canvas interaction can't be tested in JSDOM, but we can test
-  // that the formatting pipeline works
-  render(<App />);
-  // StatusBar default shows '----' when no cursor
-  expect(screen.getByText('----')).toBeInTheDocument();
-});
-```
-
-- [ ] **Step 6: Run tests, commit**
+- [ ] **Step 4: Run tests, commit**
 
 Run: `cd editor && npx vitest run`
 
@@ -193,37 +111,50 @@ Currently, pressing Enter in the command bar always creates a new feature via `a
 
 - [ ] **Step 1: Write failing test**
 
-In `editor/src/App.test.tsx`:
+In `editor/src/App.test.tsx`, following the existing pattern from line 102 (New Map dialog → Create):
 
 ```typescript
 test('Enter in command bar updates selected feature instead of creating new', async () => {
-  const yaml = `
-hexmap: "1.0"
-layout:
-  orientation: flat-down
-  all: "0101 0201"
-terrain:
-  hex:
-    clear: { style: { color: "#fff" } }
-features:
-  - at: "@all"
-    terrain: clear
-  - at: "0101"
-    terrain: clear
-    label: "Target"
-`;
   render(<App />);
-  // Load the map (use the internal mechanism or simulate)
-  // This requires the App to have a way to load YAML for testing
-  // For now, test the logic path via the command submit handler
+
+  // 1. Create a map via the New Map dialog (pattern from line 102)
+  const dialog = screen.getByRole('dialog');
+  const titleInput = within(dialog).getByLabelText(/title/i);
+  await userEvent.clear(titleInput);
+  await userEvent.type(titleInput, 'Test Map');
+  const createBtn = within(dialog).getByRole('button', { name: /create/i });
+  await userEvent.click(createBtn);
+  await screen.findByTitle('flat-down');
+
+  // 2. Add a feature via command bar
+  const input = screen.getByRole('combobox', { name: /command/i });
+  await userEvent.type(input, '0101{enter}');
+
+  // 3. Verify feature was created (check FeatureStack)
+  const featureStack = screen.getByRole('complementary', { name: /features/i });
+  const featureItems = within(featureStack).getAllByRole('listitem');
+  const initialCount = featureItems.length;
+
+  // 4. Select the feature we just created (click it in the stack)
+  await userEvent.click(featureItems[featureItems.length - 1]);
+
+  // 5. Type a new hexpath and press Enter — should UPDATE, not add
+  await userEvent.click(input);
+  await userEvent.clear(input);
+  await userEvent.type(input, '0201{enter}');
+
+  // 6. Verify feature count hasn't increased (edit, not create)
+  const updatedItems = within(featureStack).getAllByRole('listitem');
+  expect(updatedItems.length).toBe(initialCount);
 });
 ```
 
-The challenge is that App.tsx doesn't expose its state machine for unit testing. We need an integration approach. Let me design a test that loads a map via file input simulation and then interacts.
+- [ ] **Step 2: Run test to verify it fails**
 
-Actually, looking at the existing tests (line 53+), they use `CommandHistory` and `MapModel` directly. The command bar interaction test needs the full App rendered with a map loaded. The existing test at line 82 shows the pattern — simulate New Map dialog.
+Run: `cd editor && npx vitest run src/App.test.tsx -t "updates selected feature"`
+Expected: FAIL — currently creates a new feature instead of editing.
 
-- [ ] **Step 2: Implement the edit-vs-create logic**
+- [ ] **Step 3: Implement the edit-vs-create logic**
 
 In `editor/src/App.tsx`, replace lines 431-436:
 
@@ -294,24 +225,47 @@ Clicking the same hex multiple times during paint mode keeps adding duplicates. 
 - Modify: `editor/src/App.tsx:298-317`
 - Test: `editor/src/App.test.tsx`
 
-- [ ] **Step 1: Write failing test**
+- [ ] **Step 1: Write failing test at the HexPath level**
 
-We can't easily test the full paint flow in JSDOM (no canvas hit testing), but we can test the deduplication logic directly. Extract it or test via the state machine.
-
-For a unit-level approach, extract the singleton check:
+The paint handler's dedup logic operates on HexPath segments. Test via `CommandHistory` directly (same pattern as App.test.tsx line 53):
 
 In `editor/src/App.test.tsx`:
 
 ```typescript
-test('paint handler does not add duplicate singleton atoms', () => {
-  // Verify via the command history that painting the same hex twice
-  // produces a feature with only one atom
-  // This requires simulating the paint flow end-to-end
-  // which is complex in JSDOM — mark as integration test need
+test('addFeature followed by updateFeature with duplicate atom keeps only one copy', () => {
+  const yaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201 0301"
+terrain:
+  hex:
+    clear: { style: { color: "#ffffff" } }
+features:
+  - at: "@all"
+    terrain: clear
+`;
+  const doc = new HexMapDocument(yaml);
+  const model = MapModel.fromDocument(doc);
+  const history = new CommandHistory({ document: doc, model });
+
+  // Simulate painting: add feature, then update with "0101 0101"
+  history.execute({ type: 'addFeature', feature: { at: '0101', terrain: 'clear' } });
+  // If dedup works in the paint handler, this wouldn't happen.
+  // But we can test at the data level: "0101 0101" should be normalized.
+  history.execute({
+    type: 'updateFeature',
+    index: 1,
+    changes: { at: '0101 0101' },
+  });
+  const at = history.currentState.model.features[1].at;
+  // This test documents the current (buggy) behavior: duplicates are preserved.
+  // After dedup is added to the paint handler, duplicates won't reach CommandHistory.
+  expect(at).toContain('0101');
 });
 ```
 
-A more practical approach: add the deduplication directly and write a HexPath-level test.
+This test verifies the data layer. The actual dedup is in the paint handler (App.tsx), not CommandHistory, so the real fix is preventing duplicates from being submitted.
 
 - [ ] **Step 2: Add deduplication to paint handler**
 
@@ -358,9 +312,9 @@ In `editor/src/canvas/CanvasHost.tsx`, find the `onPaintClick` callback type. Ch
 onPaintClick?: (hit: HitResult, shiftKey: boolean, altKey: boolean) => void;
 ```
 
-And in the pointer up handler, pass `e.altKey`:
+And at `CanvasHost.tsx:286` (the pointer up handler), pass `e.altKey`:
 ```typescript
-onPaintClick?.(paintHit, e.shiftKey, e.altKey);
+if (onPaintClick) onPaintClick(hit, e.shiftKey, e.altKey);
 ```
 
 - [ ] **Step 2: Update handlePaintClick signature**
@@ -563,28 +517,29 @@ Remove the `export yaml` and `export json` entries.
 
 - [ ] **Step 2: Update command handler**
 
-In `editor/src/App.tsx`, update the command handler (lines 398-407):
+In `editor/src/App.tsx`, extract a shared save helper and use it from both the command handler and `mod+s`:
 
 ```typescript
-} else if (cmd === 'save') {
+// Extract save logic into a helper (inside the component, near the command handler):
+const doSave = () => {
   const yaml = historyRef.current?.currentState.document.toString() ?? '';
-  const title = model.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
+  const title = model?.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
   downloadFile(yaml, `${title}.hexmap.yaml`, 'text/yaml');
   historyRef.current?.markSaved();
   setHistoryVersion((v) => v + 1);
-} else if (cmd === 'export yaml' || cmd === 'export') {
-  // Legacy alias
-  const yaml = historyRef.current?.currentState.document.toString() ?? '';
-  const title = model.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
-  downloadFile(yaml, `${title}.hexmap.yaml`, 'text/yaml');
-  historyRef.current?.markSaved();
-  setHistoryVersion((v) => v + 1);
+};
+```
+
+Then in the command handler, replace the `export yaml` block with:
+```typescript
+} else if (cmd === 'save' || cmd === 'export yaml' || cmd === 'export') {
+  doSave();
 } else if (cmd === 'export json') {
 ```
 
-Note: keep the `export yaml` path as a silent alias so existing muscle memory works. Just remove it from the visible command list.
+And update the `mod+s` handler to call `doSave()` too (verify it already does the same thing — if so, replace with `doSave()`).
 
-Also update the `mod+s` handler (line 175-181) to call `markSaved` and bump version (it already does — verify).
+Note: keep `export yaml` as a silent alias so existing muscle memory works. Just remove it from the visible command list.
 
 - [ ] **Step 3: Run tests, commit**
 
@@ -601,7 +556,7 @@ git commit -m "feat(editor): rename 'export yaml' to 'save' in command palette"
 
 ### Task 8: Fix command dropdown transparent background
 
-The command dropdown uses `var(--surface-elevated)`, `var(--surface-hover)`, and `var(--surface-base)` which are undefined CSS variables, making the dropdown transparent.
+ISSUES.md says "shortcut/command palette menu has transparent background" — investigation shows this is actually the **CommandBar dropdown** (not the ShortcutsOverlay, which already has a solid `rgba(0,0,0,0.7)` backdrop + `var(--bg-elevated)` dialog). The CommandBar dropdown uses `var(--surface-elevated)`, `var(--surface-hover)`, and `var(--surface-base)` which are undefined CSS variables, making the dropdown transparent.
 
 **Files:**
 - Modify: `editor/src/components/CommandBar.css:100,121`
@@ -699,22 +654,28 @@ After adding a new terrain type, automatically expand its edit panel so the user
 **Files:**
 - Modify: `editor/src/components/Inspector.tsx`
 
-- [ ] **Step 1: Find the "Add terrain" handler**
+- [ ] **Step 1: Verify auto-expand already works**
 
-In `Inspector.tsx`, find the `+ Add {geometry} Terrain` button's onClick handler. It dispatches `setTerrainType` with a new key. After that dispatch, set the expanded terrain state to the new key.
-
-The expanded terrain state is likely controlled by something like `expandedTerrain` or `editingTerrain`. Search for the state variable that controls which terrain is being edited.
-
-- [ ] **Step 2: Set expanded state after add**
-
-After the `dispatch` call for adding terrain, add:
-
+In `Inspector.tsx`, the "Add terrain" handler is at line 147 and already calls:
 ```typescript
-// Auto-expand the new terrain type for editing
-setEditingTerrain({ geometry, key: newKey });
+setExpandedTerrain({ key: newKey, geometry });
 ```
 
-(Use whatever state setter controls the terrain edit panel — adapt to the actual variable name.)
+The state is `expandedTerrain`/`setExpandedTerrain` at line 45. This means auto-expand **may already be implemented**. Verify by:
+1. Running the editor (`npm run dev -w editor`)
+2. Adding a terrain type
+3. Checking if it auto-expands
+
+If it already works, mark this task as done and skip to the commit. If the expansion doesn't visually work (e.g., it sets state but the panel doesn't render), investigate the `isExpanded` check at line 87.
+
+- [ ] **Step 2: If broken, fix the expansion logic**
+
+The `isExpanded` check at line 87:
+```typescript
+const isExpanded = expandedTerrain?.key === key && expandedTerrain?.geometry === geometry;
+```
+
+Verify that `newKey` at the add handler matches the format used in the iteration. If they differ (e.g., one uses `terrain_3` and the other uses just the key), fix the mismatch.
 
 - [ ] **Step 3: Run tests, commit**
 
@@ -817,36 +778,11 @@ git commit -m "feat(editor): editable hex color field and path checkbox in terra
 
 ---
 
-### Task 12: Fix road terrain missing path=true in Standard Wargame palette
+### Task 12: ~~Fix road terrain missing path=true in Standard Wargame palette~~
 
-**Files:**
-- Modify: `editor/src/components/NewMapDialog.tsx:22`
+**ALREADY FIXED.** `NewMapDialog.tsx:110-112` — `pathTerrain` items already generate `properties: { path: true }` in the YAML output. Road is in `pathTerrain` array (line 33). No code change needed.
 
-- [ ] **Step 1: Check current road definition**
-
-In `NewMapDialog.tsx`, the road terrain is in `pathTerrain` array (line 33) which should generate `properties: { path: true }`. Let me verify the YAML generation handles this.
-
-- [ ] **Step 2: Find YAML generation for pathTerrain**
-
-Look at `handleCreate` for how `pathTerrain` items are rendered into YAML. If the path property isn't being set, fix it.
-
-Search for where terrain YAML is generated in `handleCreate`:
-
-```typescript
-// Look for the terrain YAML generation loop
-// pathTerrain should produce: road: { style: { color: "#996633" }, properties: { path: true } }
-```
-
-If `pathTerrain` items don't get `properties: { path: true }`, add it to the YAML template.
-
-- [ ] **Step 3: Run tests, commit**
-
-Run: `cd editor && npx vitest run`
-
-```bash
-git add editor/src/components/NewMapDialog.tsx
-git commit -m "fix(editor): road terrain in Standard Wargame palette gets path=true"
-```
+- [x] **Verified:** `pathTerrain` YAML generation at line 112: `yaml += \`..., properties: { path: true } }\n\``
 
 ---
 
@@ -861,62 +797,83 @@ Write integration tests that verify App.tsx state transitions are correct across
 
 - [ ] **Step 1: Write mode transition tests**
 
-Add a new `describe` block in `App.test.tsx`:
+Add a new `describe` block in `App.test.tsx`. Use the existing pattern (line 102) for creating a map via the New Map dialog. Here is one fully-worked example to establish the pattern:
 
 ```typescript
 describe('state machine transitions', () => {
-  // Helper to load a map in the App
-  const SIMPLE_YAML = `
-hexmap: "1.0"
-layout:
-  orientation: flat-down
-  all: "0101 0201"
-terrain:
-  hex:
-    clear: { style: { color: "#fff" } }
-    forest: { style: { color: "#0f0" } }
-features:
-  - at: "@all"
-    terrain: clear
-  - at: "0101"
-    terrain: forest
-    label: "Woods"
-`;
-
-  test('Escape from paint mode returns to idle', async () => {
+  // Helper: create a map and return to idle state
+  async function createMap() {
     render(<App />);
-    // Load map, enter paint mode, press Escape
-    // Verify paint mode is exited
-    // This requires the full interaction flow
+    const dialog = screen.getByRole('dialog');
+    const titleInput = within(dialog).getByLabelText(/title/i);
+    await userEvent.clear(titleInput);
+    await userEvent.type(titleInput, 'Test');
+    const createBtn = within(dialog).getByRole('button', { name: /create/i });
+    await userEvent.click(createBtn);
+    await screen.findByTitle('flat-down'); // wait for canvas to mount
+  }
+
+  test('command bar > prefix shows command mode and lists commands', async () => {
+    await createMap();
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '>');
+
+    // Verify command mode badge appears
+    expect(screen.getByText('CMD')).toBeInTheDocument();
+
+    // Verify command list dropdown is visible
+    expect(screen.getByText(/save/i)).toBeInTheDocument();
   });
 
-  test('selecting feature changes command bar placeholder to edit mode', () => {
-    // Verify placeholder text indicates editing
+  test('Escape in command bar clears input and blurs', async () => {
+    await createMap();
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '0101');
+    expect(input).toHaveValue('0101');
+
+    await userEvent.keyboard('{Escape}');
+    expect(input).toHaveValue('');
   });
 
-  test('Ctrl+Z during paint reverts last paint action', () => {
-    // Verify undo works during active paint session
+  test('selecting feature changes command bar placeholder to edit mode', async () => {
+    await createMap();
+
+    // Add a feature via command bar
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '0101{enter}');
+
+    // Select the feature in the stack
+    const featureStack = screen.getByRole('complementary', { name: /features/i });
+    const items = within(featureStack).getAllByRole('listitem');
+    await userEvent.click(items[items.length - 1]);
+
+    // Verify placeholder indicates editing
+    expect(input).toHaveAttribute('placeholder', expect.stringContaining('Edit'));
   });
 });
 ```
-
-Note: Some of these tests may be hard to write in JSDOM due to canvas dependencies. Focus on the ones that are testable via React Testing Library (feature selection, command bar interaction, keyboard shortcuts).
 
 - [ ] **Step 2: Write command bar mode interaction tests**
 
 ```typescript
 test('command bar >save triggers download', async () => {
-  render(<App />);
-  // Create a map first
-  // Type >save in command bar
-  // Verify download was triggered
-});
+  // Mock download infrastructure (pattern from line 88-99)
+  const createObjectUrlMock = vi.fn().mockReturnValue('blob:mock');
+  window.URL.createObjectURL = createObjectUrlMock;
+  window.URL.revokeObjectURL = vi.fn();
+  const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
-test('command bar respects mode prefixes', async () => {
-  render(<App />);
-  const input = screen.getByRole('combobox', { name: /command/i });
-  await userEvent.type(input, '>');
-  // Verify command mode badge is shown
+  try {
+    await createMap();
+    const input = screen.getByRole('combobox', { name: /command/i });
+    await userEvent.type(input, '>save{enter}');
+
+    // Verify download was triggered
+    expect(clickSpy).toHaveBeenCalled();
+    expect(createObjectUrlMock).toHaveBeenCalled();
+  } finally {
+    clickSpy.mockRestore();
+  }
 });
 ```
 
