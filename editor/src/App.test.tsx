@@ -103,6 +103,8 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
 
     // create a map so we have a model
     const dialog = screen.getByRole('dialog');
+    const titleInput = within(dialog).getByLabelText('Title:');
+    await userEvent.type(titleInput, 'Test Map');
     const createBtn = within(dialog).getByRole('button', { name: /create/i });
     await userEvent.click(createBtn);
 
@@ -190,6 +192,8 @@ test('Enter in command bar updates selected feature instead of creating new', as
 
   // 1. Create a map via New Map dialog
   const dialog = screen.getByRole('dialog');
+  const titleInput = within(dialog).getByLabelText('Title:');
+  await userEvent.type(titleInput, 'Test Map');
   const createBtn = within(dialog).getByRole('button', { name: /create/i });
   await userEvent.click(createBtn);
   await screen.findByTitle('flat-down');
@@ -252,6 +256,8 @@ test('>open command triggers file input click', async () => {
 
   // Close initial dialog by clicking Create
   const dialog = screen.getByRole('dialog');
+  const titleInput = within(dialog).getByLabelText('Title:');
+  await userEvent.type(titleInput, 'Test Map');
   const createBtn = within(dialog).getByRole('button', { name: /create/i });
   await userEvent.click(createBtn);
 

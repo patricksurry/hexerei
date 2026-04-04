@@ -39,7 +39,7 @@ const PALETTES: Record<
 };
 
 export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCancel }) => {
-  const [title, setTitle] = useState('New Map');
+  const [title, setTitle] = useState('');
   const [width, setWidth] = useState(10);
   const [height, setHeight] = useState(10);
   const [orientation, setOrientation] = useState<
@@ -145,7 +145,12 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
         <div className="dialog-row">
           <label>
             Title:
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter map name..."
+            />
           </label>
         </div>
 
@@ -260,7 +265,7 @@ export const NewMapDialog: React.FC<NewMapDialogProps> = ({ onCreateMap, onCance
           <button className="btn-secondary" onClick={onCancel}>
             Cancel
           </button>
-          <button className="btn-primary" onClick={handleCreate}>
+          <button className="btn-primary" onClick={handleCreate} disabled={!title.trim()}>
             Create
           </button>
         </div>

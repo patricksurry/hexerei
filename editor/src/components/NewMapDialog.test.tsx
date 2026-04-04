@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, test, vi } from 'vitest';
 import { NewMapDialog } from './NewMapDialog';
 
 describe('NewMapDialog', () => {
@@ -8,6 +9,8 @@ describe('NewMapDialog', () => {
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
 
     // Default is 10x10, flat-down, top-left, standard palette, clear base terrain
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'New Map' } });
     fireEvent.click(screen.getByText('Create'));
 
     expect(onCreateMap).toHaveBeenCalled();
@@ -35,6 +38,9 @@ describe('NewMapDialog', () => {
     const onCreateMap = vi.fn();
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
 
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Test' } });
+
     const widthInput = screen.getByLabelText('Width:');
     fireEvent.change(widthInput, { target: { value: '5' } });
 
@@ -59,6 +65,9 @@ describe('NewMapDialog', () => {
     const onCreateMap = vi.fn();
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
 
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Test' } });
+
     const baseTerrainSelect = screen.getByLabelText('Base Terrain:');
     fireEvent.change(baseTerrainSelect, { target: { value: 'none' } });
 
@@ -73,6 +82,8 @@ describe('NewMapDialog', () => {
     const onCreateMap = vi.fn();
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
 
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Test' } });
     fireEvent.click(screen.getByText('Create'));
     const yaml = onCreateMap.mock.calls[0][0];
 
@@ -87,6 +98,9 @@ describe('NewMapDialog', () => {
   it('generates YAML with XX.YY label format', () => {
     const onCreateMap = vi.fn();
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Test' } });
 
     const labelSelect = screen.getByLabelText('Label Format:');
     fireEvent.change(labelSelect, { target: { value: 'XX.YY' } });
@@ -104,6 +118,9 @@ describe('NewMapDialog', () => {
   it('generates YAML with AYY label format', () => {
     const onCreateMap = vi.fn();
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Test' } });
 
     const labelSelect = screen.getByLabelText('Label Format:');
     fireEvent.change(labelSelect, { target: { value: 'AYY' } });
@@ -126,6 +143,9 @@ describe('NewMapDialog', () => {
   it('generates YAML with custom first values', () => {
     const onCreateMap = vi.fn();
     render(<NewMapDialog onCreateMap={onCreateMap} onCancel={() => {}} />);
+
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Test' } });
 
     const firstColInput = screen.getByLabelText('First Column:');
     fireEvent.change(firstColInput, { target: { value: '0' } });
@@ -165,6 +185,8 @@ describe('NewMapDialog', () => {
       />
     );
 
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Test' } });
     fireEvent.click(screen.getByText('Create'));
 
     expect(createdYaml).toContain('edge:');
@@ -182,9 +204,34 @@ describe('NewMapDialog', () => {
       />
     );
 
+    const titleInput = screen.getByLabelText('Title:');
+    fireEvent.change(titleInput, { target: { value: 'Test' } });
     fireEvent.click(screen.getByText('Create'));
 
     expect(createdYaml).toContain('road:');
     expect(createdYaml).toContain('path: true');
   });
+});
+
+test('Create button is disabled when title is empty', () => {
+  render(<NewMapDialog onCreateMap={vi.fn()} onCancel={vi.fn()} />);
+  const createBtn = screen.getByRole('button', { name: /create/i });
+  expect(createBtn).toBeDisabled();
+});
+
+test('title field starts empty with placeholder', () => {
+  render(<NewMapDialog onCreateMap={vi.fn()} onCancel={vi.fn()} />);
+  const titleInput = screen.getByLabelText('Title:');
+  expect(titleInput).toHaveValue('');
+  expect(titleInput).toHaveAttribute('placeholder', 'Enter map name...');
+});
+
+test('Create button enables when title is entered', async () => {
+  render(<NewMapDialog onCreateMap={vi.fn()} onCancel={vi.fn()} />);
+  const titleInput = screen.getByLabelText('Title:');
+  const createBtn = screen.getByRole('button', { name: /create/i });
+
+  expect(createBtn).toBeDisabled();
+  await userEvent.type(titleInput, 'My Map');
+  expect(createBtn).not.toBeDisabled();
 });
