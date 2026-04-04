@@ -51,6 +51,16 @@ export const App = () => {
   const [selection, setSelection] = useState<Selection>({ type: 'none' });
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [cursorHex, setCursorHex] = useState<string | null>(null);
+  const cursorLabel = useMemo(() => {
+    if (!(cursorHex && model)) return null;
+    return Hex.formatHexLabel(
+      Hex.hexFromId(cursorHex),
+      model.grid.labelFormat,
+      model.grid.orientation,
+      model.grid.firstCol,
+      model.grid.firstRow
+    );
+  }, [cursorHex, model]);
   const [zoom, setZoom] = useState(0);
   const [preview, setPreview] = useState<HexPathPreview | null>(null);
   const [theme, setTheme] = useState<'sandtable' | 'classic'>('sandtable');
@@ -598,7 +608,7 @@ export const App = () => {
         statusBar={
           <StatusBar
             cursor={
-              cursorHex ??
+              cursorLabel ??
               (hoverIndex !== null && features[hoverIndex]
                 ? features[hoverIndex].at.split(' ')[0]
                 : '----')

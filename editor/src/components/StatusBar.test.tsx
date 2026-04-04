@@ -37,3 +37,8 @@ test('does not show paint indicator when paintTerrainKey is null', () => {
   render(<StatusBar paintTerrainKey={null} />);
   expect(screen.queryByText('PAINT')).not.toBeInTheDocument();
 });
+
+it('displays cursor text in POS segment', () => {
+  render(<StatusBar cursor="0201" />);
+  expect(screen.getByText('0201')).toBeInTheDocument();
+});
