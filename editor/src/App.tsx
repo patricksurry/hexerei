@@ -137,6 +137,15 @@ export const App = () => {
     }
   }, []);
 
+  const doSave = useCallback(() => {
+    const yaml = historyRef.current?.currentState.document.toString() ?? '';
+    const currentModel = historyRef.current?.currentState.model;
+    const title = currentModel?.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
+    downloadFile(yaml, `${title}.hexmap.yaml`, 'text/yaml');
+    historyRef.current?.markSaved();
+    setHistoryVersion((v) => v + 1);
+  }, []);
+
   const shortcuts = useMemo(
     () => ({
       'mod+n': () => setShowNewMapDialog(true),
@@ -182,14 +191,7 @@ export const App = () => {
       },
       delete: deleteSelected,
       backspace: deleteSelected,
-      'mod+s': () => {
-        const yaml = historyRef.current?.currentState.document.toString() ?? '';
-        const currentModel = historyRef.current?.currentState.model;
-        const title = currentModel?.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
-        downloadFile(yaml, `${title}.hexmap.yaml`, 'text/yaml');
-        historyRef.current?.markSaved();
-        setHistoryVersion((v) => v + 1);
-      },
+      'mod+s': () => doSave(),
       'mod+d': () => {
         const sel = selectionRef.current;
         const currentModel = historyRef.current?.currentState.model;
@@ -209,7 +211,7 @@ export const App = () => {
         }
       },
     }),
-    [deleteSelected]
+    [deleteSelected, doSave]
   );
 
   useKeyboardShortcuts(shortcuts);
@@ -430,10 +432,8 @@ export const App = () => {
         setTheme('sandtable');
       } else if (cmd === 'theme classic') {
         setTheme('classic');
-      } else if (cmd === 'export yaml' || cmd === 'export') {
-        const yaml = historyRef.current?.currentState.document.toString() ?? '';
-        const title = model.metadata.title?.replace(/\s+/g, '-').toLowerCase() || 'hexmap';
-        downloadFile(yaml, `${title}.hexmap.yaml`, 'text/yaml');
+      } else if (cmd === 'save' || cmd === 'export yaml' || cmd === 'export') {
+        doSave();
       } else if (cmd === 'export json') {
         const doc = historyRef.current?.currentState.document;
         const json = JSON.stringify(doc?.toJS() ?? {}, null, 2);

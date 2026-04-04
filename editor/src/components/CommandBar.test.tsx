@@ -92,7 +92,7 @@ test('shows feature suggestions in GOTO mode', () => {
 test('shows command dropdown when value is ">"', () => {
   render(<CommandBar value=">" onChange={() => {}} />);
   expect(screen.getByRole('listbox')).toBeDefined();
-  expect(screen.getByText('export yaml')).toBeDefined();
+  expect(screen.getByText('save')).toBeDefined();
   expect(screen.getByText('zoom fit')).toBeDefined();
   expect(screen.getByText('clear')).toBeDefined();
 });
@@ -100,6 +100,6 @@ test('shows command dropdown when value is ">"', () => {
 test('clicking a command in dropdown sets the value', () => {
   const onChange = vi.fn();
   render(<CommandBar value=">" onChange={onChange} />);
-  fireEvent.click(screen.getByText('export yaml'));
-  expect(onChange).toHaveBeenCalledWith('>export yaml');
+  fireEvent.click(screen.getByText('save'));
+  expect(onChange).toHaveBeenCalledWith('>save');
 });

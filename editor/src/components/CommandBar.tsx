@@ -22,8 +22,7 @@ const SEARCH_KEYS = ['terrain', 'label', 'id', 'at', 'tags'];
 const COMMANDS = [
   { label: 'new', description: 'Create new map' },
   { label: 'open', description: 'Open map file' },
-  { label: 'export yaml', description: 'Download as YAML' },
-  { label: 'export json', description: 'Download as JSON' },
+  { label: 'save', description: 'Save map as YAML' },
   { label: 'zoom fit', description: 'Reset viewport' },
   { label: 'clear', description: 'Clear selection' },
   { label: 'shortcuts', description: 'Show keyboard shortcuts' },
