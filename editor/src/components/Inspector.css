@@ -335,3 +335,43 @@
   padding-top: var(--space-md);
   border-top: 1px solid var(--border-subtle);
 }
+
+.inspector-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 8px;
+}
+
+.inspector-actions .btn-secondary,
+.inspector-actions .btn-danger {
+  flex: 1;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 4px);
+  font-size: var(--font-size-sm, 12px);
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-subtle);
+  transition: background 0.15s, color 0.15s;
+}
+
+.inspector-actions .btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.inspector-actions .btn-secondary:hover {
+  background: var(--bg-hover, var(--bg-elevated));
+  color: var(--text-primary);
+}
+
+.inspector-actions .btn-danger {
+  background: transparent;
+  color: var(--color-error, #f85149);
+  border-color: var(--color-error, #f85149);
+}
+
+.inspector-actions .btn-danger:hover {
+  background: rgba(248, 81, 73, 0.15);
+}
