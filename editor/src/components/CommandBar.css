@@ -35,7 +35,7 @@
 }
 
 .mode-badge.mode-goto {
-  color: var(--surface-base);
+  color: var(--bg-base);
   background: var(--accent-edge);
 }
 
@@ -97,7 +97,7 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--surface-elevated);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
   border-top: none;
   list-style: none;
@@ -117,7 +117,7 @@
 }
 
 .command-dropdown-item:hover {
-  background: var(--surface-hover);
+  background: var(--bg-hover, var(--bg-elevated));
   color: var(--text-primary);
 }
 
