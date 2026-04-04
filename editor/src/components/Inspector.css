@@ -48,18 +48,18 @@
 }
 
 .inspector-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  align-items: center;
   font-size: var(--font-size-sm);
   padding: var(--space-xs) 0;
-  gap: var(--space-md);
+  gap: 8px;
 }
 
 .inspector-row label {
   color: var(--text-secondary);
-  flex-shrink: 0;
-  min-width: 48px;
+  text-align: left;
+  font-size: var(--font-size-sm, 12px);
 }
 
 .inspector-row span {
