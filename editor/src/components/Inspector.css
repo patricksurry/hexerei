@@ -279,6 +279,15 @@
   min-width: 0;
 }
 
+.inspector-at-textarea {
+  resize: vertical;
+  min-height: 24px;
+  max-height: 120px;
+  line-height: 1.4;
+  padding: 4px 6px;
+  overflow-y: auto;
+}
+
 .terrain-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));

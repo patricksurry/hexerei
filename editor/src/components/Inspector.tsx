@@ -497,12 +497,21 @@ export const Inspector = ({
                   <span className="font-mono inspector-at-readonly">{expandedAt}</span>
                 )
               ) : (
-                <input
-                  type="text"
-                  className="inspector-input font-mono"
+                <textarea
+                  className="inspector-input inspector-at-textarea font-mono"
                   defaultValue={feature.at}
                   key={`at-${featureIndex}-${feature.at}`}
-                  onKeyDown={handleInputKeyDown}
+                  rows={Math.min(Math.max(Math.ceil(feature.at.length / 40), 1), 6)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    }
+                    if (e.key === 'Escape') {
+                      e.currentTarget.value = e.currentTarget.defaultValue;
+                      e.currentTarget.blur();
+                    }
+                  }}
                   onBlur={(e) => handleFieldBlur('at', e.target.value)}
                 />
               )}

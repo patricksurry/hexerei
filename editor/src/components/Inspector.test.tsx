@@ -520,6 +520,35 @@ features:
       }
     });
 
+  it('at field renders as a textarea', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'feature', indices: [1] };
+    render(<Inspector selection={sel} model={model} />);
+
+    // The at field should be a textarea, not an input
+    const textarea = document.querySelector('textarea.inspector-at-textarea');
+    expect(textarea).not.toBeNull();
+    expect((textarea as HTMLTextAreaElement).value).toBe('0201');
+  });
+
+  it('at field textarea dispatches updateFeature on blur', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'feature', indices: [1] };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    const textarea = document.querySelector('textarea.inspector-at-textarea') as HTMLTextAreaElement;
+    expect(textarea).not.toBeNull();
+    fireEvent.change(textarea, { target: { value: '0101' } });
+    fireEvent.blur(textarea);
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0].type).toBe('updateFeature');
+    if (dispatched[0].type === 'updateFeature') {
+      expect(dispatched[0].changes.at).toBe('0101');
+    }
+  });
+
     it('activates paint with geometry when edge terrain grid cell is clicked', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
       const sel: Selection = { type: 'none' };
