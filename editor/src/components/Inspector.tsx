@@ -257,12 +257,14 @@ export const Inspector = ({
           while (defs.has(`terrain_${nextId}`)) {
             nextId++;
           }
+          const newKey = `terrain_${nextId}`;
           dispatch?.({
             type: 'setTerrainType',
             geometry,
-            key: `terrain_${nextId}`,
+            key: newKey,
             def: { style: { color: '#888888' } },
           });
+          setExpandedTerrain({ key: newKey, geometry });
         }}
       >
         + Add {geometry.charAt(0).toUpperCase() + geometry.slice(1)} Terrain
