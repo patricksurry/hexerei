@@ -549,7 +549,115 @@ features:
     }
   });
 
-    it('activates paint with geometry when edge terrain grid cell is clicked', () => {
+    it('hex color text input dispatches setTerrainType on blur with valid hex color', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    // Double-click "clear" to expand edit form
+    fireEvent.doubleClick(screen.getByText('clear').closest('.terrain-grid-cell') as HTMLElement);
+
+    // Find the hex color text input (distinguished by inspector-hex-input class)
+    const hexInput = document.querySelector('.inspector-hex-input') as HTMLInputElement;
+    expect(hexInput).not.toBeNull();
+
+    fireEvent.change(hexInput, { target: { value: '#ff0000' } });
+    fireEvent.blur(hexInput);
+
+    const setCmd = dispatched.find((c) => c.type === 'setTerrainType');
+    expect(setCmd).toBeDefined();
+    if (setCmd?.type === 'setTerrainType') {
+      expect(setCmd.key).toBe('clear');
+      expect(setCmd.def.style?.color).toBe('#ff0000');
+    }
+  });
+
+  it('hex color text input does not dispatch for invalid color strings', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    fireEvent.doubleClick(screen.getByText('clear').closest('.terrain-grid-cell') as HTMLElement);
+
+    const hexInput = document.querySelector('.inspector-hex-input') as HTMLInputElement;
+    expect(hexInput).not.toBeNull();
+
+    fireEvent.change(hexInput, { target: { value: 'not-a-color' } });
+    fireEvent.blur(hexInput);
+
+    expect(dispatched.filter((c) => c.type === 'setTerrainType')).toHaveLength(0);
+  });
+
+  it('path checkbox dispatches setTerrainType with path property set', () => {
+    const model = MapModel.load(MOCK_YAML);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    // Expand "clear" hex terrain
+    fireEvent.doubleClick(screen.getByText('clear').closest('.terrain-grid-cell') as HTMLElement);
+
+    const pathCheckbox = screen.getByLabelText('Path') as HTMLInputElement;
+    expect(pathCheckbox).not.toBeNull();
+    expect(pathCheckbox.checked).toBe(false);
+
+    fireEvent.click(pathCheckbox);
+
+    const setCmd = dispatched.find((c) => c.type === 'setTerrainType');
+    expect(setCmd).toBeDefined();
+    if (setCmd?.type === 'setTerrainType') {
+      expect(setCmd.key).toBe('clear');
+      expect(setCmd.def.properties?.path).toBe(true);
+    }
+  });
+
+  it('path checkbox unchecking removes path property', () => {
+    const pathTerrainYaml = `
+hexmap: "1.0"
+layout:
+  orientation: flat-down
+  all: "0101 0201"
+terrain:
+  hex:
+    road: { style: { color: "#ffcc00" }, properties: { path: true } }
+features:
+  - at: "@all"
+    terrain: road
+`;
+    const model = MapModel.load(pathTerrainYaml);
+    const sel: Selection = { type: 'none' };
+    const dispatched: MapCommand[] = [];
+    render(<Inspector selection={sel} model={model} dispatch={(cmd) => dispatched.push(cmd)} />);
+
+    fireEvent.doubleClick(screen.getByText('road').closest('.terrain-grid-cell') as HTMLElement);
+
+    const pathCheckbox = screen.getByLabelText('Path') as HTMLInputElement;
+    expect(pathCheckbox.checked).toBe(true);
+
+    fireEvent.click(pathCheckbox);
+
+    const setCmd = dispatched.find((c) => c.type === 'setTerrainType');
+    expect(setCmd).toBeDefined();
+    if (setCmd?.type === 'setTerrainType') {
+      expect(setCmd.def.properties).toBeUndefined();
+    }
+  });
+
+  it('path checkbox is not shown for edge terrain', () => {
+    const model = MapModel.load(MULTI_GEOM_YAML);
+    const sel: Selection = { type: 'none' };
+    render(<Inspector selection={sel} model={model} />);
+
+    // Switch to edge tab and expand river
+    fireEvent.click(screen.getByText('edge'));
+    fireEvent.doubleClick(screen.getByText('river').closest('.terrain-grid-cell') as HTMLElement);
+
+    expect(screen.queryByLabelText('Path')).toBeNull();
+  });
+
+  it('activates paint with geometry when edge terrain grid cell is clicked', () => {
       const model = MapModel.load(MULTI_GEOM_YAML);
       const sel: Selection = { type: 'none' };
       let paintKey: string | null = null;

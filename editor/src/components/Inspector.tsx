@@ -177,22 +177,45 @@ export const Inspector = ({
                   </div>
                   <div className="inspector-row">
                     <label>Color</label>
-                    <ColorPicker
-                      value={def.color}
-                      onChange={(newColor) => {
-                        if (newColor !== def.color) {
-                          dispatch?.({
-                            type: 'setTerrainType',
-                            geometry,
-                            key,
-                            def: {
-                              ...buildDef(def),
-                              style: { color: newColor },
-                            },
-                          });
-                        }
-                      }}
-                    />
+                    <div className="inspector-color-row">
+                      <ColorPicker
+                        value={def.color}
+                        onChange={(newColor) => {
+                          if (newColor !== def.color) {
+                            dispatch?.({
+                              type: 'setTerrainType',
+                              geometry,
+                              key,
+                              def: {
+                                ...buildDef(def),
+                                style: { color: newColor },
+                              },
+                            });
+                          }
+                        }}
+                      />
+                      <input
+                        type="text"
+                        className="inspector-input inspector-hex-input font-mono"
+                        defaultValue={def.color}
+                        key={`tc-${key}-${def.color}`}
+                        onKeyDown={handleInputKeyDown}
+                        onBlur={(e) => {
+                          const v = e.target.value.trim();
+                          if (/^#[0-9a-fA-F]{3,8}$/.test(v) && v !== def.color) {
+                            dispatch?.({
+                              type: 'setTerrainType',
+                              geometry,
+                              key,
+                              def: {
+                                ...buildDef(def),
+                                style: { color: v },
+                              },
+                            });
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="inspector-row">
                     <label>Name</label>
@@ -215,6 +238,33 @@ export const Inspector = ({
                       }}
                     />
                   </div>
+                  {geometry === 'hex' && (
+                    <div className="inspector-row">
+                      <label htmlFor={`terrain-path-${key}`}>Path</label>
+                      <input
+                        id={`terrain-path-${key}`}
+                        type="checkbox"
+                        checked={!!def.properties?.path}
+                        onChange={(e) => {
+                          const newProps = { ...(def.properties ?? {}) };
+                          if (e.target.checked) {
+                            newProps.path = true;
+                          } else {
+                            delete newProps.path;
+                          }
+                          dispatch?.({
+                            type: 'setTerrainType',
+                            geometry,
+                            key,
+                            def: {
+                              ...buildDef(def),
+                              properties: Object.keys(newProps).length > 0 ? newProps : undefined,
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
                   <div className="terrain-edit-actions">
                     <button
                       className="btn-secondary"

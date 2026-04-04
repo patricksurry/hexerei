@@ -336,6 +336,17 @@
   border-top: 1px solid var(--border-subtle);
 }
 
+.inspector-color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inspector-hex-input {
+  width: 80px;
+  font-size: 11px;
+}
+
 .inspector-actions {
   display: flex;
   gap: 8px;
