@@ -185,6 +185,37 @@ test('escape key clears paint mode before selection', async () => {
   // We'll leave this to manual testing since it's hard to trigger without mock props.
 });
 
+test('Enter in command bar updates selected feature instead of creating new', async () => {
+  render(<App />);
+
+  // 1. Create a map via New Map dialog
+  const dialog = screen.getByRole('dialog');
+  const createBtn = within(dialog).getByRole('button', { name: /create/i });
+  await userEvent.click(createBtn);
+  await screen.findByTitle('flat-down');
+
+  // 2. Add a feature via command bar
+  const input = screen.getByRole('combobox', { name: /command/i });
+  await userEvent.type(input, '0101{enter}');
+
+  // 3. Count features in stack
+  const featureStack = screen.getByRole('complementary', { name: /features/i });
+  const featureItems = within(featureStack).getAllByRole('listitem');
+  const initialCount = featureItems.length;
+
+  // 4. Select the last feature (click it in the stack)
+  await userEvent.click(featureItems[featureItems.length - 1]);
+
+  // 5. Type a new hexpath and press Enter — should UPDATE, not add
+  await userEvent.click(input);
+  await userEvent.clear(input);
+  await userEvent.type(input, '0201{enter}');
+
+  // 6. Feature count should NOT have increased
+  const updatedItems = within(featureStack).getAllByRole('listitem');
+  expect(updatedItems.length).toBe(initialCount);
+});
+
 test('>open command triggers file input click', async () => {
   render(<App />);
 

@@ -439,8 +439,20 @@ export const App = () => {
     }
 
     if (historyRef.current) {
-      const cmd: MapCommand = { type: 'addFeature', feature: { at: value.trim() } };
-      historyRef.current.execute(cmd);
+      const sel = selectionRef.current;
+      if (sel.type === 'feature' && sel.indices.length === 1) {
+        // Edit selected feature's `at` expression
+        const cmd: MapCommand = {
+          type: 'updateFeature',
+          index: sel.indices[0],
+          changes: { at: value.trim() },
+        };
+        historyRef.current.execute(cmd);
+      } else {
+        // No feature selected — create new feature
+        const cmd: MapCommand = { type: 'addFeature', feature: { at: value.trim() } };
+        historyRef.current.execute(cmd);
+      }
       setHistoryVersion((v) => v + 1);
     }
     setCommandValue('');
