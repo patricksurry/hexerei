@@ -13,6 +13,20 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/** Open the New Map dialog from the WelcomeScreen and create a map with given title. */
+async function openNewMapAndCreate(title = 'Test Map') {
+  // Click "Create New Map" on the WelcomeScreen to open the dialog
+  const newMapBtn = await screen.findByRole('button', { name: /create new map/i });
+  await userEvent.click(newMapBtn);
+
+  const dialog = screen.getByRole('dialog');
+  const titleInput = within(dialog).getByLabelText('Title:');
+  await userEvent.type(titleInput, title);
+  const createBtn = within(dialog).getByRole('button', { name: /create/i });
+  await userEvent.click(createBtn);
+  await screen.findByTitle('flat-down');
+}
+
 test('renders all layout regions', () => {
   render(<App />);
   expect(screen.getByRole('banner')).toBeInTheDocument();
@@ -100,16 +114,7 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
 
   try {
     render(<App />);
-
-    // create a map so we have a model
-    const dialog = screen.getByRole('dialog');
-    const titleInput = within(dialog).getByLabelText('Title:');
-    await userEvent.type(titleInput, 'Test Map');
-    const createBtn = within(dialog).getByRole('button', { name: /create/i });
-    await userEvent.click(createBtn);
-
-    // Wait for initial render
-    await screen.findByTitle('flat-down');
+    await openNewMapAndCreate();
 
     // 1. Initial state: not modified
     expect(screen.queryByText('MODIFIED')).not.toBeInTheDocument();
@@ -134,22 +139,32 @@ test('Cmd+S shortcut marks document as saved and clears MODIFIED indicator', asy
   }
 });
 
-test('canceling new map dialog without existing map shows empty state, not Loading', async () => {
+test('initial load shows WelcomeScreen with New and Open options', async () => {
   render(<App />);
+  expect(await screen.findByText(/hexerei/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /create new map/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /open existing map/i })).toBeInTheDocument();
+});
 
-  // Initial state: dialog is open
+test('WelcomeScreen Create New Map opens dialog', async () => {
+  render(<App />);
+  const newMapBtn = await screen.findByRole('button', { name: /create new map/i });
+  await userEvent.click(newMapBtn);
   expect(await screen.findByRole('dialog', { name: /create new map/i })).toBeInTheDocument();
+});
 
-  // Cancel the dialog
+test('canceling new map dialog returns to WelcomeScreen', async () => {
+  render(<App />);
+  const newMapBtn = await screen.findByRole('button', { name: /create new map/i });
+  await userEvent.click(newMapBtn);
+
   const dialog = screen.getByRole('dialog');
   const cancelBtn = within(dialog).getByRole('button', { name: /cancel/i });
   await userEvent.click(cancelBtn);
 
-  // Inspector should NOT show "Loading..."
-  expect(screen.queryByText(/loading\.\.\./i)).not.toBeInTheDocument();
-
-  // Should show welcome/placeholder text instead
-  expect(screen.getByText(/no map loaded/i)).toBeInTheDocument();
+  // Should return to WelcomeScreen
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /create new map/i })).toBeInTheDocument();
 });
 
 test('>new command opens dialog and closes it on cancel', async () => {
@@ -166,17 +181,8 @@ test('>new command opens dialog and closes it on cancel', async () => {
   expect(screen.queryByRole('dialog', { name: /create new map/i })).not.toBeInTheDocument();
 });
 
-test('initial load shows dialog instead of fetching hardcoded map', async () => {
-  render(<App />);
-  expect(await screen.findByRole('dialog', { name: /create new map/i })).toBeInTheDocument();
-});
-
 test('escape key clears paint mode before selection', async () => {
   render(<App />);
-
-  // close the initial dialog
-  const cancelBtn = await screen.findByRole('button', { name: /cancel/i });
-  await userEvent.click(cancelBtn);
 
   const input = screen.getByRole('combobox', { name: /command/i });
   await userEvent.type(input, '0101{enter}');
@@ -189,14 +195,7 @@ test('escape key clears paint mode before selection', async () => {
 
 test('Enter in command bar updates selected feature instead of creating new', async () => {
   render(<App />);
-
-  // 1. Create a map via New Map dialog
-  const dialog = screen.getByRole('dialog');
-  const titleInput = within(dialog).getByLabelText('Title:');
-  await userEvent.type(titleInput, 'Test Map');
-  const createBtn = within(dialog).getByRole('button', { name: /create/i });
-  await userEvent.click(createBtn);
-  await screen.findByTitle('flat-down');
+  await openNewMapAndCreate();
 
   // 2. Add a feature via command bar
   const input = screen.getByRole('combobox', { name: /command/i });
@@ -253,13 +252,7 @@ test('paint dedup: singleton segment guard prevents adding duplicate atom IDs', 
 
 test('>open command triggers file input click', async () => {
   render(<App />);
-
-  // Close initial dialog by clicking Create
-  const dialog = screen.getByRole('dialog');
-  const titleInput = within(dialog).getByLabelText('Title:');
-  await userEvent.type(titleInput, 'Test Map');
-  const createBtn = within(dialog).getByRole('button', { name: /create/i });
-  await userEvent.click(createBtn);
+  await openNewMapAndCreate();
 
   // Spy on file input click
   const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -299,12 +292,7 @@ test('alt-click removal: removing from multi-atom segment preserves others', () 
 describe('state machine transitions', () => {
   async function createTestMap() {
     render(<App />);
-    const dialog = screen.getByRole('dialog');
-    const titleInput = within(dialog).getByLabelText(/title/i);
-    await userEvent.type(titleInput, 'Test');
-    const createBtn = within(dialog).getByRole('button', { name: /create/i });
-    await userEvent.click(createBtn);
-    await screen.findByTitle('flat-down');
+    await openNewMapAndCreate('Test');
   }
 
   test('command bar > prefix enters command mode and shows commands', async () => {

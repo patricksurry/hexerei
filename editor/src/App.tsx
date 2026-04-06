@@ -100,12 +100,7 @@ export const App = () => {
     document.documentElement.classList.add(`theme-${theme}`);
   }, [theme]);
 
-  useEffect(() => {
-    // Only show the new map dialog if there is no map loaded and it's the initial load
-    if (!historyRef.current) {
-      setShowNewMapDialog(true);
-    }
-  }, []);
+  // No auto-open of New Map dialog — WelcomeScreen shows New/Open options instead
 
   useEffect(() => {
     if (model && commandValue && !commandValue.startsWith('>') && !commandValue.startsWith('/')) {
